@@ -4,4 +4,4 @@ set -x
 
 HOSTNAME=`hostname`
 
-minerd -o stratum+tcp://europe.mine-litecoin.com -u rpodgorny.${HOSTNAME} -p x
+nice minerd -o stratum+tcp://europe.mine-litecoin.com -u rpodgorny.${HOSTNAME} -p x
