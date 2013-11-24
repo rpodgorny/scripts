@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -x
+
+HOSTS="
+berta.podgorny.cz
+chuck.podgorny.cz
+europa.podgorny.cz
+hubert.asterix.cz
+kulicka.podgorny.cz
+milhouse.podgorny.cz
+orion.asterix.cz
+pimiento.podgorny.cz
+simir.podgorny.cz
+taurus.asterix.cz
+"
+
+UPCMD="sudo pacman -Syu"
+
+for host in ${HOSTS}; do
+	ssh -o ConnectTimeout=2 -t ${host} ${UPCMD}
+	#ssh-copy-id -i .ssh/id_ecdsa.pub ${host}
+done
+
