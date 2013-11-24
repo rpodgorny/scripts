@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -x
+
+HOSTNAME=`hostname`
+
+minerd -o stratum+tcp://europe.mine-litecoin.com -u rpodgorny.${HOSTNAME} -p x
