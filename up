@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -x
+
 cd ~/dotfiles
 hg pull -u
 cd -
