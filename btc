@@ -6,7 +6,7 @@ import socket
 
 
 def main():
-	blocks_remote = 'milhouse:bitcoin-blocks'
+	blocks_remote = 'milhouse.podgorny.cz:bitcoin-blocks'
 	blocks_dir = os.path.expanduser('~/.bitcoin/blocks')
 	lock_fn = '%s/_lock' % blocks_dir
 	hostname = socket.gethostname()
