@@ -1,0 +1,51 @@
+#!/usr/bin/python3
+
+import subprocess
+
+
+def call(cmd):
+	print(cmd)
+	subprocess.call(cmd, shell=True)
+#enddef
+
+
+def fix_mkinitcpio():
+	fn = '/etc/mkinitcpio.conf'
+
+	if call('grep "^HOOKS=.*autodetect.*" %s' % fn) != 0:
+		return
+	#endif
+
+	call('sed -e "/^HOOKS=/s/autodetect //g" -i %s' % fn)
+	call('mkinitcpio -p linux')
+	call('sureboot')
+#enddef
+
+
+def fix_locale_gen():
+	fn = '/etc/locale.gen'
+
+	if call('grep "^#en_US.UTF-8" %s' % fn) != 0:
+		return
+	#endif
+
+	call('sed -e "s/^#en_US.UTF-8/en_US.UTF-8/g" -i %s' % fn)
+	call('locale-gen')
+#enddef
+
+
+def fix_locale():
+	fn = '/etc/locale.conf'
+
+	call('echo "LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8\n" > %s' % fn)
+#enddef
+
+
+def main():
+	fix_mkinitcpio()
+	fix_locale_gen()
+	fix_locale()
+#enddef
+
+
+if __name__ == '__main__': main()
