@@ -5,7 +5,7 @@ import subprocess
 
 
 def call(cmd):
-	print(cmd)
+	print('>>> %s' % cmd)
 	subprocess.call(cmd, shell=True)
 #enddef
 
@@ -48,9 +48,19 @@ def fix_radek():
 #enddef
 
 
+def fix_root():
+	fn = '/root/.forward'
+
+	if os.path.exists(fn): return
+
+	call('echo "radek@podgorny.cz" > %s' % fn)
+#enddef
+
+
 def fix_packages():
-	call('pacman -Sy --noconfirm --needed dstat htop ntp openssh sudo uptimed vim zsh')
+	call('pacman -Sy --noconfirm --needed dstat htop ntp openssh postfix sudo uptimed vim zsh')
 	call('systemctl enable ntpd')
+	call('systemctl enable postfix')
 	call('systemctl enable sshd')
 	call('systemctl enable uptimed')
 #enddef
@@ -72,6 +82,7 @@ def main():
 	fix_locale()
 	fix_time()
 	fix_radek()
+	fix_root()
 #enddef
 
 
