@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import os
 import subprocess
 
 
@@ -41,10 +42,37 @@ def fix_locale():
 #enddef
 
 
+def fix_radek():
+	call('usermod -aG wheel radek')
+	call('usermod -s /usr/bin/zsh radek')
+#enddef
+
+
+def fix_packages():
+	call('pacman -Sy --noconfirm --needed dstat htop ntp openssh syslinux sudo vim zsh')
+	call('systemctl enable ntpd')
+	call('systemctl enable sshd')
+#enddef
+
+
+def fix_time():
+	fn = '/etc/localtime'
+
+	if os.path.islink(fn):
+		return
+	#endif
+
+	call('ln -s /usr/share/zoneinfo/Europe/Prague %s' % fn)
+#enddef
+
+
 def main():
+	fix_packages()
 	fix_mkinitcpio()
 	fix_locale_gen()
 	fix_locale()
+	fix_time()
+	fix_radek()
 #enddef
 
 
