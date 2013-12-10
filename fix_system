@@ -6,7 +6,7 @@ import subprocess
 
 def call(cmd):
 	print('>>> %s' % cmd)
-	subprocess.call(cmd, shell=True)
+	return subprocess.call(cmd, shell=True)
 #enddef
 
 
@@ -43,6 +43,12 @@ def fix_locale():
 
 
 def fix_radek():
+	if call('grep "^radek:" /etc/passwd') == 0: return
+
+	call('useradd -m radek')
+	call('passwd radek')
+
+	call('pacman -Sy --noconfirm --needed sudo zsh')
 	call('usermod -aG wheel radek')
 	call('usermod -s /usr/bin/zsh radek')
 #enddef
@@ -58,15 +64,35 @@ def fix_root():
 
 
 def fix_packages():
-	call('pacman -Sy --noconfirm --needed dstat htop ntp openssh postfix sudo uptimed vim zsh')
-	call('systemctl enable ntpd')
-	call('systemctl enable postfix')
-	call('systemctl enable sshd')
-	call('systemctl enable uptimed')
+	call('pacman -Sy --noconfirm --needed ntp openssh postfix uptimed')
+
+	for action in ['enable', 'start']:
+		call('systemctl %s ntpd' % action)
+		call('systemctl %s postfix' % action)
+		call('systemctl %s sshd' % action)
+		call('systemctl %s uptimed' % action)
+	#endfor
 #enddef
 
 
-def fix_time():
+def fix_pacman_sources():
+	fn = '/etc/pacman.conf'
+
+	if call('grep "^\[rpodgorny\]$" %s' % fn) == 0: return
+
+	call('''echo "
+
+[archlinuxfr]
+SigLevel = Never
+Server = http://repo.archlinux.fr/$arch
+
+[rpodgorny]
+SigLevel = Never
+Server = http://podgorny.cz/~radek/arch-repo" >> %s''' % fn)
+#enddef
+
+
+def fix_timezone():
 	fn = '/etc/localtime'
 
 	if os.path.islink(fn): return
@@ -75,12 +101,28 @@ def fix_time():
 #enddef
 
 
+def fix_hostname():
+	fn = '/etc/hostname'
+
+	if os.path.isfile(fn): return
+
+	hostname = None
+	while not hostname:
+		hostname = input('enter hostname: ').strip()
+	#endwhile
+
+	call('echo "%s" > %s' % (hostname, fn))
+#enddef
+
+
 def main():
+	fix_pacman_sources()
 	fix_packages()
+	fix_hostname()
 	fix_mkinitcpio()
 	fix_locale_gen()
 	fix_locale()
-	fix_time()
+	fix_timezone()
 	fix_radek()
 	fix_root()
 #enddef
