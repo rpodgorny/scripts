@@ -13,6 +13,10 @@ def call(cmd):
 def fix_mkinitcpio():
 	fn = '/etc/mkinitcpio.conf'
 
+	if not os.path.isfile(fn):
+		return
+	#enddef
+
 	if call('grep "^HOOKS=.*autodetect.*" %s' % fn) != 0:
 		return
 	#endif
