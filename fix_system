@@ -1,0 +1,77 @@
+#!/usr/bin/python3
+
+import os
+import subprocess
+
+
+def call(cmd):
+	print(cmd)
+	subprocess.call(cmd, shell=True)
+#enddef
+
+
+def fix_mkinitcpio():
+	fn = '/etc/mkinitcpio.conf'
+
+	if call('grep "^HOOKS=.*autodetect.*" %s' % fn) != 0: return
+
+	call('sed -e "/^HOOKS=/s/autodetect //g" -i %s' % fn)
+	call('mkinitcpio -p linux')
+	call('pacman -Sy --noconfirm --needed syslinux')
+	call('sureboot')
+#enddef
+
+
+def fix_locale_gen():
+	fn = '/etc/locale.gen'
+
+	if call('grep "^#en_US.UTF-8" %s' % fn) != 0: return
+
+	call('sed -e "s/^#en_US.UTF-8/en_US.UTF-8/g" -i %s' % fn)
+	call('locale-gen')
+#enddef
+
+
+def fix_locale():
+	fn = '/etc/locale.conf'
+
+	if os.path.isfile(fn): return
+
+	call('echo "LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8\n" > %s' % fn)
+#enddef
+
+
+def fix_radek():
+	call('usermod -aG wheel radek')
+	call('usermod -s /usr/bin/zsh radek')
+#enddef
+
+
+def fix_packages():
+	call('pacman -Sy --noconfirm --needed dstat htop ntp openssh sudo uptimed vim zsh')
+	call('systemctl enable ntpd')
+	call('systemctl enable sshd')
+	call('systemctl enable uptimed')
+#enddef
+
+
+def fix_time():
+	fn = '/etc/localtime'
+
+	if os.path.islink(fn): return
+
+	call('ln -s /usr/share/zoneinfo/Europe/Prague %s' % fn)
+#enddef
+
+
+def main():
+	fix_packages()
+	fix_mkinitcpio()
+	fix_locale_gen()
+	fix_locale()
+	fix_time()
+	fix_radek()
+#enddef
+
+
+if __name__ == '__main__': main()

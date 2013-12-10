@@ -1,0 +1,48 @@
+#!/usr/bin/python
+
+import os
+import subprocess
+import socket
+
+
+def main():
+	blocks_remote = 'milhouse.podgorny.cz:bitcoin-blocks'
+	blocks_dir = os.path.expanduser('~/.bitcoin/blocks')
+	lock_fn = '%s/_lock' % blocks_dir
+	hostname = socket.gethostname()
+
+	if not os.path.isdir(blocks_dir):
+		raise Exception('%s does not exist' % blocks_dir)
+	#endif
+
+	if os.listdir(blocks_dir):
+		raise Exception('%s not empty' % blocks_dir)
+	#endif
+
+	subprocess.call('sshfs %s %s' % (blocks_remote, blocks_dir), shell=True)
+
+	if not os.listdir(blocks_dir):
+		raise Exception('%s empty after mount')
+	#endif
+
+	if os.path.isfile(lock_fn):
+		f = open(lock_fn, 'r')
+		line = f.readline().strip()
+		f.close()
+		subprocess.call('fusermount -u %s' % blocks_dir, shell=True)
+		raise Exception('already locked by %s' % line)
+	#endif
+
+	f = open(lock_fn, 'w')
+	f.write(hostname)
+	f.close()
+
+	subprocess.call('bitcoin-qt', shell=True)
+
+	os.remove(lock_fn)
+
+	subprocess.call('fusermount -u %s' % blocks_dir, shell=True)
+#enddef
+
+
+if __name__ == '__main__': main()

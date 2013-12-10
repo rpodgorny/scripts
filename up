@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -x
+
+cd ~/dotfiles
+hg pull -u
+cd -
+
+cd ~/scripts
+hg pull -u
+cd -
