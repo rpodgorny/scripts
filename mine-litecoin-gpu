@@ -27,7 +27,7 @@ export GPU_USE_SYNC_OBJECTS=1
 cgminer --scrypt -I 19 -g 1 -w 256 --thread-concurrency 7168 \
 -o stratum+tcp://ltc-eu.give-me-coins.com:3334 -u rpodgorny.$HOSTNAME -p x \
 -o stratum+tcp://ltc.give-me-coins.com -u rpodgorny.$HOSTNAME -p x \
--o stratum+tcp://world.wemineltc.com:3335 -u rpodgorny.$HOSTNAME -p x
+-o stratum+tcp://world.wemineltc.com:3335 -u rpodgorny.$HOSTNAME -p x \
 -o stratum+tcp://europe.mine-litecoin.com -u rpodgorny.$HOSTNAME -p x \
 -o stratum+tcp://america.mine-litecoin.com -u rpodgorny.$HOSTNAME -p x \
 --failover-only
