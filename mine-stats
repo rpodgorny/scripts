@@ -1,0 +1,11 @@
+#!/bin/sh
+
+for i in '0' '1'; do
+	echo ${i}
+
+	export DISPLAY=:0.${i}
+
+	aticonfig --adapter=$i --odgc
+	aticonfig --adapter=$i --pplib-cmd "get fanspeed 0"
+	aticonfig --adapter=$i --odgt
+done
