@@ -115,6 +115,14 @@ def fix_hostname():
 #enddef
 
 
+def fix_x():
+	# TODO: find a better way to test for X
+	if not os.path.isfile('/usr/bin/X'): return
+
+	call('pacman -S --needed terminus-font')
+#enddef
+
+
 def main():
 	fix_pacman_sources()
 	fix_packages()
@@ -125,6 +133,7 @@ def main():
 	fix_timezone()
 	fix_radek()
 	fix_root()
+	fix_x()
 #enddef
 
 
