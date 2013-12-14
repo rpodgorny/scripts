@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -x
+
+#POOL_URL="stratum+tcp://europe.mine-litecoin.com"
+POOL_URL="stratum+tcp://ltc-eu.give-me-coins.com:3334/"
+HOSTNAME=`hostname`
+
+nice minerd -o ${POOL_URL} -u rpodgorny.${HOSTNAME} -p x
