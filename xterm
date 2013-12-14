@@ -1,6 +1,12 @@
 #!/bin/sh
 
-FONT="-*-terminus-medium-*-*-*-14-*-*-*-*-*-*-u"
+FONT_SIZE=14
+
+if [ `hostname` = 'krabicka' ]; then
+	FONT_SIZE=19
+fi
+
+FONT="-*-terminus-medium-*-*-*-${FONT_SIZE}-*-*-*-*-*-*-u"
 #FONT="-*-terminus-medium-*-*-*-14-*-*-*-*-*-iso10646-1"
 
 #exec /usr/bin/xterm -rv -vb +sb -fn ${FONT} -xrm "XTerm*charClass: 0-32:1,33-126:2,127-160:3,161-255:2"
