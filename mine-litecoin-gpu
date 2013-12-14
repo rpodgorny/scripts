@@ -1,0 +1,33 @@
+#!/bin/sh
+
+HOSTNAME=`hostname`
+
+for i in '1' '0'; do
+	echo ${i}
+
+	export DISPLAY=:0.${i}
+
+	aticonfig --adapter=$i --od-enable
+	aticonfig --adapter=$i --pplib-cmd "set fanspeed 0 60"
+
+	#aticonfig --adapter=$i --odsc=1000,1300
+	#aticonfig --adapter=$i --odgc
+	#sleep 5
+	#aticonfig --adapter=$i --odcc
+	#sleep 5
+
+	aticonfig --adapter=$i --odgc
+	aticonfig --adapter=$i --pplib-cmd "get fanspeed 0"
+	aticonfig --adapter=$i --odgt
+done
+
+export GPU_MAX_ALLOC_PERCENT=100
+export GPU_USE_SYNC_OBJECTS=1
+
+cgminer --scrypt -I 19 -g 1 -w 256 --thread-concurrency 7168 \
+-o stratum+tcp://ltc-eu.give-me-coins.com:3334 -u rpodgorny.$HOSTNAME -p x \
+-o stratum+tcp://ltc.give-me-coins.com -u rpodgorny.$HOSTNAME -p x \
+-o stratum+tcp://world.wemineltc.com:3335 -u rpodgorny.$HOSTNAME -p x \
+-o stratum+tcp://europe.mine-litecoin.com -u rpodgorny.$HOSTNAME -p x \
+-o stratum+tcp://america.mine-litecoin.com -u rpodgorny.$HOSTNAME -p x \
+--failover-only

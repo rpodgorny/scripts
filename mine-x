@@ -1,0 +1,5 @@
+#!/bin/sh
+
+sudo aticonfig --adapter=all --initial
+
+X :0 vt9
