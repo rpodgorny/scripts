@@ -1,0 +1,3 @@
+#!/bin/sh
+
+find $1 -xdev -type f -exec btrfs filesystem defrag -v -clzo '{}' \;
