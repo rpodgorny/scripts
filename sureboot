@@ -1,8 +1,23 @@
 #!/usr/bin/python3
 
+'''
+SureBoot.
+
+Usage:
+  sureboot [update]
+  sureboot new <device>
+
+Arguments:
+  <device>  Target device.
+
+Options:
+  -h, --help  This screen.
+'''
+
 import os
 import os.path
 import subprocess
+import docopt
 
 
 def cmd(cmd):
@@ -11,7 +26,7 @@ def cmd(cmd):
 #enddef
 
 
-def main():
+def update():
 	with open('/etc/fstab', 'r') as f:
 		for line in f:
 			if '/boot' in line and not line.startswith('#'):
@@ -86,6 +101,21 @@ def main():
 	#endfor
 
 	cmd('sync')
+#enddef
+
+
+def main():
+	args = docopt.docopt(__doc__)
+
+	if args['new']:
+		print('not implemented, yet')
+		return
+	elif args['update']:
+		update()
+	else:
+		print('no command specified, inferring update')
+		update()
+	#endif
 #enddef
 
 
