@@ -21,7 +21,7 @@ import docopt
 import glob
 
 
-def cmd(cmd):
+def call(cmd):
 	print('$ %s' % cmd)
 	os.system(cmd)
 #enddef
@@ -31,8 +31,7 @@ def update():
 	with open('/etc/fstab', 'r') as f:
 		for line in f:
 			if '/boot' in line and not line.startswith('#'):
-				print('/boot partition is in fstab')
-				return
+				raise Exception('/boot partition is in fstab')
 			#endif
 		#endfor
 	#endwith
@@ -44,8 +43,7 @@ def update():
 
 	# TODO: actually verify where does the link point to
 	if not os.path.islink('/etc/systemd/system/local-fs.target.wants/boot.mount'):
-		print('/etc/systemd/system/local-fs.target.wants/boot.mount link does not exist')
-		return
+		raise Exception('/etc/systemd/system/local-fs.target.wants/boot.mount link does not exist')
 	#endif
 
 	# TODO: this may be simpler but does not check the fs type
@@ -59,56 +57,53 @@ def update():
 				break
 			#endif
 		else:
-			print('/boot partition not mounted')
-			return
+			raise Exception('/boot partition not mounted')
 		#endfor
 	#endwith
 
 	boot_parts = subprocess.check_output('blkid -o device -t LABEL=BOOT', shell=True).decode().strip().split('\n')
 
 	if not boot_parts:
-		print('no backup BOOT partitions!')
-		return
+		raise Exception('no backup BOOT partitions!')
 	#endif
 
 	mbr_devs = []
 	for dev in os.listdir('/sys/class/block'):
+		if not dev.startswith('sd'): continue
 		if not os.path.isfile('/sys/class/block/%s/removable' % dev): continue
 		if not open('/sys/class/block/%s/removable' % dev).read() != '0': continue
 		mbr_devs.append(dev)
 	#endfor
 
 	if not mbr_devs:
-		print('no devices to install mbr to')
-		return
+		raise Exception('no devices to install mbr to')
 	#endif
 
-	cmd('mkdir /tmp/sureboot')
+	call('mkdir /tmp/sureboot')
 
 	for part in boot_parts:
 		if part == boot_part: continue
 
-		cmd('mount %s /tmp/sureboot' % part)
-		cmd('rm -rf /tmp/sureboot/*')
-		cmd('cp -av /boot/* /tmp/sureboot/')
-		cmd('extlinux --install -r /tmp/sureboot')
-		cmd('umount /tmp/sureboot')
+		call('mount %s /tmp/sureboot' % part)
+		call('rm -rf /tmp/sureboot/*')
+		call('cp -av /boot/* /tmp/sureboot/')
+		call('extlinux --install -r /tmp/sureboot')
+		call('umount /tmp/sureboot')
 	#endfor
 
-	cmd('rmdir /tmp/sureboot')
+	call('rmdir /tmp/sureboot')
 
 	for dev in mbr_devs:
-		cmd('dd if=/usr/lib/syslinux/bios/mbr.bin of=/dev/%s bs=440 count=1 conv=notrunc' % dev)
+		call('dd if=/usr/lib/syslinux/bios/mbr.bin of=/dev/%s bs=440 count=1 conv=notrunc' % dev)
 	#endfor
 
-	cmd('sync')
+	call('sync')
 #enddef
 
 
 def new(dev):
 	if glob.glob('%s?' % dev):
-		print('%s does not seem to be empty drive' % dev)
-		return
+		raise Exception('%s does not seem to be empty drive' % dev)
 	#endif
 
 	cmd = '''echo "n
@@ -121,6 +116,11 @@ p
 2
 
 +1000M
+n
+p
+3
+
+
 t
 1
 0c
