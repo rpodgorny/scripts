@@ -104,12 +104,47 @@ def update():
 #enddef
 
 
+def new(dev):
+	if glob.glob('%s?' % dev):
+		print('%s does not seem to be empty drive' % dev)
+		return
+	#endif
+
+	cmd = '''echo "n
+p
+1
+
++100M
+n
+p
+2
+
++1000M
+t
+1
+0c
+t
+2
+82
+a
+1
+w
+q
+" | fdisk %s''' % dev
+	call(cmd)
+
+	call('mkfs.vfat -n BOOT %s1' % dev)
+	call('mkswap -L SWAP %s2' % dev)
+	call('btrfs device add %s3 /' % dev)
+#enddef
+
+
 def main():
 	args = docopt.docopt(__doc__)
 
 	if args['new']:
-		print('not implemented, yet')
-		return
+		new(args['<device>'])
+		update()
 	elif args['update']:
 		update()
 	else:
