@@ -35,6 +35,8 @@ def get_devices():
 def main():
 	subprocess.call('lsblk -o NAME,SIZE,LABEL', shell=True)
 
+	subprocess.call('btrfs fi show', shell=True)
+
 	devs = sorted(get_devices())
 
 	for dev in devs:
