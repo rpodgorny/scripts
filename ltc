@@ -7,7 +7,7 @@ import tempfile
 
 
 def main():
-	remote_path = 'milhouse.podgorny.cz:bitcoin_shared'
+	remote_path = 'milhouse.podgorny.cz:litecoin_shared'
 	hostname = socket.gethostname()
 
 	with tempfile.TemporaryDirectory() as local_path:
@@ -31,7 +31,7 @@ def main():
 		f.write(hostname)
 		f.close()
 
-		subprocess.call('bitcoin-qt -datadir=%s' % local_path, shell=True)
+		subprocess.call('litecoin-qt -datadir=%s' % local_path, shell=True)
 
 		os.remove(lock_fn)
 

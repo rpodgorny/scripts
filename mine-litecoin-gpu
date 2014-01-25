@@ -37,3 +37,4 @@ cgminer --api-listen \
 -o stratum+tcp://ltc.give-me-coins.com -u rpodgorny.$HOSTNAME -p x \
 -o stratum+tcp://europe.mine-litecoin.com -u rpodgorny.$HOSTNAME -p x \
 -o stratum+tcp://america.mine-litecoin.com -u rpodgorny.$HOSTNAME -p x
+#--failover-only
