@@ -1,8 +1,10 @@
 #!/bin/sh
 
+set -x
+
 HOSTNAME=`hostname`
 
-for i in '1' '0'; do
+for i in '0' '1'; do
 	echo ${i}
 
 	export DISPLAY=:0.${i}
@@ -23,11 +25,15 @@ done
 
 export GPU_MAX_ALLOC_PERCENT=100
 export GPU_USE_SYNC_OBJECTS=1
+export DISPLAY=:0
+
+source ~/.mine-litecoin-gpu
 
 cgminer --api-listen \
---scrypt -I 19 -g 1 -w 256 --thread-concurrency 16384 \
+--scrypt -I 19 -g 1 -w 256 ${MINER_FLAGS} \
+-o stratum+tcp://freedom.wemineltc.com -u rpodgorny.$HOSTNAME -p x \
+-o stratum+tcp://usa.wemineltc.com -u rpodgorny.$HOSTNAME -p x \
 -o stratum+tcp://ltc-eu.give-me-coins.com:3334 -u rpodgorny.$HOSTNAME -p x \
 -o stratum+tcp://ltc.give-me-coins.com -u rpodgorny.$HOSTNAME -p x \
--o stratum+tcp://world.wemineltc.com:3335 -u rpodgorny.$HOSTNAME -p x \
 -o stratum+tcp://europe.mine-litecoin.com -u rpodgorny.$HOSTNAME -p x \
 -o stratum+tcp://america.mine-litecoin.com -u rpodgorny.$HOSTNAME -p x
