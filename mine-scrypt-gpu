@@ -27,7 +27,7 @@ export GPU_MAX_ALLOC_PERCENT=100
 export GPU_USE_SYNC_OBJECTS=1
 export DISPLAY=:0
 
-source ~/.mine-litecoin-gpu
+source ~/.mine-scrypt-gpu
 
 cgminer --api-listen \
 --scrypt -I 19 -g 1 -w 256 ${MINER_FLAGS} \
