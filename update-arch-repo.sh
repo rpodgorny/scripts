@@ -1,6 +1,6 @@
 set -x
 
-mkdir /tmp/arch-repo
+mkdir -p /tmp/arch-repo
 sshfs podgorny.cz:arch-repo /tmp/arch-repo
 cd /tmp/arch-repo
 rm rpodgorny.db.*
