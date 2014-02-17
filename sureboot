@@ -5,8 +5,8 @@ SureBoot.
 
 Usage:
   sureboot [update]
-  sureboot new <device>
-  sureboot delete <device>
+  sureboot add <device>
+  sureboot remove <device>
 
 Arguments:
   <device>  Target device.
@@ -102,7 +102,7 @@ def update():
 #enddef
 
 
-def new(dev):
+def add(dev):
 	if glob.glob('%s?' % dev):
 		raise Exception('%s does not seem to be empty drive' % dev)
 	#endif
@@ -140,11 +140,15 @@ q
 	call('mkfs.vfat -n BOOT %s1' % dev)
 	call('mkswap -L SWAP %s2' % dev)
 	call('btrfs device add %s3 /' % dev)
+	cass('swapon %s2' % dev)
 #enddef
 
 
-def delete(dev):
+def remove(dev):
 	assert set(glob.glob('%s?' % dev)) == set('%s%d' % (dev, i) for i in range(1, 4))
+
+	# /boot can be mounted from the removed drive so unmount it just to be sure
+	call('umount /boot')
 
 	call('btrfs device delete %s3 /' % dev)
 	call('wipefs %s3' % dev)
@@ -152,17 +156,19 @@ def delete(dev):
 	call('wipefs %s1' % dev)
 
 	call('dd if=/dev/zero of=%s bs=512 count=1' % dev)
+
+	call('mount /boot')
 #enddef
 
 
 def main():
 	args = docopt.docopt(__doc__)
 
-	if args['new']:
-		new(args['<device>'])
+	if args['add']:
+		add(args['<device>'])
 		update()
-	elif args['delete']:
-		delete(args['<device>'])
+	elif args['remove']:
+		remove(args['<device>'])
 	elif args['update']:
 		update()
 	else:
