@@ -140,7 +140,7 @@ q
 	call('mkfs.vfat -n BOOT %s1' % dev)
 	call('mkswap -L SWAP %s2' % dev)
 	call('btrfs device add %s3 /' % dev)
-	cass('swapon %s2' % dev)
+	call('swapon %s2' % dev)
 #enddef
 
 
