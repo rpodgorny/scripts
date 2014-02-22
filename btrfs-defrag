@@ -17,15 +17,18 @@ def get_extents(fn):
 		raise Exception('get_extents failed for %s' % fn)
 	#endif
 
-	return r.group(1)
+	return int(r.group(1))
 #enddef
+
 
 def defrag(fn):
 	subprocess.call('btrfs filesystem defrag -clzo "%s"' % fn, shell=True)
 #enddef
 
+
 def main():
 	path = sys.argv[1]
+	thresh = 5  # TODO: hard-coded shit
 
 	fns = set()
 	for root, dirs, files in os.walk(path):
@@ -41,14 +44,17 @@ def main():
 	#endfor
 
 	for fn in fns:
-		#print(fn)
 		extents_before = get_extents(fn)
+
+		if extents_before < thresh: continue
+
+		sys.stdout.write('%s: %d' % (fn, extents_before))
+		sys.stdout.flush()
+
 		defrag(fn)
 		extents_after = get_extents(fn)
 
-		if extents_before != extents_after:
-			print('%s: %s -> %s' % (fn, extents_before, extents_after))
-		#endif
+		sys.stdout.write(' -> %d\n' % (extents_after, ))
 	#endfor
 #enddef
 
