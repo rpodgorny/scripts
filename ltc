@@ -1,0 +1,43 @@
+#!/usr/bin/python
+
+import os
+import subprocess
+import socket
+import tempfile
+
+
+def main():
+	remote_path = 'milhouse.podgorny.cz:litecoin_shared'
+	hostname = socket.gethostname()
+
+	with tempfile.TemporaryDirectory() as local_path:
+		subprocess.call('sshfs %s %s' % (remote_path, local_path), shell=True)
+
+		if not os.listdir(local_path):
+			raise Exception('%s empty after mount' % local_path)
+		#endif
+
+		lock_fn = '%s/_lock' % local_path
+
+		if os.path.isfile(lock_fn):
+			f = open(lock_fn, 'r')
+			line = f.readline().strip()
+			f.close()
+			subprocess.call('fusermount -u %s' % local_path, shell=True)
+			raise Exception('already locked by %s' % line)
+		#endif
+
+		f = open(lock_fn, 'w')
+		f.write(hostname)
+		f.close()
+
+		subprocess.call('litecoin-qt -datadir=%s' % local_path, shell=True)
+
+		os.remove(lock_fn)
+
+		subprocess.call('fusermount -u %s' % local_path, shell=True)
+	#endwith
+#enddef
+
+
+if __name__ == '__main__': main()

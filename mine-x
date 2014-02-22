@@ -1,0 +1,6 @@
+#!/bin/sh
+
+sudo rm /etc/X11/xorg.conf
+sudo aticonfig --adapter=all --initial
+
+X :0 vt9
