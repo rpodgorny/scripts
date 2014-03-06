@@ -1,32 +1,61 @@
-#!/bin/sh
+#!/usr/bin/python3
 
-set -x
+'''
+Run command on multiple hosts.
 
-HOSTS="
-berta.podgorny.cz
-chuck.podgorny.cz
-europa.podgorny.cz
-hubert.asterix.cz
-krabicka.podgorny.cz
-kulicka.podgorny.cz
-milhouse.podgorny.cz
-mrtvola.asterix.cz
-orion.asterix.cz
-pimiento.podgorny.cz
-simir.podgorny.cz
-taurus.asterix.cz
-"
+Usage:
+  run_all [-g <group>] <command>
 
-#CMD="sudo pacman -Syu"
-CMD=$1
+Options:
+  -g <group>  Group of hosts.
 
-if [ -z "${CMD}" ]; then
-	echo 'no command scpecified!'
-	exit
-fi
+Arguments:
+  <command>  Command to run.
+'''
 
-for host in ${HOSTS}; do
-	ssh -o ConnectTimeout=2 -t ${host} ${CMD}
-	#ssh-copy-id -i .ssh/id_ecdsa.pub ${host}
-done
+import subprocess
+import docopt
 
+hosts = {}
+
+hosts['default'] = set([
+	'berta.podgorny.cz',
+	'chuck.podgorny.cz',
+	'europa.podgorny.cz',
+	'hubert.asterix.cz',
+	'krabicka.podgorny.cz',
+	'kulicka.podgorny.cz',
+	'milhouse.podgorny.cz',
+	'mrtvola.asterix.cz',
+	'orion.asterix.cz',
+	'pimiento.podgorny.cz',
+	'simir.podgorny.cz',
+	'taurus.asterix.cz',
+])
+
+hosts['miners'] = set('miner%d.asterix.cz' % i for i in range(1, 13))
+
+def main():
+	args = docopt.docopt(__doc__)
+
+	group = args['-g']
+
+	if not group:
+		selected_hosts = hosts['default']
+	elif group == 'all':
+		selected_hosts = hosts['default'] | hosts['miners']
+	else:
+		selected_hosts = hosts[group]
+	#endif
+
+	for host in selected_hosts:
+		cmd = 'ssh -o ConnectTimeout=2 -t %s %s' % (host, args['<command>'])
+		print('>> %s' % cmd)
+		subprocess.call(cmd, shell=True)
+	#endfor
+#enddef
+
+
+if __name__ == '__main__':
+	main()
+#enddef
