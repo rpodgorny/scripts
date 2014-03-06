@@ -1,0 +1,61 @@
+#!/usr/bin/python3
+
+# the simple and stupid way:
+# find $1 -xdev -type f -exec btrfs filesystem defrag -v -clzo '{}' \;
+
+import sys
+import os
+import subprocess
+import re
+
+
+def get_extents(fn):
+	out = subprocess.getoutput('filefrag -s "%s"' % fn)
+	r = re.search('.* (\d*) extents* found', out)
+
+	if not r:
+		raise Exception('get_extents failed for %s' % fn)
+	#endif
+
+	return int(r.group(1))
+#enddef
+
+
+def defrag(fn):
+	subprocess.call('btrfs filesystem defrag -clzo "%s"' % fn, shell=True)
+#enddef
+
+
+def main():
+	path = sys.argv[1]
+	thresh = 5  # TODO: hard-coded shit
+
+	fns = set()
+	for root, dirs, files in os.walk(path):
+		for d in dirs:
+			if os.path.ismount(os.path.join(root, d)): dirs.remove(d)
+		#endfor
+
+		for fn in files:
+			fn = os.path.join(root, fn)
+			if not os.path.isfile(fn): continue
+			fns.add(fn)
+		#endfor
+	#endfor
+
+	for fn in fns:
+		extents_before = get_extents(fn)
+
+		if extents_before < thresh: continue
+
+		sys.stdout.write('%s: %d' % (fn, extents_before))
+		sys.stdout.flush()
+
+		defrag(fn)
+		extents_after = get_extents(fn)
+
+		sys.stdout.write(' -> %d\n' % (extents_after, ))
+	#endfor
+#enddef
+
+if __name__ == '__main__': main()
