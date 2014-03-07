@@ -1,0 +1,15 @@
+[Unit]
+Description=GPU miner X server
+After=network.target
+Wants=network.target
+
+[Service]
+ExecStart=/home/radek/scripts/mine-x
+#ExecReload=/bin/kill -HUP $MAINPID
+#StandardInput=null
+#StandardOutput=null
+User=radek
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
