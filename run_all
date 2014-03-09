@@ -20,19 +20,30 @@ import docopt
 
 hosts = {}
 
-hosts['default'] = set([
+hosts['arm'] = set([
+	'berta.podgorny.cz',
+	'europa.podgorny.cz',
+	'kulicka.podgorny.cz',
+	'pokuston.podgorny.cz',
+])
+
+hosts['asterix'] = set([
+	'hubert.asterix.cz',
+	'mrtvola.asterix.cz',
+	'orion.asterix.cz',
+	'taurus.asterix.cz',
+])
+
+hosts['podgorny'] = set([
 	'berta.podgorny.cz',
 	'chuck.podgorny.cz',
 	'europa.podgorny.cz',
-	'hubert.asterix.cz',
 	'krabicka.podgorny.cz',
 	'kulicka.podgorny.cz',
 	'milhouse.podgorny.cz',
-	'mrtvola.asterix.cz',
-	'orion.asterix.cz',
 	'pimiento.podgorny.cz',
+	'pokuston.podgorny.cz',
 	'simir.podgorny.cz',
-	'taurus.asterix.cz',
 ])
 
 hosts['miners'] = set('miner%d.asterix.cz' % i for i in range(1, 13))
@@ -57,12 +68,14 @@ def main():
 
 	group = args['-g']
 
-	if not group:
-		selected_hosts = hosts['default']
-	elif group == 'all':
-		selected_hosts = hosts['default'] | hosts['miners']
-	else:
+	if group:
 		selected_hosts = hosts[group]
+	else:
+		# all
+		selected_hosts = set()
+		for k, v in hosts.items():
+			selected_hosts |= v
+		#endfor
 	#endif
 
 	for host in sorted(list(selected_hosts)):
