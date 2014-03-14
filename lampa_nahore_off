@@ -1,3 +1,0 @@
-#!/bin/sh
-
-rcswitch-send 10111 3 0
