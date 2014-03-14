@@ -32,13 +32,14 @@ def main():
 
 	fns = set()
 	for root, dirs, files in os.walk(path):
-		for d in dirs:
+		for d in dirs[:]:
 			if os.path.ismount(os.path.join(root, d)): dirs.remove(d)
 		#endfor
 
 		for fn in files:
 			fn = os.path.join(root, fn)
 			if not os.path.isfile(fn): continue
+			if os.path.islink(fn): continue
 			fns.add(fn)
 		#endfor
 	#endfor
