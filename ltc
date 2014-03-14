@@ -4,6 +4,7 @@ import os
 import subprocess
 import socket
 import tempfile
+import sys
 
 
 def main():
@@ -19,7 +20,7 @@ def main():
 
 		lock_fn = '%s/_lock' % local_path
 
-		if os.path.isfile(lock_fn):
+		if os.path.isfile(lock_fn) and not '--force' in sys.argv:
 			f = open(lock_fn, 'r')
 			line = f.readline().strip()
 			f.close()

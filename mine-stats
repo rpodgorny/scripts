@@ -9,3 +9,5 @@ for i in '0' '1'; do
 	aticonfig --adapter=$i --pplib-cmd "get fanspeed 0"
 	aticonfig --adapter=$i --odgt
 done
+
+sgminer_api.py devs

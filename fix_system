@@ -88,7 +88,7 @@ Server = http://repo.archlinux.fr/$arch
 
 [rpodgorny]
 SigLevel = Never
-Server = http://podgorny.cz/~radek/arch-repo" >> %s''' % fn)
+Server = http://archlinux.podgorny.cz/$repo/os/$arch" >> %s''' % fn)
 #enddef
 
 
