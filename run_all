@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -x
+
+HOSTS="
+berta.podgorny.cz
+chuck.podgorny.cz
+europa.podgorny.cz
+hubert.asterix.cz
+krabicka.podgorny.cz
+kulicka.podgorny.cz
+milhouse.podgorny.cz
+mrtvola.asterix.cz
+orion.asterix.cz
+pimiento.podgorny.cz
+simir.podgorny.cz
+taurus.asterix.cz
+"
+
+#CMD="sudo pacman -Syu"
+CMD=$1
+
+if [ -z "${CMD}" ]; then
+	echo 'no command scpecified!'
+	exit
+fi
+
+for host in ${HOSTS}; do
+	ssh -o ConnectTimeout=2 -t ${host} ${CMD}
+	#ssh-copy-id -i .ssh/id_ecdsa.pub ${host}
+done
+
