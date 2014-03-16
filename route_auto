@@ -1,0 +1,54 @@
+#!/usr/bin/python
+
+import subprocess
+import sys
+import os
+import re
+
+
+def call(cmd):
+	print('>> %s' % cmd)
+	return subprocess.call(cmd, shell=True)
+#enddef
+
+
+def main():
+	ifaces = sys.argv[1:]
+
+	if not os.path.isfile('/usr/bin/fping'):
+		print('/usr/bin/fping not found!')
+		return
+	#endif
+
+	res = {}
+	routes = {}
+	for iface in ifaces:
+		route = subprocess.check_output('ip route | grep default | grep %s' % iface, shell=True).decode().split('\n')[0]
+		route = re.sub('metric [0-9]+', '', route)
+		route = route.strip()
+		routes[iface] = route
+
+		r = route.replace('default', '8.8.8.8')
+		call('ip route add %s metric 0' % r)
+		res[iface] = call('/usr/bin/fping -r 0 8.8.8.8')
+		call('ip route del 8.8.8.8')
+	#endfor
+
+	for i, iface in enumerate(ifaces):
+		route = routes[iface]
+
+		if res[iface] == 0:
+			metric = 10 + i
+		else:
+			metric = 1000 + i
+		#endif
+
+		call('ip route del %s' % route)
+		call('ip route add %s metric %d' % (route, metric))
+	#endfor
+#enddef
+
+
+if __name__ == '__main__':
+	main()
+#endif
