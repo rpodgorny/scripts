@@ -56,7 +56,6 @@ def test_route(route):
 		ret = 0
 	#endif
 
-	#call('ip route del 8.8.8.8')
 	call('ip route del %s' % r)
 
 	return ret
@@ -70,16 +69,18 @@ def main():
 	#endif
 
 	for route in get_default_routes():
-		base_metric = get_metric(route) % 10000
+		metric = get_metric(route)
 
 		if test_route(route):
-			metric = base_metric
+			new_metric = metric % 10000
 		else:
-			metric = base_metric + 10000
+			ner_metric = (metric % 10000) + 10000
 		#endif
 
-		call('ip route del %s' % route)
-		call('ip route add %s' % set_metric(route, metric))
+		if new_metric != metric:
+			call('ip route del %s' % route)
+			call('ip route add %s' % set_metric(route, metric))
+		#endif
 	#endfor
 #enddef
 
