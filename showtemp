@@ -1,0 +1,3 @@
+#!/bin/sh
+
+watch -n5 'sensors; smartctl -a /dev/sda | grep Temp'
