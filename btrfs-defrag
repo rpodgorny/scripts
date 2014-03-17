@@ -30,6 +30,7 @@ def main():
 	path = sys.argv[1]
 	thresh = 5  # TODO: hard-coded shit
 
+	print('gathering list of files')
 	fns = set()
 	for root, dirs, files in os.walk(path):
 		for d in dirs[:]:
@@ -43,6 +44,7 @@ def main():
 			fns.add(fn)
 		#endfor
 	#endfor
+	print('will defrag %d files' % len(fns))
 
 	for fn in fns:
 		extents_before = get_extents(fn)
