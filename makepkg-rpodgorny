@@ -3,7 +3,7 @@
 set -x
 
 rm *.pkg.*
-makepkg || exit
-rsync -avP *.pkg.* milhouse.podgorny.cz:archlinux/rpodgorny/ || exit
+makepkg $@ || exit
+rsync -avP ./*.pkg.* milhouse.podgorny.cz:archlinux/rpodgorny/ || exit
 ssh milhouse.podgorny.cz "cd archlinux/rpodgorny; ./update.py" || exit
 
