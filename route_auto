@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import subprocess
-import sys
 import os
 import re
 
@@ -12,39 +11,75 @@ def call(cmd):
 #enddef
 
 
-def main():
-	ifaces = sys.argv[1:]
+def get_metric(route):
+	try:
+		metric = int(re.search('metric (\w*)', route).groups()[0])
+	except:
+		metric = 0
+	#endtry
 
+	return metric
+#enddef
+
+
+def remove_metric(route):
+	return re.sub('metric \w*', '', route).strip()
+#enddef
+
+
+def set_metric(route, metric):
+	return '%s metric %d' % (remove_metric(route), metric)
+#enddef
+
+
+def get_default_routes():
+	lines = subprocess.check_output('ip route', shell=True).decode().split('\n')
+	for line in lines:
+		line = line.strip()
+
+		if not 'default' in line: continue
+
+		yield line
+	#endfor
+#enddef
+
+
+def test_route(route):
+	r = route.replace('default', '8.8.8.8')
+	r = set_metric(r, 0)
+
+	call('ip route add %s' % r)
+
+	if call('/usr/bin/fping -r 0 8.8.8.8') == 0:
+		ret = 1
+	else:
+		ret = 0
+	#endif
+
+	#call('ip route del 8.8.8.8')
+	call('ip route del %s' % r)
+
+	return ret
+#enddef
+
+
+def main():
 	if not os.path.isfile('/usr/bin/fping'):
 		print('/usr/bin/fping not found!')
 		return
 	#endif
 
-	res = {}
-	routes = {}
-	for iface in ifaces:
-		route = subprocess.check_output('ip route | grep default | grep %s' % iface, shell=True).decode().split('\n')[0]
-		route = re.sub('metric [0-9]+', '', route)
-		route = route.strip()
-		routes[iface] = route
+	for route in get_default_routes():
+		base_metric = get_metric(route) % 10000
 
-		r = route.replace('default', '8.8.8.8')
-		call('ip route add %s metric 0' % r)
-		res[iface] = call('/usr/bin/fping -r 0 8.8.8.8')
-		call('ip route del 8.8.8.8')
-	#endfor
-
-	for i, iface in enumerate(ifaces):
-		route = routes[iface]
-
-		if res[iface] == 0:
-			metric = 10 + i
+		if test_route(route):
+			metric = base_metric
 		else:
-			metric = 1000 + i
+			metric = base_metric + 10000
 		#endif
 
 		call('ip route del %s' % route)
-		call('ip route add %s metric %d' % (route, metric))
+		call('ip route add %s' % set_metric(route, metric))
 	#endfor
 #enddef
 
