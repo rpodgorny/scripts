@@ -79,7 +79,7 @@ def main():
 
 		if new_metric != metric:
 			call('ip route del %s' % route)
-			call('ip route add %s' % set_metric(route, metric))
+			call('ip route add %s' % set_metric(route, new_metric))
 		#endif
 	#endfor
 #enddef
