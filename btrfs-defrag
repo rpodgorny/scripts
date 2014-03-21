@@ -44,7 +44,7 @@ def main():
 			fns.add(fn)
 		#endfor
 	#endfor
-	print('will defrag %d files' % len(fns))
+	print('will consider %d files' % len(fns))
 
 	for fn in fns:
 		extents_before = get_extents(fn)
