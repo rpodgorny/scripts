@@ -7,10 +7,25 @@ import sys
 import os
 import subprocess
 import re
+import shlex
+
+
+class color:
+	PURPLE = '\033[95m'
+	CYAN = '\033[96m'
+	DARKCYAN = '\033[36m'
+	BLUE = '\033[94m'
+	GREEN = '\033[92m'
+	YELLOW = '\033[93m'
+	RED = '\033[91m'
+	BOLD = '\033[1m'
+	UNDERLINE = '\033[4m'
+	END = '\033[0m'
+#endclass
 
 
 def get_extents(fn):
-	out = subprocess.getoutput('filefrag -s "%s"' % fn)
+	out = subprocess.getoutput('filefrag -s %s' % shlex.quote(fn))
 	r = re.search('.* (\d*) extents* found', out)
 
 	if not r:
@@ -22,7 +37,7 @@ def get_extents(fn):
 
 
 def defrag(fn):
-	subprocess.call('btrfs filesystem defrag -clzo "%s"' % fn, shell=True)
+	subprocess.call('btrfs filesystem defrag -clzo %s' % shlex.quote(fn), shell=True)
 #enddef
 
 
@@ -57,7 +72,15 @@ def main():
 		defrag(fn)
 		extents_after = get_extents(fn)
 
-		sys.stdout.write(' -> %d\n' % (extents_after, ))
+		if extents_after < extents_before:
+			clr = color.GREEN
+		elif extents_after > extents_before:
+			clr = color.RED
+		else:
+			clr = color.YELLOW
+		#endif
+
+		sys.stdout.write(' -> %s%d%s\n' % (clr, extents_after, color.END))
 	#endfor
 #enddef
 
