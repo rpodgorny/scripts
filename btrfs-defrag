@@ -37,7 +37,7 @@ def get_extents(fn):
 
 
 def defrag(fn):
-	subprocess.call('btrfs filesystem defrag -clzo %s' % shlex.quote(fn), shell=True)
+	return subprocess.call('btrfs filesystem defrag -clzo %s >/dev/null 2>&1' % shlex.quote(fn), shell=True) == 0
 #enddef
 
 
@@ -59,7 +59,10 @@ def main():
 			fns.add(fn)
 		#endfor
 	#endfor
-	print('will consider %d files' % len(fns))
+	print('will consider %d files (threshold is %d extents)' % (len(fns), thresh))
+
+	extents_before_total = 0
+	extents_after_total = 0
 
 	for fn in fns:
 		extents_before = get_extents(fn)
@@ -69,7 +72,10 @@ def main():
 		sys.stdout.write('%s: %d' % (fn, extents_before))
 		sys.stdout.flush()
 
-		defrag(fn)
+		if not defrag(fn):
+			sys.stdout.write(' %serror%s' % (color.RED, color.END))
+		#endif
+
 		extents_after = get_extents(fn)
 
 		if extents_after < extents_before:
@@ -81,7 +87,20 @@ def main():
 		#endif
 
 		sys.stdout.write(' -> %s%d%s\n' % (clr, extents_after, color.END))
+
+		extents_before_total += extents_before
+		extents_after_total	+= extents_after
 	#endfor
+
+	if extents_after_total < extents_before_total:
+		clr = color.GREEN
+	elif extents_after_total > extents_before_total:
+		clr = color.RED
+	else:
+		clr = color.YELLOW
+	#endif
+
+	print('total: %s -> %s%d%s' % (extents_before_total, clr, extents_after_total, color.END))
 #enddef
 
 if __name__ == '__main__': main()
