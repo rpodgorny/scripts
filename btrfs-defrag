@@ -43,7 +43,7 @@ def defrag(fn):
 
 def main():
 	path = sys.argv[1]
-	thresh = 5  # TODO: hard-coded shit
+	thresh = 50  # TODO: hard-coded shit
 
 	print('gathering list of files')
 	fns = set()
