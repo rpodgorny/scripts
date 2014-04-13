@@ -1,0 +1,50 @@
+#!/usr/bin/python3
+
+import subprocess
+import glob
+import os
+
+
+def get_serial_number(dev):
+	cmd = 'smartctl -i %s' % dev
+	o = subprocess.check_output(cmd, shell=True).decode()
+	for line in o.split('\n'):
+		if not 'Serial Number:' in line: continue
+		return line.split(':', 1)[1].strip()
+	#endfor
+	raise Exception('serial number not found!')
+#enddef
+
+
+# this returns sectors, not bytes :-(
+def get_size(dev):
+	d = os.path.basename(dev)
+	f = open('/sys/block/%s/size' % d, 'r')
+	size = int(f.read().strip())
+	f.close()
+	return size
+#enddef
+
+
+def get_devices():
+	ret = glob.glob('/dev/sd?')
+	return ret
+#enddef
+
+
+def main():
+	subprocess.call('lsblk -o NAME,SIZE,LABEL', shell=True)
+
+	subprocess.call('btrfs fi show', shell=True)
+
+	devs = sorted(get_devices())
+
+	for dev in devs:
+		sn = get_serial_number(dev)
+
+		print('%s: %s' % (dev, sn))
+	#endfor
+#enddef
+
+
+if __name__ == '__main__': main()

@@ -1,0 +1,3 @@
+#!/bin/sh
+
+/usr/bin/redshift -l 50:14 -t 6000:5000 "$@"
