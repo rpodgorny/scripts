@@ -25,6 +25,7 @@ hosts['arm'] = set([
 	'europa.podgorny.cz',
 	'kulicka.podgorny.cz',
 	'pokuston.podgorny.cz',
+	'ucho.podgorny.cz',
 ])
 
 hosts['asterix'] = set([
@@ -44,6 +45,7 @@ hosts['podgorny'] = set([
 	'pimiento.podgorny.cz',
 	'pokuston.podgorny.cz',
 	'simir.podgorny.cz',
+	'ucho.podgorny.cz',
 ])
 
 hosts['miners'] = set('miner%d.asterix.cz' % i for i in range(1, 13))
