@@ -21,24 +21,25 @@ import subprocess
 import docopt
 
 hosts = [
-	'berta.podgorny.cz arm podgorny',
-	'chuck.podgorny.cz podgorny',
-	'europa.podgorny.cz arm podgorny router',
-	'hubert.asterix.cz asterix',
-	'krabicka.podgorny.cz podgorny',
-	'kulicka.podgorny.cz arm podgorny',
-	'milhouse.podgorny.cz podgorny sureboot',
-	'mrtvola.asterix.cz asterix',
-	'orion.asterix.cz asterix sureboot',
-	'pimiento.podgorny.cz podgorny',
-	'pokuston.podgorny.cz arm podgorny',
-	'simir.podgorny.cz podgorny',
-	'taurus.asterix.cz asterix router',
-	'ucho.podgorny.cz arm podgorny',
+	'berta.podgorny.cz arch arm podgorny',
+	'chuck.podgorny.cz arch podgorny',
+	'europa.podgorny.cz arch arm podgorny router',
+	'hubert.asterix.cz arch asterix',
+	'krabicka.podgorny.cz arch podgorny',
+	'kulicka.podgorny.cz arch arm podgorny',
+	'milhouse.podgorny.cz arch podgorny sureboot',
+	'mrtvola.asterix.cz arch asterix',
+	'orion.asterix.cz arch asterix sureboot',
+	'pimiento.podgorny.cz arch podgorny',
+	'podgorny.cz gentoo podgorny',
+	'pokuston.podgorny.cz arch arm podgorny',
+	'simir.podgorny.cz arch podgorny',
+	'taurus.asterix.cz arch asterix router',
+	'ucho.podgorny.cz arch arm podgorny',
 ]
 
 for i in range(1, 13):
-	hosts.append('miner%d.asterix.cz asterix miner' % i)
+	hosts.append('miner%d.asterix.cz arch asterix miner' % i)
 #endfor
 
 
