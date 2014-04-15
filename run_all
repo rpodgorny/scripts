@@ -4,51 +4,42 @@
 Run command on multiple hosts.
 
 Usage:
-  run_all [-g <group>] <command>
-  run_all [-g <group>] --copy-keys
+  run_all [-t <tag>] <command>
+  run_all [-t <tag>] --copy-keys
 
 Options:
-  -g <group>   Group of hosts.
+  -t <tag>     Only consider hosts with <tag>.
   --copy-keys  Copy local ssh keys to remote servers.
 
 Arguments:
   <command>  Command to run.
 '''
 
+__version__ = '0.1'
+
 import subprocess
 import docopt
 
-hosts = {}
+hosts = [
+	'berta.podgorny.cz arm podgorny',
+	'chuck.podgorny.cz podgorny',
+	'europa.podgorny.cz arm podgorny router',
+	'hubert.asterix.cz asterix',
+	'krabicka.podgorny.cz podgorny',
+	'kulicka.podgorny.cz arm podgorny',
+	'milhouse.podgorny.cz podgorny sureboot',
+	'mrtvola.asterix.cz asterix',
+	'orion.asterix.cz asterix sureboot',
+	'pimiento.podgorny.cz podgorny',
+	'pokuston.podgorny.cz arm podgorny',
+	'simir.podgorny.cz podgorny',
+	'taurus.asterix.cz asterix router',
+	'ucho.podgorny.cz arm podgorny',
+]
 
-hosts['arm'] = set([
-	'berta.podgorny.cz',
-	'europa.podgorny.cz',
-	'kulicka.podgorny.cz',
-	'pokuston.podgorny.cz',
-	'ucho.podgorny.cz',
-])
-
-hosts['asterix'] = set([
-	'hubert.asterix.cz',
-	'mrtvola.asterix.cz',
-	'orion.asterix.cz',
-	'taurus.asterix.cz',
-])
-
-hosts['podgorny'] = set([
-	'berta.podgorny.cz',
-	'chuck.podgorny.cz',
-	'europa.podgorny.cz',
-	'krabicka.podgorny.cz',
-	'kulicka.podgorny.cz',
-	'milhouse.podgorny.cz',
-	'pimiento.podgorny.cz',
-	'pokuston.podgorny.cz',
-	'simir.podgorny.cz',
-	'ucho.podgorny.cz',
-])
-
-hosts['miners'] = set('miner%d.asterix.cz' % i for i in range(1, 13))
+for i in range(1, 13):
+	hosts.append('miner%d.asterix.cz asterix miner' % i)
+#endfor
 
 
 class color:
@@ -66,25 +57,23 @@ class color:
 
 
 def main():
-	args = docopt.docopt(__doc__)
+	args = docopt.docopt(__doc__, version=__version__)
 
-	group = args['-g']
+	tag = args['-t']
 
-	if group:
-		selected_hosts = hosts[group]
-	else:
-		# all
-		selected_hosts = set()
-		for k, v in hosts.items():
-			selected_hosts |= v
-		#endfor
-	#endif
+	selected_hosts = set()
+	for i in hosts:
+		host, *tags = i.split()
+		if not tag or tag in tags:
+			selected_hosts.add(host)
+		#endif
+	#endfor
 
 	for host in sorted(list(selected_hosts)):
 		if args['--copy-keys']:
 			cmd = 'ssh-copy-id -i ~/.ssh/id_ecdsa.pub %s' % host
 		else:
-			cmd = 'ssh -o ConnectTimeout=2 -t %s %s' % (host, args['<command>'])
+			cmd = 'ssh -o ConnectTimeout=2 -t %s "%s"' % (host, args['<command>'])
 		#endif
 
 		print('%s%s%s%s' % (color.BOLD, color.YELLOW, cmd, color.END))
