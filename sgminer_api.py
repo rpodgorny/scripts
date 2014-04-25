@@ -57,6 +57,6 @@ except socket.error as e:
 
 if data:
 	data = json.loads(data.decode().replace('\x00', ''))
-	#pp = pprint.PrettyPrinter()
-	#pp.pprint(data)
-	print(data)
+	pp = pprint.PrettyPrinter()
+	pp.pprint(data)
+	#print(data)
