@@ -1,0 +1,23 @@
+#!/bin/sh
+
+REPO=backup@milhouse.podgorny.cz:attic
+PREFIX=`hostname`-
+ARCHIVE=$PREFIX`date +%Y%m%dT%H%M%S` 
+
+attic create \
+--do-not-cross-mountpoints --stats \
+$REPO::$ARCHIVE \
+/ /boot \
+--exclude /home/backup \
+--exclude /home/*/.cache \
+--exclude /home/*/.thumbnails
+
+attic prune \
+--stats \
+--keep-within 7d \
+--keep-daily 30 \
+--keep-monthly 12 \
+--keep-yearly 10 \
+--prefix $PREFIX \
+$REPO
+
