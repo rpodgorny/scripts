@@ -9,6 +9,7 @@ attic create \
 $REPO::$ARCHIVE \
 / /boot \
 --exclude /home/backup \
+--exclude /home/*/tmp \
 --exclude /home/*/.cache \
 --exclude /home/*/.thumbnails
 
