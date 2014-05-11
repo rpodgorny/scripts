@@ -2,7 +2,7 @@
 
 FONT_SIZE=14
 
-if [ `hostname` = 'krabicka' ]; then
+if [ `hostname` = 'kulicka' ]; then
 	FONT_SIZE=19
 fi
 
