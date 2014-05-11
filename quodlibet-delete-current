@@ -1,0 +1,9 @@
+#!/bin/sh
+
+FN=`cat ~/.quodlibet/current|grep filename|cut -f 2 -d=`
+
+echo $FN
+
+quodlibet --next
+
+rm "$FN"

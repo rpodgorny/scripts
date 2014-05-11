@@ -1,0 +1,6 @@
+#!/bin/sh
+set -x
+
+for i in *.pnm; do
+	convert ${i} ${i:0: -4}.jpg && rm ${i}
+done
