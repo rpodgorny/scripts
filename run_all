@@ -33,6 +33,7 @@ hosts = [
 	'pimiento.podgorny.cz arch podgorny',
 	'podgorny.cz gentoo podgorny',
 	'pokuston.podgorny.cz arch arm podgorny',
+	'rpodgorny.podgorny.cz arch podgorny',
 	'simir.podgorny.cz arch podgorny',
 	'taurus.asterix.cz arch asterix router',
 	'ucho.podgorny.cz arch arm podgorny',
