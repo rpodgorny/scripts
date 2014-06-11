@@ -32,19 +32,21 @@ def update():
 	with open('/etc/fstab', 'r') as f:
 		for line in f:
 			if '/boot' in line and not line.startswith('#'):
-				raise Exception('/boot partition is in fstab')
+				break
 			#endif
+		else:
+			raise Exception('/boot partition not in fstab')
 		#endfor
 	#endwith
 
-	if not os.path.isfile('/etc/systemd/system/boot.mount'):
-		print('/etc/systemd/system/boot.mount does not exist')
-		return
+	#if not os.path.isfile('/etc/systemd/system/boot.mount'):
+	#	print('/etc/systemd/system/boot.mount does not exist')
+	#	return
 	#endif
 
 	# TODO: actually verify where does the link point to
-	if not os.path.islink('/etc/systemd/system/local-fs.target.wants/boot.mount'):
-		raise Exception('/etc/systemd/system/local-fs.target.wants/boot.mount link does not exist')
+	#if not os.path.islink('/etc/systemd/system/local-fs.target.wants/boot.mount'):
+	#	raise Exception('/etc/systemd/system/local-fs.target.wants/boot.mount link does not exist')
 	#endif
 
 	# TODO: this may be simpler but does not check the fs type
