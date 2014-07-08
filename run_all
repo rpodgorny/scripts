@@ -39,8 +39,8 @@ hosts = [
 	'ucho.podgorny.cz arch arm podgorny',
 ]
 
-for i in range(1, 13):
-	hosts.append('miner%d.asterix.cz arch asterix miner' % i)
+#for i in range(1, 13):
+#	hosts.append('miner%d.asterix.cz arch asterix miner' % i)
 #endfor
 
 
