@@ -1,0 +1,18 @@
+#!/usr/bin/python3
+
+import os
+import subprocess
+
+
+def main():
+	for fn in sorted(os.listdir('.')):
+		cmd = 'omxplayer -b -o hdmi "./%s"' % fn
+		print('>>> %s' % cmd)
+		subprocess.call(cmd, shell=True)
+	#endfor
+#enddef
+
+
+if __name__ == '__main__':
+	main()
+#endif
