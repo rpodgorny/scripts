@@ -2,14 +2,19 @@
 
 import os
 import subprocess
+import time
 
 
 def main():
-	for fn in sorted(os.listdir('.')):
-		cmd = 'omxplayer -b -o hdmi "./%s"' % fn
-		print('>>> %s' % cmd)
-		subprocess.call(cmd, shell=True)
-	#endfor
+	while 1:
+		for fn in sorted(os.listdir('.')):
+			cmd = 'omxplayer -b -o hdmi "./%s"' % fn
+			print('>>> %s' % cmd)
+			subprocess.call(cmd, shell=True)
+		#endfor
+
+		time.sleep(1)
+	#endwhile
 #enddef
 
 
