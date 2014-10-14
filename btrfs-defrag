@@ -1,0 +1,106 @@
+#!/usr/bin/python3
+
+# the simple and stupid way:
+# find $1 -xdev -type f -exec btrfs filesystem defrag -v -clzo '{}' \;
+
+import sys
+import os
+import subprocess
+import re
+import shlex
+
+
+class color:
+	PURPLE = '\033[95m'
+	CYAN = '\033[96m'
+	DARKCYAN = '\033[36m'
+	BLUE = '\033[94m'
+	GREEN = '\033[92m'
+	YELLOW = '\033[93m'
+	RED = '\033[91m'
+	BOLD = '\033[1m'
+	UNDERLINE = '\033[4m'
+	END = '\033[0m'
+#endclass
+
+
+def get_extents(fn):
+	out = subprocess.getoutput('filefrag -s %s' % shlex.quote(fn))
+	r = re.search('.* (\d*) extents* found', out)
+
+	if not r:
+		raise Exception('get_extents failed for %s' % fn)
+	#endif
+
+	return int(r.group(1))
+#enddef
+
+
+def defrag(fn):
+	return subprocess.call('btrfs filesystem defrag -clzo %s >/dev/null 2>&1' % shlex.quote(fn), shell=True) == 0
+#enddef
+
+
+def main():
+	path = sys.argv[1]
+	thresh = 50  # TODO: hard-coded shit
+
+	print('gathering list of files')
+	fns = set()
+	for root, dirs, files in os.walk(path):
+		for d in dirs[:]:
+			if os.path.ismount(os.path.join(root, d)): dirs.remove(d)
+		#endfor
+
+		for fn in files:
+			fn = os.path.join(root, fn)
+			if not os.path.isfile(fn): continue
+			if os.path.islink(fn): continue
+			fns.add(fn)
+		#endfor
+	#endfor
+	print('will consider %d files (threshold is %d extents)' % (len(fns), thresh))
+
+	extents_before_total = 0
+	extents_after_total = 0
+
+	for fn in fns:
+		extents_before = get_extents(fn)
+
+		if extents_before < thresh: continue
+
+		sys.stdout.write('%s: %d' % (fn, extents_before))
+		sys.stdout.flush()
+
+		if not defrag(fn):
+			sys.stdout.write(' %serror%s' % (color.RED, color.END))
+		#endif
+
+		extents_after = get_extents(fn)
+
+		if extents_after < extents_before:
+			clr = color.GREEN
+		elif extents_after > extents_before:
+			clr = color.RED
+		else:
+			clr = color.YELLOW
+		#endif
+
+		sys.stdout.write(' -> %s%d%s\n' % (clr, extents_after, color.END))
+
+		extents_before_total += extents_before
+		extents_after_total	+= extents_after
+	#endfor
+
+	if extents_after_total < extents_before_total:
+		clr = color.GREEN
+	elif extents_after_total > extents_before_total:
+		clr = color.RED
+	else:
+		clr = color.YELLOW
+	#endif
+
+	print('total: %s -> %s%d%s' % (extents_before_total, clr, extents_after_total, color.END))
+#enddef
+
+if __name__ == '__main__': main()
