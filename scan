@@ -1,15 +1,16 @@
 #!/bin/sh
 set -x
 
+RES=600
 fn=scan_$(date +"%Y%m%d_%H%M%S")
 
-#scanimage -d epson2 --mode Color --resolution 300 --progress >/tmp/${fn}.pnm \
-#scanimage --mode Color --resolution 300 --progress \
+#scanimage -d epson2 --mode Color --resolution $RES --progress >/tmp/${fn}.pnm \
+#scanimage --mode Color --resolution $RES --progress \
 #| grep -v 'Failed cupsGetDevices' >/tmp/${fn}.pnm \
 #&& convert /tmp/${fn}.pnm ${fn}.jpg \
 #&& rm /tmp/${fn}.pnm
 
-scanimage --mode Color --resolution 300 --progress >${fn}.pnm_
+scanimage --mode Color --resolution $RES --progress >${fn}.pnm_
 mv ${fn}.pnm_ ${fn}.pnm
 
 identify ${fn}.pnm
