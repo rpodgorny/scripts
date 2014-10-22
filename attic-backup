@@ -15,6 +15,7 @@ $REPO::$ARCHIVE \
 / /boot \
 --exclude-caches \
 --exclude /tmp \
+--exclude /var/log/journal \
 --exclude /var/cache/pacman/pkg \
 --exclude /home/backup \
 --exclude /home/*/tmp \
@@ -27,6 +28,5 @@ attic prune \
 --keep-daily 30 \
 --keep-monthly 12 \
 --keep-yearly 10 \
---prefix $PREFIX \
 $REPO
 
