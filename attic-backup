@@ -1,13 +1,21 @@
 #!/bin/sh
 
-REPO=backup@milhouse.podgorny.cz:attic
-PREFIX=`hostname`-
-ARCHIVE=$PREFIX`date +%Y%m%dT%H%M%S` 
+set -x
+
+HOSTNAME=`hostname`
+REPO=backup@milhouse.podgorny.cz:attic/$HOSTNAME
+ARCHIVE=`date +%Y%m%dT%H%M%S` 
+
+attic init $REPO
 
 attic create \
+--verbose \
 --do-not-cross-mountpoints --stats \
 $REPO::$ARCHIVE \
 / /boot \
+--exclude-caches \
+--exclude /tmp \
+--exclude /var/cache/pacman/pkg \
 --exclude /home/backup \
 --exclude /home/*/tmp \
 --exclude /home/*/.cache \
