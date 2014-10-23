@@ -3,13 +3,15 @@
 set -x
 
 HOSTNAME=`hostname`
-REPO=backup@milhouse.podgorny.cz:attic/$HOSTNAME
+REMOTE=backup@milhouse.podgorny.cz
+REPO=$REMOTE:attic/$HOSTNAME
 ARCHIVE=`date +%Y%m%dT%H%M%S` 
+
+ssh-copy-id -i $HOME/.ssh/id_ecdsa.pub $REMOTE
 
 attic init $REPO
 
 attic create \
---verbose \
 --do-not-cross-mountpoints --stats \
 $REPO::$ARCHIVE \
 / /boot \
