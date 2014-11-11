@@ -82,10 +82,6 @@ def fix_pacman_sources():
 
 	call('''echo "
 
-[archlinuxfr]
-SigLevel = Never
-Server = http://repo.archlinux.fr/$arch
-
 [rpodgorny]
 SigLevel = Never
 Server = http://archlinux.podgorny.cz/$repo/os/$arch" >> %s''' % fn)
@@ -137,4 +133,7 @@ def main():
 #enddef
 
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+	main()
+#endif
+
