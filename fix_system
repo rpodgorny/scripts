@@ -91,14 +91,14 @@ def fix_root():
 
 
 def fix_packages():
-	for p in ['ntp', 'openssh', 'postfix', 'uptimed']:
+	for p, srv in [('ntp', 'ntpd'), ('openssh', 'sshd'), ('postfix', 'postfix'), ('uptimed', 'uptimed'), ]:
 		if is_package_installed(p): continue
 
 		if not ask('install and enable and start %s?' % p): continue
 
 		call('pacman -Sy --noconfirm %s' % p)
-		call('systemctl enable %s' % p)
-		call('systemctl start %s' % p)
+		call('systemctl enable %s' % srv)
+		call('systemctl start %s' % srv)
 	#endfor
 #enddef
 
