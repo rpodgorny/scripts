@@ -21,6 +21,7 @@ import subprocess
 import docopt
 
 hosts = [
+	'admiral.podgorny.cz arch podgorny',
 	'berta.podgorny.cz arch arm podgorny',
 	'chuck.podgorny.cz arch podgorny',
 	'europa.podgorny.cz arch arm podgorny router',
