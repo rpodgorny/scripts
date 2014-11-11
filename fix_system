@@ -1,0 +1,139 @@
+#!/usr/bin/python3
+
+import os
+import subprocess
+
+
+def call(cmd):
+	print('>>> %s' % cmd)
+	return subprocess.call(cmd, shell=True)
+#enddef
+
+
+def fix_mkinitcpio():
+	fn = '/etc/mkinitcpio.conf'
+
+	if not os.path.isfile(fn): return
+	if call('grep "^HOOKS=.*autodetect.*" %s' % fn) != 0: return
+
+	call('sed -e "/^HOOKS=/s/autodetect //g" -i %s' % fn)
+	call('mkinitcpio -p linux')
+	call('pacman -Sy --noconfirm --needed syslinux')
+	call('sureboot')
+#enddef
+
+
+def fix_locale_gen():
+	fn = '/etc/locale.gen'
+
+	if call('grep "^#en_US.UTF-8" %s' % fn) != 0: return
+
+	call('sed -e "s/^#en_US.UTF-8/en_US.UTF-8/g" -i %s' % fn)
+	call('locale-gen')
+#enddef
+
+
+def fix_locale():
+	fn = '/etc/locale.conf'
+
+	if os.path.isfile(fn): return
+
+	call('echo "LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8\n" > %s' % fn)
+#enddef
+
+
+def fix_radek():
+	if call('grep "^radek:" /etc/passwd') == 0: return
+
+	call('useradd -m radek')
+	call('passwd radek')
+
+	call('pacman -Sy --noconfirm --needed sudo zsh')
+	call('usermod -aG wheel radek')
+	call('usermod -s /usr/bin/zsh radek')
+#enddef
+
+
+def fix_root():
+	fn = '/root/.forward'
+
+	if os.path.exists(fn): return
+
+	call('echo "radek@podgorny.cz" > %s' % fn)
+#enddef
+
+
+def fix_packages():
+	call('pacman -Sy --noconfirm --needed ntp openssh postfix uptimed')
+
+	for action in ['enable', 'start']:
+		call('systemctl %s ntpd' % action)
+		call('systemctl %s postfix' % action)
+		call('systemctl %s sshd' % action)
+		call('systemctl %s uptimed' % action)
+	#endfor
+#enddef
+
+
+def fix_pacman_sources():
+	fn = '/etc/pacman.conf'
+
+	if call('grep "^\[rpodgorny\]$" %s' % fn) == 0: return
+
+	call('''echo "
+
+[rpodgorny]
+SigLevel = Never
+Server = http://archlinux.podgorny.cz/$repo/os/$arch" >> %s''' % fn)
+#enddef
+
+
+def fix_timezone():
+	fn = '/etc/localtime'
+
+	if os.path.islink(fn): return
+
+	call('ln -s /usr/share/zoneinfo/Europe/Prague %s' % fn)
+#enddef
+
+
+def fix_hostname():
+	fn = '/etc/hostname'
+
+	if os.path.isfile(fn): return
+
+	hostname = None
+	while not hostname:
+		hostname = input('enter hostname: ').strip()
+	#endwhile
+
+	call('echo "%s" > %s' % (hostname, fn))
+#enddef
+
+
+def fix_x():
+	# TODO: find a better way to test for X
+	if not os.path.isfile('/usr/bin/X'): return
+
+	call('pacman -S --needed terminus-font')
+#enddef
+
+
+def main():
+	fix_pacman_sources()
+	fix_packages()
+	fix_hostname()
+	fix_mkinitcpio()
+	fix_locale_gen()
+	fix_locale()
+	fix_timezone()
+	fix_radek()
+	fix_root()
+	fix_x()
+#enddef
+
+
+if __name__ == '__main__':
+	main()
+#endif
+
