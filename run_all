@@ -27,6 +27,7 @@ hosts = [
 	'europa.podgorny.cz arch arm podgorny router',
 	'hubert.asterix.cz arch asterix',
 	'kulicka.podgorny.cz arch arm podgorny',
+	'milan.podgorny.cz arch arm podgorny'
 	'milhouse.podgorny.cz arch podgorny sureboot',
 	'mrtvola.asterix.cz arch asterix',
 	'orion.asterix.cz arch asterix sureboot',
