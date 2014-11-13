@@ -8,7 +8,12 @@ import time
 def main():
 	while 1:
 		for fn in sorted(os.listdir('.')):
-			cmd = 'omxplayer -b -o hdmi "./%s"' % fn
+			if fn.lower().endswith('.mp3'):
+				cmd = 'mplayer "./%s"' % fn
+			else:
+				cmd = 'omxplayer -b -o hdmi "./%s"' % fn
+			#endif
+
 			print('>>> %s' % cmd)
 			subprocess.call(cmd, shell=True)
 		#endfor
