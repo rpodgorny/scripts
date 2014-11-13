@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -x
+
+HOSTNAME=`hostname`
+REMOTE=backup@milhouse.podgorny.cz
+REPO=$REMOTE:attic/$HOSTNAME
+ARCHIVE=`date +%Y%m%dT%H%M%S` 
+
+ssh-copy-id -i $HOME/.ssh/id_ecdsa.pub $REMOTE
+
+attic init $REPO
+
+attic create \
+--do-not-cross-mountpoints --stats \
+$REPO::$ARCHIVE \
+/ /boot \
+--exclude-caches \
+--exclude /tmp \
+--exclude /var/log/journal \
+--exclude /var/cache/pacman/pkg \
+--exclude /home/backup \
+--exclude /home/*/tmp \
+--exclude /home/*/.cache \
+--exclude /home/*/.thumbnails
+
+attic prune \
+--stats \
+--keep-within 7d \
+--keep-daily 30 \
+--keep-monthly 12 \
+--keep-yearly 10 \
+$REPO
+

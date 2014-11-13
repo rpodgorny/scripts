@@ -1,0 +1,187 @@
+#!/usr/bin/python3
+
+import os
+import subprocess
+
+
+def call(cmd):
+	print('>>> %s' % cmd)
+	return subprocess.call(cmd, shell=True)
+#enddef
+
+
+def ask(question):
+	res = input(question)
+	if res == 'y': return True
+	return False
+#enddef
+
+
+def is_package_installed(package):
+	try:
+		subprocess.check_output('pacman -Qi %s' % package, shell=True, stderr=subprocess.PIPE)
+		return True
+	except:
+		return False
+	#endtry
+#enddef
+
+
+def fix_mkinitcpio():
+	fn = '/etc/mkinitcpio.conf'
+
+	if not os.path.isfile(fn): return
+	if call('grep "^HOOKS=.*autodetect.*" %s' % fn) != 0: return
+
+	if not ask('fix mkinitcpio?'): return
+
+	call('sed -e "/^HOOKS=/s/autodetect //g" -i %s' % fn)
+	call('mkinitcpio -p linux')
+	call('pacman -Sy --noconfirm --needed syslinux')
+	call('sureboot')
+#enddef
+
+
+def fix_locale_gen():
+	fn = '/etc/locale.gen'
+
+	if call('grep "^#en_US.UTF-8" %s' % fn) != 0: return
+
+	if not ask('fix locale.gen? (en_US.UTF-8)'): return
+
+	call('sed -e "s/^#en_US.UTF-8/en_US.UTF-8/g" -i %s' % fn)
+	call('locale-gen')
+#enddef
+
+
+def fix_locale():
+	fn = '/etc/locale.conf'
+
+	if os.path.isfile(fn): return
+
+	if not ask('fix locale.conf? (en_US.UTF-8)'): return
+
+	call('echo "LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8\n" > %s' % fn)
+#enddef
+
+
+def fix_radek():
+	if call('grep "^radek:" /etc/passwd') == 0: return
+
+	if not ask('add user radek?'): return
+
+	call('useradd -m radek')
+	call('passwd radek')
+
+	call('pacman -Sy --noconfirm --needed sudo zsh')
+	call('usermod -aG wheel radek')
+	call('usermod -s /usr/bin/zsh radek')
+#enddef
+
+
+def fix_root():
+	fn = '/root/.forward'
+
+	if os.path.exists(fn): return
+
+	if not ask('add .forward to radek@podgorny.cz for root?'): return
+
+	call('echo "radek@podgorny.cz" > %s' % fn)
+#enddef
+
+
+def fix_packages():
+	for p, srv in [('ntp', 'ntpd'), ('openssh', 'sshd'), ('postfix', 'postfix'), ('uptimed', 'uptimed'), ]:
+		if is_package_installed(p): continue
+
+		if not ask('install and enable and start %s?' % p): continue
+
+		call('pacman -Sy --noconfirm %s' % p)
+		call('systemctl enable %s' % srv)
+		call('systemctl start %s' % srv)
+	#endfor
+#enddef
+
+
+def fix_pacman_sources():
+	fn = '/etc/pacman.conf'
+
+	if call('grep "^\[rpodgorny\]$" %s' % fn) == 0: return
+
+	if not ask('add rpodgorny repo to pacman.conf?'): return
+
+	call('''echo "
+
+[rpodgorny]
+SigLevel = Never
+Server = http://archlinux.podgorny.cz/$repo/os/$arch" >> %s''' % fn)
+#enddef
+
+
+def fix_timezone():
+	fn = '/etc/localtime'
+
+	if os.path.islink(fn): return
+
+	if not ask('set timezone to Europe/Prague?'): return
+
+	call('ln -s /usr/share/zoneinfo/Europe/Prague %s' % fn)
+#enddef
+
+
+def fix_hostname():
+	fn = '/etc/hostname'
+
+	if os.path.isfile(fn): return
+
+	if not ask('set hostname?'): return
+
+	hostname = None
+	while not hostname:
+		hostname = input('enter hostname: ').strip()
+	#endwhile
+
+	call('echo "%s" > %s' % (hostname, fn))
+#enddef
+
+
+def fix_x():
+	# TODO: find a better way to test for X
+	if not os.path.isfile('/usr/bin/X'): return
+
+	if is_package_installed('terminus-font'): return
+
+	if not ask('install terminus font?'): return
+
+	call('pacman -Sy terminus-font')
+#enddef
+
+
+def fix_fstrim():
+	if os.path.islink('/etc/systemd/system/multi-user.target.wants/fstrim.timer'): return
+
+	if not ask('enable fstrim timer?'): return
+
+	call('systemctl enable fstrim.timer')
+#enddef
+
+
+def main():
+	fix_pacman_sources()
+	fix_packages()
+	fix_hostname()
+	fix_mkinitcpio()
+	fix_locale_gen()
+	fix_locale()
+	fix_timezone()
+	fix_radek()
+	fix_root()
+	fix_x()
+	fix_fstrim()
+#enddef
+
+
+if __name__ == '__main__':
+	main()
+#endif
+

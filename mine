@@ -1,0 +1,7 @@
+#!/bin/sh
+
+tmux new -d
+tmux new-window \; send-keys mine-x \; send-keys Enter
+sleep 5
+tmux new-window \; send-keys mine-litecoin-gpu \; send-keys Enter
+tmux attach

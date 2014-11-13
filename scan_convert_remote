@@ -1,0 +1,18 @@
+#!/bin/sh
+set -x
+
+mkdir /tmp/scan_convert
+
+sshfs kulicka.podgorny.cz:scan /tmp/scan_convert || exit
+
+cd /tmp/scan_convert
+
+for i in *.pnm; do
+	convert ${i} ${i:0: -4}.jpg && rm ${i}
+done
+
+cd -
+
+fusermount -u /tmp/scan_convert
+
+rmdir /tmp/scan_convert

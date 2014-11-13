@@ -1,0 +1,89 @@
+#!/usr/bin/python3
+
+'''
+Run command on multiple hosts.
+
+Usage:
+  run_all [-t <tag>] <command>
+  run_all [-t <tag>] --copy-keys
+
+Options:
+  -t <tag>     Only consider hosts with <tag>.
+  --copy-keys  Copy local ssh keys to remote servers.
+
+Arguments:
+  <command>  Command to run.
+'''
+
+__version__ = '0.1'
+
+import subprocess
+import docopt
+
+hosts = [
+	'admiral.podgorny.cz arch podgorny',
+	'berta.podgorny.cz arch arm podgorny',
+	'chuck.podgorny.cz arch podgorny',
+	'europa.podgorny.cz arch arm podgorny router',
+	'hubert.asterix.cz arch asterix',
+	'kulicka.podgorny.cz arch arm podgorny',
+	'milhouse.podgorny.cz arch podgorny sureboot',
+	'mrtvola.asterix.cz arch asterix',
+	'orion.asterix.cz arch asterix sureboot',
+	'pimiento.podgorny.cz arch podgorny',
+	'kapitan.podgorny.cz gentoo podgorny',
+	'pokuston.podgorny.cz arch arm podgorny',
+	'rpodgorny.podgorny.cz arch podgorny',
+	'simir.podgorny.cz arch podgorny',
+	'taurus.asterix.cz arch asterix router',
+	'ucho.podgorny.cz arch arm podgorny',
+]
+
+#for i in range(1, 13):
+#	hosts.append('miner%d.asterix.cz arch asterix miner' % i)
+#endfor
+
+
+class color:
+	PURPLE = '\033[95m'
+	CYAN = '\033[96m'
+	DARKCYAN = '\033[36m'
+	BLUE = '\033[94m'
+	GREEN = '\033[92m'
+	YELLOW = '\033[93m'
+	RED = '\033[91m'
+	BOLD = '\033[1m'
+	UNDERLINE = '\033[4m'
+	END = '\033[0m'
+#endclass
+
+
+def main():
+	args = docopt.docopt(__doc__, version=__version__)
+
+	tag = args['-t']
+
+	selected_hosts = set()
+	for i in hosts:
+		host, *tags = i.split()
+		if not tag or tag in tags:
+			selected_hosts.add(host)
+		#endif
+	#endfor
+
+	for host in sorted(list(selected_hosts)):
+		if args['--copy-keys']:
+			cmd = 'ssh-copy-id -i ~/.ssh/id_ecdsa.pub %s' % host
+		else:
+			cmd = 'ssh -o ConnectTimeout=2 -t %s "%s"' % (host, args['<command>'])
+		#endif
+
+		print('%s%s%s%s' % (color.BOLD, color.YELLOW, cmd, color.END))
+		subprocess.call(cmd, shell=True)
+	#endfor
+#enddef
+
+
+if __name__ == '__main__':
+	main()
+#enddef
