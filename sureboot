@@ -82,11 +82,16 @@ def update():
 		raise Exception('no devices to install mbr to')
 	#endif
 
+	call('umount %s' % boot_part)
+	call('fsck.vfat -a %s' % boot_part)
+	call('mount %s /boot' % boot_part)
+
 	call('mkdir /tmp/sureboot')
 
 	for part in boot_parts:
 		if part == boot_part: continue
 
+		call('fsck.vfat -a %s' % part)
 		call('mount %s /tmp/sureboot' % part)
 		call('rm -rf /tmp/sureboot/*')
 		call('cp -av /boot/* /tmp/sureboot/')
