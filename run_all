@@ -5,6 +5,7 @@ Run command on multiple hosts.
 
 Usage:
   run_all [-t <tag>] [--user=<user>] [--pass=<pass>] <command>
+  run_all [-t <tag>] [--user=<user>] [--pass=<pass>] --script <script>
   run_all [-t <tag>] [--user=<user>] [--pass=<pass>] --copy-keys
 
 Options:
@@ -115,7 +116,9 @@ def main():
 			#endif
 
 			cmd = 'ssh-copy-id -i %s %s' % (PUB_KEY_FN, host)
-		else:
+		elif args['<script>']:
+			cmd = 'ssh -o ConnectTimeout=2 %s "a=`mktemp`; cat >\$a; chmod a+x \$a; \$a; rm \$a" <%s' % (host_full, args['<script>'])
+		elif args['<command>']:
 			# the -t seems to be breaking logins to windows machines
 			#cmd = 'ssh -o ConnectTimeout=2 -t %s "%s"' % (host_full, args['<command>'])
 
