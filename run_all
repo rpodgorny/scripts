@@ -28,31 +28,35 @@ import socket
 
 
 hosts = [
-	'admiral.podgorny.cz arch podgorny',
-	'berta.podgorny.cz arch arm podgorny',
-	'chuck.podgorny.cz arch podgorny',
-	'europa.podgorny.cz arch arm podgorny router',
-	'hubert.asterix.cz arch asterix',
-	'kulicka.podgorny.cz arch arm podgorny',
-	'milan.podgorny.cz arch arm podgorny',
-	'milhouse.podgorny.cz arch podgorny sureboot',
-	'mrtvola.asterix.cz arch asterix',
-	'orion.asterix.cz arch asterix sureboot',
-	'pimiento.podgorny.cz arch podgorny',
-	'kapitan.podgorny.cz gentoo podgorny',
-	'pokuston.podgorny.cz arch arm podgorny',
-	'rpodgorny.podgorny.cz arch podgorny',
-	'simir.podgorny.cz arch podgorny',
-	'taurus.asterix.cz arch asterix router',
-	'ucho.podgorny.cz arch arm podgorny',
+	'admiral.podgorny.cz arch linux podgorny',
+	'berta.podgorny.cz arch arm linux podgorny',
+	'chuck.podgorny.cz arch linux podgorny',
+	'europa.podgorny.cz arch arm linux podgorny router',
+	'hubert.asterix.cz arch asterix linux',
+	'kulicka.podgorny.cz arch arm linux podgorny',
+	'milan.podgorny.cz arch arm linux podgorny',
+	'milhouse.podgorny.cz arch linux podgorny sureboot',
+	'mrtvola.asterix.cz arch asterix linux',
+	'orion.asterix.cz arch asterix linux sureboot',
+	'pimiento.podgorny.cz arch linux podgorny',
+	'kapitan.podgorny.cz gentoo linux podgorny',
+	'pokuston.podgorny.cz arch arm linux podgorny',
+	'rpodgorny.podgorny.cz arch linux podgorny',
+	'simir.podgorny.cz arch linux podgorny',
+	'taurus.asterix.cz arch asterix linux router',
+	'ucho.podgorny.cz arch arm linux podgorny',
 ]
 
 #for i in range(1, 13):
-#	hosts.append('miner%d.asterix.cz arch asterix miner' % i)
+#	hosts.append('miner%d.asterix.cz arch asterix linux miner' % i)
 #endfor
 
 for i in range(1, 200):
 	hosts.append('mj%d.asterix.cz asterix atx300 windows' % i)
+#endfor
+
+for i in range(1, 2000):
+	hosts.append('mj%dd.asterix.cz asterix windows' % i)
 #endfor
 
 
