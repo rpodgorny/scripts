@@ -27,10 +27,10 @@ def is_package_installed(package):
 #enddef
 
 
-def fix_cron():
+def fix_cronie():
 	if os.path.islink('/etc/systemd/system/multi-user.target.wants/cronie.service'): return
 
-	if not ask('enable cron?'): return
+	if not ask('enable cronie?'): return
 
 	call('systemctl enable cronie')
 #enddef
@@ -187,6 +187,7 @@ def main():
 	fix_root()
 	fix_x()
 	fix_fstrim()
+	fix_cronie()
 #enddef
 
 
