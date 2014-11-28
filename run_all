@@ -20,6 +20,7 @@ Arguments:
 
 __version__ = '0.1'
 
+import sys
 import subprocess
 import docopt
 import os
@@ -27,7 +28,7 @@ import pwd
 import socket
 
 
-hosts = [
+HOSTS = [
 	'admiral.podgorny.cz arch linux podgorny',
 	'berta.podgorny.cz arch arm linux podgorny',
 	'chuck.podgorny.cz arch linux podgorny',
@@ -48,15 +49,15 @@ hosts = [
 ]
 
 #for i in range(1, 13):
-#	hosts.append('miner%d.asterix.cz arch asterix linux miner' % i)
+#	HOSTS.append('miner%d.asterix.cz arch asterix linux miner' % i)
 #endfor
 
 for i in range(1, 200):
-	hosts.append('mj%d.asterix.cz asterix atx300 windows' % i)
+	HOSTS.append('mj%d.asterix.cz asterix atx300 windows' % i)
 #endfor
 
 for i in range(1, 2000):
-	hosts.append('mj%dd.asterix.cz asterix windows' % i)
+	HOSTS.append('mj%dd.asterix.cz asterix windows' % i)
 #endfor
 
 
@@ -92,22 +93,43 @@ def check_pub_key(fn):
 #enddef
 
 
+def filter_hosts(hosts):
+	ret = set()
+
+	for host in hosts:
+		sys.stdout.write('.')
+		sys.stdout.flush()
+
+		try:
+			socket.getaddrinfo(host, None)
+			ret.add(host)
+		except socket.gaierror:
+			pass
+		#endtry
+	#endfor
+
+	return ret
+#enddef
+
+
 def main():
 	args = docopt.docopt(__doc__, version=__version__)
 
 	tag = args['-t']
 
 	selected_hosts = set()
-	for i in hosts:
+	for i in HOSTS:
 		host, *tags = i.split()
 		if not tag or tag in tags:
 			selected_hosts.add(host)
 		#endif
 	#endfor
 
+	hosts = filter_hosts(selected_hosts)
+
 	ok, err = set(), set()
 
-	for host in sorted(list(selected_hosts)):
+	for host in sorted(list(hosts)):
 		if args['--user']:
 			host_full = '%s@%s' % (args['--user'], host)
 		else:
