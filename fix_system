@@ -27,6 +27,15 @@ def is_package_installed(package):
 #enddef
 
 
+def fix_cron():
+	if os.path.islink('/etc/systemd/system/multi-user.target.wants/cronie.service'): return
+
+	if not ask('enable cron?'): return
+
+	call('systemctl enable cronie')
+#enddef
+
+
 def fix_mkinitcpio():
 	fn = '/etc/mkinitcpio.conf'
 
@@ -91,7 +100,7 @@ def fix_root():
 
 
 def fix_packages():
-	for p, srv in [('ntp', 'ntpd'), ('openssh', 'sshd'), ('postfix', 'postfix'), ('uptimed', 'uptimed'), ]:
+	for p, srv in [('cronie', 'cronie'), ('ntp', 'ntpd'), ('openssh', 'sshd'), ('postfix', 'postfix'), ('uptimed', 'uptimed'), ]:
 		if is_package_installed(p): continue
 
 		if not ask('install and enable and start %s?' % p): continue
