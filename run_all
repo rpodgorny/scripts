@@ -100,9 +100,13 @@ def main():
 		#endif
 	#endfor
 
+	ok, err = set(), set()
+
 	for host in sorted(list(selected_hosts)):
 		if args['--user']:
-			host = '%s@%s' % (args['--user'], host)
+			host_full = '%s@%s' % (args['--user'], host)
+		else:
+			host_full = host
 		#endif
 
 		if args['--copy-keys']:
@@ -113,9 +117,9 @@ def main():
 			cmd = 'ssh-copy-id -i %s %s' % (PUB_KEY_FN, host)
 		else:
 			# the -t seems to be breaking logins to windows machines
-			#cmd = 'ssh -o ConnectTimeout=2 -t %s "%s"' % (host, args['<command>'])
+			#cmd = 'ssh -o ConnectTimeout=2 -t %s "%s"' % (host_full, args['<command>'])
 
-			cmd = 'ssh -o ConnectTimeout=2 %s "%s"' % (host, args['<command>'])
+			cmd = 'ssh -o ConnectTimeout=2 %s "%s"' % (host_full, args['<command>'])
 		#endif
 
 		if args['--pass']:
@@ -127,8 +131,16 @@ def main():
 		#endif
 
 		print('%s%s%s%s' % (color.BOLD, color.YELLOW, cmd, color.END))
-		subprocess.call(cmd, shell=True)
+		res = subprocess.call(cmd, shell=True)
+
+		if res == 0:
+			ok.add(host)
+		else:
+			err.add(host)
+		#endif
 	#endfor
+
+	print('ok: %d, err: %d' % (len(ok), len(err)))
 #enddef
 
 
