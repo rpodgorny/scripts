@@ -27,15 +27,6 @@ def is_package_installed(package):
 #enddef
 
 
-def fix_cronie():
-	if os.path.islink('/etc/systemd/system/multi-user.target.wants/cronie.service'): return
-
-	if not ask('enable cronie?'): return
-
-	call('systemctl enable cronie')
-#enddef
-
-
 def fix_mkinitcpio():
 	fn = '/etc/mkinitcpio.conf'
 
@@ -100,14 +91,38 @@ def fix_root():
 
 
 def fix_packages():
-	for p, srv in [('cronie', 'cronie'), ('ntp', 'ntpd'), ('openssh', 'sshd'), ('postfix', 'postfix'), ('uptimed', 'uptimed'), ]:
-		if is_package_installed(p): continue
+	for p in ['cronie', 'ntp', ('openssh', 'openssh-hpn'), 'postfix', 'uptimed', ]:
+		installed = False
 
-		if not ask('install and enable and start %s?' % p): continue
+		if isinstance(p, tuple):
+			for i in p:
+				if is_package_installed(i):
+					installed = True
+				#endif
+			#endfor
+		else:
+			installed = is_package_installed(p)
+		#endif
+
+		if installed: continue
+
+		if isinstance(p, tuple): p = p[0]  # TODO: quick hack
+
+		if not ask('install %s?' % p): continue
 
 		call('pacman -Sy --noconfirm %s' % p)
-		call('systemctl enable %s' % srv)
-		call('systemctl start %s' % srv)
+	#endfor
+#enddef
+
+
+def fix_services():
+	for s in ['cronie', 'ntpd', 'sshd', 'postfix', 'uptimed', ]:
+		if os.path.islink('/etc/systemd/system/multi-user.target.wants/%s.service' % s): return
+
+		if not ask('enable and start %s?' % s): continue
+
+		call('systemctl enable %s.service' % s)
+		call('systemctl start %s.service' % s)
 	#endfor
 #enddef
 
@@ -176,18 +191,18 @@ def fix_fstrim():
 
 
 def main():
-	fix_pacman_sources()
-	fix_packages()
-	fix_hostname()
 	fix_mkinitcpio()
+	fix_hostname()
+	fix_timezone()
 	fix_locale_gen()
 	fix_locale()
-	fix_timezone()
-	fix_radek()
-	fix_root()
-	fix_x()
+	fix_pacman_sources()
+	fix_packages()
+	fix_services()
 	fix_fstrim()
-	fix_cronie()
+	fix_root()
+	fix_radek()
+	fix_x()
 #enddef
 
 
