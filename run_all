@@ -26,6 +26,8 @@ import docopt
 import os
 import pwd
 import socket
+import threading
+import time
 
 
 HOSTS = [
@@ -93,22 +95,18 @@ def check_pub_key(fn):
 #enddef
 
 
-def filter_hosts(hosts):
-	ret = set()
-
-	for host in hosts:
-		sys.stdout.write('.')
-		sys.stdout.flush()
+def filter_hosts(hosts_in, hosts_out):
+	while hosts_in:
+		host = list(hosts_in)[0]
+		hosts_in.remove(host)
 
 		try:
 			socket.getaddrinfo(host, None)
-			ret.add(host)
+			hosts_out.add(host)
 		except socket.gaierror:
 			pass
 		#endtry
 	#endfor
-
-	return ret
 #enddef
 
 
@@ -117,19 +115,38 @@ def main():
 
 	tag = args['-t']
 
-	selected_hosts = set()
+	hosts = set()
 	for i in HOSTS:
 		host, *tags = i.split()
 		if not tag or tag in tags:
-			selected_hosts.add(host)
+			hosts.add(host)
 		#endif
 	#endfor
 
-	hosts = filter_hosts(selected_hosts)
+	if 1:
+		print('starting host resolving thread')
 
-	ok, err = set(), set()
+		hosts_to_go = set()
+		thr = threading.Thread(target=filter_hosts, args=(hosts, hosts_to_go), daemon=True)
+		thr.start()
+	else:
+		hosts_to_go = hosts
+		hosts = set()
+	#endif
 
-	for host in sorted(list(hosts)):
+	results = {}
+
+	i = 0
+	while hosts or hosts_to_go:
+		if not hosts_to_go:
+			time.sleep(0.1)
+			continue
+		#endif
+
+		i += 1
+		host = sorted(list(hosts_to_go))[0]
+		hosts_to_go.remove(host)
+
 		if args['--user']:
 			host_full = '%s@%s' % (args['--user'], host)
 		else:
@@ -159,17 +176,31 @@ def main():
 			cmd = '/usr/bin/sshpass -p%s %s' % (args['--pass'], cmd)
 		#endif
 
-		print('%s%s%s%s' % (color.BOLD, color.YELLOW, cmd, color.END))
+		print('%s(%d/%d/%s) %s%s%s' % (color.YELLOW, i, i + len(hosts_to_go), i + len(hosts_to_go) + len(hosts), color.BOLD, cmd, color.END))
 		res = subprocess.call(cmd, shell=True)
 
-		if res == 0:
-			ok.add(host)
-		else:
-			err.add(host)
+		#results.get(res, set()).add(host)
+
+		if not res in results:
+			results[res] = set()
 		#endif
+
+		results[res].add(host)
 	#endfor
 
-	print('ok: %d, err: %d' % (len(ok), len(err)))
+	ss = []
+	for res in sorted(results.keys()):
+		if res == 0:
+			s = color.GREEN
+		else:
+			s = color.RED
+		#endif
+
+		s += '%s: %d' % (res, len(results[res]))
+		ss.append(s)
+	#endfor
+
+	print('%sresults: %s%s' % (color.YELLOW, ', '.join(ss), color.END))
 #enddef
 
 
