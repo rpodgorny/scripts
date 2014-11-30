@@ -5,13 +5,14 @@ Run command on multiple hosts.
 
 Usage:
   run_all [-t <tag>] [--user=<user>] [--pass=<pass>] <command>
-  run_all [-t <tag>] [--user=<user>] [--pass=<pass>] --script <script>
+  run_all [-t <tag>] [--user=<user>] [--pass=<pass>] [--sudo] --script <script>
   run_all [-t <tag>] [--user=<user>] [--pass=<pass>] --copy-keys
 
 Options:
   -t <tag>       Only consider hosts with <tag>.
   --user=<user>  Username to use for the remote host.
   --pass=<pass>  Password to use for sshpass.
+  --sudo         Use sudo on remote system.
   --copy-keys    Copy local ssh keys to remote servers.
 
 Arguments:
@@ -173,7 +174,14 @@ def main():
 		if args['--copy-keys']:
 			cmd = 'ssh-copy-id -i %s %s' % (PUB_KEY_FN, host_full)
 		elif args['<script>']:
-			cmd = 'ssh %s %s "a=`mktemp`; cat >\$a; chmod a+x \$a; \$a; rm \$a" <%s' % (sshopts, host_full, args['<script>'])
+			if args['--sudo']:
+				sudo = 'sudo'
+			else:
+				sudo = ''
+			#endif
+
+			cmd = 'ssh %s %s \'sh -c "a=`mktemp`; cat >$a; chmod a+x $a; %s $a; rm $a"\'' % (sshopts, host_full, sudo)
+			cmd = 'ssh %s %s "cat >/tmp/ahoj"' % (sshopts, host_full)
 		elif args['<command>']:
 			cmd = 'ssh %s %s "%s"' % (sshopts, host_full, args['<command>'])
 		#endif
@@ -194,7 +202,6 @@ def main():
 	outs = {}
 	rets = {}
 
-
 	total = len(cmds)
 	i = 0
 	cur_cmd = None
@@ -208,6 +215,13 @@ def main():
 
 			if cols:
 				fcntl.ioctl(f, termios.TIOCSWINSZ, struct.pack('HHHH', rows, cols, 0, 0))  # send terminal size
+			#endif
+
+			# TODO: does not fucking work!
+			if args['<script>']:
+				data = open(args['<script>'], 'rb').read()
+				os.write(f, data)
+				os.write(f, b'\x04')
 			#endif
 
 			forks[cmd] = (pid, f)
