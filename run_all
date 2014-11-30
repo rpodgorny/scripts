@@ -183,7 +183,12 @@ def main():
 	outs = {}
 	rets = {}
 
-	cols, rows = os.get_terminal_size()
+	# this fails when piping the output to less etc.
+	try:
+		cols, rows = os.get_terminal_size()
+	except:
+		cols, rows = None, None
+	#endtry
 
 	total = len(cmds)
 	i = 0
@@ -191,12 +196,17 @@ def main():
 	last_ctrl_c = 0
 	while 1:
 		while cmds and len(forks) < MAX_FORKS:
+			if DEBUG: dot('+')
+
 			cmd = cmds.pop(0)
 			pid, f = fork_it(cmd)
-			fcntl.ioctl(f, termios.TIOCSWINSZ, struct.pack('HHHH', rows, cols, 0, 0))  # send terminal size
+
+			if cols:
+				fcntl.ioctl(f, termios.TIOCSWINSZ, struct.pack('HHHH', rows, cols, 0, 0))  # send terminal size
+			#endif
+
 			forks[cmd] = (pid, f)
 			outs[cmd] = ''
-			if DEBUG: dot('+')
 		#endif
 
 		if not cur_cmd:
