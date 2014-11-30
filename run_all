@@ -218,38 +218,38 @@ def main():
 			for cmd in sorted(list(outs.keys())):
 				if cmd in forks: continue  # still active
 
-				i += 1
-				print('%s(%d/%d) %s%s%s' % (color.YELLOW, i, total, color.BOLD, cmd, color.END))
-
-				sys.stdout.write(outs[cmd])
-				sys.stdout.flush()
-				del outs[cmd]
-
 				if rets[cmd] == 0:
 					col = color.GREEN
 				else:
 					col = color.RED
 				#endif
 
-				print('%sret: %d%s' % (col, rets[cmd], color.END))
+				i += 1
+				print('%s(%d/%d) %s%s -> ret: %d%s' % (col, i, total, color.BOLD, cmd, rets[cmd], color.END))
+
+				sys.stdout.write(outs[cmd])
+				sys.stdout.flush()
+				del outs[cmd]
 			#endfor
 
-			if forks:
-				cur_cmd = sorted(list(forks.keys()))[0]
-			else:
+			if not forks:
 				break  # we're done
+			elif not cols:
+				pass  # we're not interactive, just wait for some fork to finish
+			else:
+				cur_cmd = sorted(list(forks.keys()))[0]
+
+				i += 1
+				print('%s(%d/%d) %s%s%s' % (color.YELLOW, i, total, color.BOLD, cur_cmd, color.END))
+
+				if cur_cmd in outs:
+					sys.stdout.write(outs[cur_cmd])
+					del outs[cur_cmd]
+				#endif
+
+				pid, f = forks[cur_cmd]
+				inp = ''
 			#endif
-
-			i += 1
-			print('%s(%d/%d) %s%s%s' % (color.GREEN, i, total, color.BOLD, cur_cmd, color.END))
-
-			if cur_cmd in outs:
-				sys.stdout.write(outs[cur_cmd])
-				del outs[cur_cmd]
-			#endif
-
-			pid, f = forks[cur_cmd]
-			inp = ''
 		#endif
 
 		r, w, x = [sys.stdin, ], [], [sys.stdin, ]
