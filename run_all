@@ -281,7 +281,7 @@ def main():
 		if sys.stdin in r:
 			inp_ = sys.stdin.readline()
 			if not inp_:
-				inp += b'\x04'  # EOF
+				inp += '\x04'  # EOF
 			else:
 				inp += inp_
 			#endif
