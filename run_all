@@ -219,16 +219,19 @@ def main():
 				if cmd in forks: continue  # still active
 
 				i += 1
-
-				if cols:
-					print('%s(%d/%d) %s%s%s' % (color.YELLOW, i, total, color.BOLD, cmd, color.END))
-				else:
-					print('>>> (%d/%d) %s' % (i, total, cmd))
-				#endif
+				print('%s(%d/%d) %s%s%s' % (color.YELLOW, i, total, color.BOLD, cmd, color.END))
 
 				sys.stdout.write(outs[cmd])
 				sys.stdout.flush()
 				del outs[cmd]
+
+				if rets[cmd] == 0:
+					col = color.GREEN
+				else:
+					col = color.RED
+				#endif
+
+				print('%sret: %d%s' % (col, rets[cmd], color.END))
 			#endfor
 
 			if forks:
@@ -237,21 +240,16 @@ def main():
 				break  # we're done
 			#endif
 
-			pid, f = forks[cur_cmd]
-			inp = ''
-
 			i += 1
-
-			if cols:
-				print('%s(%d/%d) %s%s%s' % (color.GREEN, i, total, color.BOLD, cur_cmd, color.END))
-			else:
-				print('>>> (%d/%d) %s' % (i, total, cur_cmd))
-			#endif
+			print('%s(%d/%d) %s%s%s' % (color.GREEN, i, total, color.BOLD, cur_cmd, color.END))
 
 			if cur_cmd in outs:
 				sys.stdout.write(outs[cur_cmd])
 				del outs[cur_cmd]
 			#endif
+
+			pid, f = forks[cur_cmd]
+			inp = ''
 		#endif
 
 		r, w, x = [sys.stdin, ], [], [sys.stdin, ]
@@ -321,13 +319,20 @@ def main():
 			pid, f = forks[cmd]
 			os.close(f)
 			_, ret = os.waitpid(pid, 0)
-
-			if not ret in rets: rets[ret] = set()
-			rets[ret].add(cmd)
+			rets[cmd] = ret
 
 			del forks[cmd]
 
-			if cmd == cur_cmd: cur_cmd = None
+			if cmd == cur_cmd:
+				if ret == 0:
+					col = color.GREEN
+				else:
+					col = color.RED
+				#endif
+
+				print('%sret: %d%s' % (col, ret, color.END))
+				cur_cmd = None
+			#endif
 		#endfor
 	#endif
 
@@ -343,23 +348,25 @@ def main():
 
 	forks.clear()
 
-	ss = []
-	for ret in sorted(rets.keys()):
-		if ret == 0:
-			s = color.GREEN
-		else:
-			s = color.RED
-		#endif
-
-		s += '%s: %d' % (ret, len(rets[ret]))
-		ss.append(s)
+	ret_stats = {}
+	for cmd, ret in rets.items():
+		if not ret in ret_stats: ret_stats[ret] = set()
+		ret_stats[ret].add(cmd)
 	#endfor
 
-	if cols:
-		print('%srets: %s%s' % (color.YELLOW, ', '.join(ss), color.END))
-	else:
-		print('>> rets: %s' % (', '.join(ss), ))
-	#endif
+	s = []
+	for ret in sorted(ret_stats.keys()):
+		if ret == 0:
+			col = color.GREEN
+		else:
+			col = color.RED
+		#endif
+
+		s.append('%s%s: %d' % (col, ret, len(ret_stats[ret])))
+	#endfor
+	s = ', '.join(s)
+
+	print('rets: %s%s' % (s, color.END))
 #enddef
 
 
