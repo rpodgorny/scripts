@@ -159,6 +159,8 @@ def main():
 	#sshopts = '-t -o ConnectTImeout=2'
 	sshopts = ''
 
+	# TODO: why the fuck can't i use -t in script mode? (sending eof does not work, then)
+	#if cols and not args['<script>']:
 	if cols:
 		sshopts += ' -t'
 	#endif
@@ -180,8 +182,9 @@ def main():
 				sudo = ''
 			#endif
 
-			cmd = 'ssh %s %s \'sh -c "a=`mktemp`; cat >$a; chmod a+x $a; %s $a; rm $a"\'' % (sshopts, host_full, sudo)
-			cmd = 'ssh %s %s "cat >/tmp/ahoj"' % (sshopts, host_full)
+			#cmd = 'ssh %s %s \'sh -c "a=`mktemp`; cat >$a; chmod a+x $a; %s $a; rm $a"\'' % (sshopts, host_full, sudo)
+			#cmd = 'ssh %s %s \'sh -c "cat >/tmp/ahojjj; chmod a+x /tmp/ahojjj; %s /tmp/ahojjj; rm /tmp/ahojjj"\'' % (sshopts, host_full, sudo)
+			cmd = 'ssh %s %s "cat | %s sh"' % (sshopts, host_full, sudo)
 		elif args['<command>']:
 			cmd = 'ssh %s %s "%s"' % (sshopts, host_full, args['<command>'])
 		#endif
@@ -198,7 +201,7 @@ def main():
 	#endfor
 
 	forks = {}
-	forks_finished = set()
+	ins = {}
 	outs = {}
 	rets = {}
 
@@ -217,11 +220,9 @@ def main():
 				fcntl.ioctl(f, termios.TIOCSWINSZ, struct.pack('HHHH', rows, cols, 0, 0))  # send terminal size
 			#endif
 
-			# TODO: does not fucking work!
 			if args['<script>']:
-				data = open(args['<script>'], 'rb').read()
-				os.write(f, data)
-				os.write(f, b'\x04')
+				data = open(args['<script>'], 'r').read()
+				ins[cmd] = data + '\x04'  # EOF - does not work!
 			#endif
 
 			forks[cmd] = (pid, f)
@@ -262,14 +263,22 @@ def main():
 				#endif
 
 				pid, f = forks[cur_cmd]
-				inp = ''
+
+				if cur_cmd in ins:
+					inp = ins[cur_cmd]
+					del ins[cur_cmd]
+				else:
+					inp = ''
+				#endif
 			#endif
 		#endif
 
 		r, w, x = [sys.stdin, ], [], [sys.stdin, ]
 		for cmd, (pid, f) in forks.items():
 			r.append(f)
-			if cmd == cur_cmd and inp: w.append(f)
+			if (cmd == cur_cmd and inp) or cmd in ins:
+				w.append(f)
+			#endif
 			x.append(f)
 		#endfor
 
@@ -305,7 +314,7 @@ def main():
 		for cmd, (pid, f) in forks.items():
 			if f in r:
 				try:
-					out_ = os.read(f, 10000).decode()
+					out_ = os.read(f, 1024).decode()
 				except:
 					just_finished.add(cmd)
 					out_ = None
@@ -322,8 +331,13 @@ def main():
 			#endif
 
 			if f in w:
-				os.write(f, inp.encode())
-				inp = ''
+				if cmd == cur_cmd:
+					os.write(f, inp.encode())
+					inp = ''
+				else:
+					os.write(f, ins[cmd].encode())
+					del ins[cmd]
+				#endif
 			#endif
 		#endfor
 
