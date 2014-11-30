@@ -135,9 +135,6 @@ def main():
 		#endif
 	#endfor
 
-	# TODO: hack
-	hosts = set(list(hosts)[:100])
-
 	hosts_to_go = hosts
 	hosts = set()
 
