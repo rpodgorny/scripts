@@ -341,9 +341,7 @@ def main():
 		os.close(f)
 		os.kill(pid, signal.SIGTERM)
 		_, ret = os.waitpid(pid, 0)
-
-		if not ret in rets: rets[ret] = set()
-		rets[ret].add(cmd)
+		rets[cmd] = ret
 	#endfor
 
 	forks.clear()
