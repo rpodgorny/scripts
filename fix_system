@@ -2,6 +2,8 @@
 
 import os
 import subprocess
+import glob
+import socket
 
 
 def call(cmd):
@@ -190,6 +192,39 @@ def fix_fstrim():
 #enddef
 
 
+def fix_ssh_host_keys():
+	should_be = 'root@%s' % socket.gethostname()
+
+	fns = glob.glob('/etc/ssh/*_key.pub')
+	for fn in fns:
+		with open(fn, 'r') as f:
+			user_and_host = f.readline().split()[-1]
+		#endwith
+
+		if user_and_host != should_be:
+			print('i dont like ssh host key in %s' % fn)
+		#endif
+	#endfor
+#enddef
+
+
+def fix_ssh_user_keys():
+	fns = glob.glob('/home/*/.ssh/*.pub')
+	for fn in fns:
+		user = fn.split('/')[1]
+		should_be = '%s@%s' % (user, socket.gethostname())
+
+		with open(fn, 'r') as f:
+			user_and_host = f.readline().split()[-1]
+		#endwith
+
+		if user_and_host != should_be:
+			print('i dont like ssh host key in %s' % fn)
+		#endif
+	#endfor
+#enddef
+
+
 def main():
 	fix_mkinitcpio()
 	fix_hostname()
@@ -199,6 +234,8 @@ def main():
 	fix_pacman_sources()
 	fix_packages()
 	fix_services()
+	fix_ssh_host_keys()
+	fix_ssh_user_keys()
 	fix_fstrim()
 	fix_root()
 	fix_radek()
