@@ -189,8 +189,17 @@ def main():
 			continue
 		#endif
 
+		# pick the first one
+		#cmd, pid, f = forks[0]
+
+		# pick the dead one (with fallback to last one if everyone is alive)
+		for cmd, pid, f in forks:
+			if not check_pid(pid): break
+		#endfor
+
+		forks.remove((cmd, pid, f))
+
 		i += 1
-		cmd, pid, f = forks.pop(0)
 
 		print('%s(%d/%d) %s%s%s' % (color.YELLOW, i, total, color.BOLD, cmd, color.END))
 
