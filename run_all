@@ -147,9 +147,20 @@ def main():
 		#endif
 	#endfor
 
+	# this fails when piping the output to less etc.
+	try:
+		cols, rows = os.get_terminal_size()
+	except:
+		cols, rows = None, None
+	#endtry
+
 	# TODO: the -t seems to be breaking logins to windows machines - figure shomething out
 	#sshopts = '-t -o ConnectTImeout=2'
-	sshopts = '-t'
+	sshopts = ''
+
+	if cols:
+		sshopts += ' -t'
+	#endif
 
 	cmds = []
 	for host in sorted(list(hosts)):
@@ -183,12 +194,6 @@ def main():
 	outs = {}
 	rets = {}
 
-	# this fails when piping the output to less etc.
-	try:
-		cols, rows = os.get_terminal_size()
-	except:
-		cols, rows = None, None
-	#endtry
 
 	total = len(cmds)
 	i = 0
@@ -214,7 +219,12 @@ def main():
 				if cmd in forks: continue  # still active
 
 				i += 1
-				print('%s(%d/%d) %s%s%s' % (color.YELLOW, i, total, color.BOLD, cmd, color.END))
+
+				if cols:
+					print('%s(%d/%d) %s%s%s' % (color.YELLOW, i, total, color.BOLD, cmd, color.END))
+				else:
+					print('>>> (%d/%d) %s' % (i, total, cmd))
+				#endif
 
 				sys.stdout.write(outs[cmd])
 				sys.stdout.flush()
@@ -231,7 +241,12 @@ def main():
 			inp = ''
 
 			i += 1
-			print('%s(%d/%d) %s%s%s' % (color.GREEN, i, total, color.BOLD, cur_cmd, color.END))
+
+			if cols:
+				print('%s(%d/%d) %s%s%s' % (color.GREEN, i, total, color.BOLD, cur_cmd, color.END))
+			else:
+				print('>>> (%d/%d) %s' % (i, total, cur_cmd))
+			#endif
 
 			if cur_cmd in outs:
 				sys.stdout.write(outs[cur_cmd])
@@ -340,7 +355,11 @@ def main():
 		ss.append(s)
 	#endfor
 
-	print('%srets: %s%s' % (color.YELLOW, ', '.join(ss), color.END))
+	if cols:
+		print('%srets: %s%s' % (color.YELLOW, ', '.join(ss), color.END))
+	else:
+		print('>> rets: %s' % (', '.join(ss), ))
+	#endif
 #enddef
 
 
