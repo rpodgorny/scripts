@@ -21,13 +21,18 @@ Arguments:
 __version__ = '0.1'
 
 import sys
-import subprocess
 import docopt
 import os
 import pwd
 import socket
-import threading
 import time
+import pty
+import signal
+import select
+import shlex
+import struct
+import termios
+import fcntl
 
 
 HOSTS = [
@@ -95,18 +100,25 @@ def check_pub_key(fn):
 #enddef
 
 
-def filter_hosts(hosts_in, hosts_out):
-	while hosts_in:
-		host = list(hosts_in)[0]
-		hosts_in.remove(host)
+def fork_it(cmd):
+	pid, f = pty.fork()
+	if pid == 0:
+		argv = shlex.split(cmd)
+		os.execlp(argv[0], *argv)
+	else:
+		return pid, f
+	#endif
+#enddef
 
-		try:
-			socket.getaddrinfo(host, None)
-			hosts_out.add(host)
-		except socket.gaierror:
-			pass
-		#endtry
-	#endfor
+
+def check_pid(pid):
+	try:
+		os.kill(pid, 0)
+	except OSError:
+		return False
+	#endtry
+
+	return True
 #enddef
 
 
@@ -123,84 +135,141 @@ def main():
 		#endif
 	#endfor
 
-	if 1:
-		print('starting host resolving thread')
+	# TODO: hack
+	hosts = set(list(hosts)[:100])
 
-		hosts_to_go = set()
-		thr = threading.Thread(target=filter_hosts, args=(hosts, hosts_to_go), daemon=True)
-		thr.start()
-	else:
-		hosts_to_go = hosts
-		hosts = set()
-	#endif
+	hosts_to_go = hosts
+	hosts = set()
 
-	results = {}
+	forks = []
+	rets = {}
 
+	cols, rows = os.get_terminal_size()
+
+	total = len(hosts_to_go)
 	i = 0
-	while hosts or hosts_to_go:
-		if not hosts_to_go:
+	while forks or hosts_to_go:
+		while len(forks) < 10 and hosts_to_go:
+			host = sorted(list(hosts_to_go))[0]
+			hosts_to_go.remove(host)
+
+			if args['--user']:
+				host_full = '%s@%s' % (args['--user'], host)
+			else:
+				host_full = host
+			#endif
+
+			if args['--copy-keys']:
+				if not check_pub_key(PUB_KEY_FN):
+					raise Exception('i don\'t like the public key')
+				#endif
+
+				cmd = 'ssh-copy-id -i %s %s' % (PUB_KEY_FN, host_full)
+			elif args['<script>']:
+				cmd = 'ssh -o ConnectTimeout=2 %s "a=`mktemp`; cat >\$a; chmod a+x \$a; \$a; rm \$a" <%s' % (host_full, args['<script>'])
+			elif args['<command>']:
+				# the -t seems to be breaking logins to windows machines
+				#cmd = 'ssh -o ConnectTimeout=2 -t %s "%s"' % (host_full, args['<command>'])
+
+				cmd = 'ssh -o ConnectTimeout=2 -t %s "%s"' % (host_full, args['<command>'])
+			#endif
+
+			if args['--pass']:
+				if not os.path.isfile('/usr/bin/sshpass'):
+					raise Exception('/usr/bin/sshpass does not exist')
+				#endif
+
+				cmd = '/usr/bin/sshpass -p%s %s' % (args['--pass'], cmd)
+			#endif
+
+			pid, f = fork_it(cmd)
+			fcntl.ioctl(f, termios.TIOCSWINSZ, struct.pack('HHHH', rows, cols, 0, 0))
+			forks.append((cmd, pid, f))
+		#endwhile
+
+		if not forks:
 			time.sleep(0.1)
 			continue
 		#endif
 
 		i += 1
-		host = sorted(list(hosts_to_go))[0]
-		hosts_to_go.remove(host)
+		cmd, pid, f = forks.pop(0)
 
-		if args['--user']:
-			host_full = '%s@%s' % (args['--user'], host)
-		else:
-			host_full = host
-		#endif
+		print('%s(%d/%d) %s%s%s' % (color.YELLOW, i, total, color.BOLD, cmd, color.END))
 
-		if args['--copy-keys']:
-			if not check_pub_key(PUB_KEY_FN):
-				raise Exception('i don\'t like the public key')
+		out = bytes()
+		while 1:
+			if out:
+				w = [f]
+			else:
+				w = []
+
+			# TODO: this is probably useless - it mostly fails in time.sleep() below
+			try:
+				r, w, x = select.select([f, sys.stdin], w, [], 0)
+			except KeyboardInterrupt:
+				out += b'\x03'
+			#endtry
+
+			if f in r:
+				try:
+					xxx = os.read(f, 10000).decode()
+				except:
+					break
+				sys.stdout.write(xxx)
+				sys.stdout.flush()
 			#endif
 
-			cmd = 'ssh-copy-id -i %s %s' % (PUB_KEY_FN, host)
-		elif args['<script>']:
-			cmd = 'ssh -o ConnectTimeout=2 %s "a=`mktemp`; cat >\$a; chmod a+x \$a; \$a; rm \$a" <%s' % (host_full, args['<script>'])
-		elif args['<command>']:
-			# the -t seems to be breaking logins to windows machines
-			#cmd = 'ssh -o ConnectTimeout=2 -t %s "%s"' % (host_full, args['<command>'])
-
-			cmd = 'ssh -o ConnectTimeout=2 %s "%s"' % (host_full, args['<command>'])
-		#endif
-
-		if args['--pass']:
-			if not os.path.isfile('/usr/bin/sshpass'):
-				raise Exception('/usr/bin/sshpass does not exist')
+			if f in w:
+				os.write(f, out)
+				out = bytes()
 			#endif
 
-			cmd = '/usr/bin/sshpass -p%s %s' % (args['--pass'], cmd)
+			if sys.stdin in r:
+				#print('ha')
+				inp = sys.stdin.readline().encode()
+				#print('inp: %s' % inp)
+				if not inp:
+					out += b'\x04'
+				else:
+					out += inp
+				#endif
+			#endif
+
+			if sys.stdin in x:
+				print('XXX')
+			#endif
+
+			try:
+				time.sleep(0.01)
+			except KeyboardInterrupt:
+				out += b'\x03'
+			#endtry
+		#endwhile
+
+		os.close(f)
+		_, ret = os.waitpid(pid, 0)
+
+		if not ret in rets:
+			rets[ret] = set()
 		#endif
 
-		print('%s(%d/%d/%s) %s%s%s' % (color.YELLOW, i, i + len(hosts_to_go), i + len(hosts_to_go) + len(hosts), color.BOLD, cmd, color.END))
-		res = subprocess.call(cmd, shell=True)
-
-		#results.get(res, set()).add(host)
-
-		if not res in results:
-			results[res] = set()
-		#endif
-
-		results[res].add(host)
-	#endfor
+		rets[ret].add(host)
+	#endwhile
 
 	ss = []
-	for res in sorted(results.keys()):
-		if res == 0:
+	for ret in sorted(rets.keys()):
+		if ret == 0:
 			s = color.GREEN
 		else:
 			s = color.RED
 		#endif
 
-		s += '%s: %d' % (res, len(results[res]))
+		s += '%s: %d' % (ret, len(rets[ret]))
 		ss.append(s)
 	#endfor
 
-	print('%sresults: %s%s' % (color.YELLOW, ', '.join(ss), color.END))
+	print('%srets: %s%s' % (color.YELLOW, ', '.join(ss), color.END))
 #enddef
 
 
