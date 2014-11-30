@@ -69,7 +69,8 @@ for i in range(1, 2000):
 
 
 PUB_KEY_FN = os.path.expanduser('~/.ssh/id_ecdsa.pub')
-MAX_FORKS = 20
+MAX_FORKS = 10
+DEBUG = 0
 
 
 class color:
@@ -123,8 +124,18 @@ def check_pid(pid):
 #enddef
 
 
+def dot(c='.'):
+	sys.stdout.write(c)
+	sys.stdout.flush()
+#enddef
+
+
 def main():
 	args = docopt.docopt(__doc__, version=__version__)
+
+	if args['--copy-keys'] and not check_pub_key(PUB_KEY_FN):
+		raise Exception('i don\'t like the public key')
+	#endif
 
 	tag = args['-t']
 
@@ -148,17 +159,11 @@ def main():
 		#endif
 
 		if args['--copy-keys']:
-			if not check_pub_key(PUB_KEY_FN):
-				raise Exception('i don\'t like the public key')
-			#endif
-
 			cmd = 'ssh-copy-id -i %s %s' % (PUB_KEY_FN, host_full)
 		elif args['<script>']:
 			cmd = 'ssh -o ConnectTimeout=2 %s "a=`mktemp`; cat >\$a; chmod a+x \$a; \$a; rm \$a" <%s' % (host_full, args['<script>'])
 		elif args['<command>']:
-			# the -t seems to be breaking logins to windows machines
-			#cmd = 'ssh -o ConnectTimeout=2 -t %s "%s"' % (host_full, args['<command>'])
-
+			# TODO: the -t seems to be breaking logins to windows machines - figure shomething out
 			cmd = 'ssh -o ConnectTimeout=2 -t %s "%s"' % (host_full, args['<command>'])
 		#endif
 
@@ -173,7 +178,7 @@ def main():
 		cmds.append(cmd)
 	#endfor
 
-	forks = []
+	forks = {}
 	outs = {}
 	rets = {}
 
@@ -181,90 +186,136 @@ def main():
 
 	total = len(cmds)
 	i = 0
-	while forks or cmds:
-		while len(forks) < MAX_FORKS and cmds:
+	cur_cmd = None
+	last_ctrl_c = 0
+	while 1:
+		while cmds and len(forks) < MAX_FORKS:
 			cmd = cmds.pop(0)
 			pid, f = fork_it(cmd)
 			fcntl.ioctl(f, termios.TIOCSWINSZ, struct.pack('HHHH', rows, cols, 0, 0))
-			forks.append((cmd, pid, f))
-		#endwhile
-
-		if not forks:
-			time.sleep(0.1)
-			continue
+			forks[cmd] = (pid, f)
+			outs[cmd] = ''
+			if DEBUG: dot('+')
 		#endif
 
-		# pick the first one
-		#cmd, pid, f = forks[0]
+		if not cur_cmd:
+			if forks:
+				cur_cmd = sorted(list(forks.keys()))[0]
+			#endif
 
-		# pick the dead one (with fallback to last one if everyone is alive)
-		for cmd, pid, f in forks:
-			if not check_pid(pid): break
+			# print out finished forks
+			for cmd in sorted(list(outs.copy().keys())):
+				if cmd in forks: continue  # still active
+				if cmd == cur_cmd: continue  # we'll write this later
+
+				i += 1
+				print('%s(%d/%d) %s%s%s' % (color.YELLOW, i, total, color.BOLD, cmd, color.END))
+
+				sys.stdout.write(outs[cmd])
+				sys.stdout.flush()
+				del outs[cmd]
+			#endfor
+
+			if not cur_cmd: break  # we're done
+
+			pid, f = forks[cur_cmd]
+			inp = ''
+
+			i += 1
+			print('%s(%d/%d) %s%s%s' % (color.GREEN, i, total, color.BOLD, cur_cmd, color.END))
+
+			if cur_cmd in outs:
+				sys.stdout.write(outs[cur_cmd])
+				outs[cur_cmd] = ''
+			#endif
+		#endif
+
+		r, w, x = [sys.stdin, ], [], [sys.stdin, ]
+		for cmd, (pid, f) in forks.items():
+			r.append(f)
+			if cmd == cur_cmd and inp: w.append(f)
+			x.append(f)
 		#endfor
 
-		forks.remove((cmd, pid, f))
+		r, w, x = select.select(r, w, x, 0)
 
-		i += 1
-
-		print('%s(%d/%d) %s%s%s' % (color.YELLOW, i, total, color.BOLD, cmd, color.END))
-
-		out = bytes()
-		while 1:
-			if out:
-				w = [f]
-			else:
-				w = []
-
-			# TODO: this is probably useless - it mostly fails in time.sleep() below
-			try:
-				r, w, x = select.select([f, sys.stdin], w, [], 0)
-			except KeyboardInterrupt:
-				out += b'\x03'
-			#endtry
-
-			if f in r:
-				try:
-					xxx = os.read(f, 10000).decode()
-				except:
-					break
-				sys.stdout.write(xxx)
-				sys.stdout.flush()
-			#endif
-
-			if f in w:
-				os.write(f, out)
-				out = bytes()
-			#endif
-
-			if sys.stdin in r:
-				inp = sys.stdin.readline().encode()
-				if not inp:
-					out += b'\x04'
-				else:
-					out += inp
-				#endif
-			#endif
-
-			if sys.stdin in x:
-				print('XXX')
-			#endif
+		if not r and not w and not x:
+			if DEBUG: dot()
 
 			try:
 				time.sleep(0.01)
 			except KeyboardInterrupt:
-				out += b'\x03'
+				t = time.monotonic()
+				if t - last_ctrl_c < 1: raise
+				last_ctrl_c = t
+				inp += '\x03'
 			#endtry
-		#endwhile
 
-		os.close(f)
-		_, ret = os.waitpid(pid, 0)
-
-		if not ret in rets:
-			rets[ret] = set()
+			continue
+		else:
+			if DEBUG: dot('_')
 		#endif
 
-		rets[ret].add(host)
-	#endwhile
+		if sys.stdin in r:
+			inp_ = sys.stdin.readline()
+			if not inp_:
+				inp += b'\x04'  # EOF
+			else:
+				inp += inp_
+			#endif
+		#endif
+
+		wait_for = []
+		for cmd, (pid, f) in forks.items():
+			if f in r:
+				try:
+					out_ = os.read(f, 10000).decode()
+				except:
+					wait_for.append(cmd)
+					out_ = None
+				#endtry	
+
+				if out_:
+					if cmd == cur_cmd:
+						sys.stdout.write(out_)
+						sys.stdout.flush()
+					else:
+						outs[cmd] += out_
+					#endif
+				#endif
+			#endif
+
+			if f in w:
+				os.write(f, inp.encode())
+				inp = ''
+			#endif
+		#endfor
+
+		for cmd in wait_for:
+			pid, f = forks[cmd]
+
+			os.close(f)
+			_, ret = os.waitpid(pid, 0)
+			del forks[cmd]
+			if DEBUG: dot('-')
+
+			if cmd == cur_cmd:
+				sys.stdout.write(outs[cmd])
+				sys.stdout.flush()
+				del outs[cmd]
+			#endif
+
+			if not ret in rets:
+				rets[ret] = set()
+			#endif
+
+			rets[ret].add(cmd)
+
+			if cmd == cur_cmd:
+				cur_cmd = None
+			#endif
+		#endfor
+	#endif
 
 	ss = []
 	for ret in sorted(rets.keys()):
