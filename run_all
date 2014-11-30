@@ -255,7 +255,7 @@ def main():
 				time.sleep(0.01)
 			except KeyboardInterrupt:
 				t = time.monotonic()
-				if t - last_ctrl_c < 1: raise
+				if t - last_ctrl_c < 1: break
 				last_ctrl_c = t
 				inp += '\x03'  # ctrl-c
 			#endtry
@@ -315,6 +315,18 @@ def main():
 			if cmd == cur_cmd: cur_cmd = None
 		#endfor
 	#endif
+
+	# TODO: a lot of this is cut-n-pasted from above
+	for cmd, (pid, f) in forks.items():
+		os.close(f)
+		os.kill(pid, signal.SIGTERM)
+		_, ret = os.waitpid(pid, 0)
+
+		if not ret in rets: rets[ret] = set()
+		rets[ret].add(cmd)
+	#endfor
+
+	forks.clear()
 
 	ss = []
 	for ret in sorted(rets.keys()):
