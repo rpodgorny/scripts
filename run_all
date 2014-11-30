@@ -147,11 +147,12 @@ def main():
 		#endif
 	#endfor
 
-	hosts_to_go = hosts
-	hosts = set()
+	# TODO: the -t seems to be breaking logins to windows machines - figure shomething out
+	#sshopts = '-t -o ConnectTImeout=2'
+	sshopts = '-t'
 
 	cmds = []
-	for host in sorted(list(hosts_to_go)):
+	for host in sorted(list(hosts)):
 		if args['--user']:
 			host_full = '%s@%s' % (args['--user'], host)
 		else:
@@ -161,10 +162,9 @@ def main():
 		if args['--copy-keys']:
 			cmd = 'ssh-copy-id -i %s %s' % (PUB_KEY_FN, host_full)
 		elif args['<script>']:
-			cmd = 'ssh -o ConnectTimeout=2 %s "a=`mktemp`; cat >\$a; chmod a+x \$a; \$a; rm \$a" <%s' % (host_full, args['<script>'])
+			cmd = 'ssh %s %s "a=`mktemp`; cat >\$a; chmod a+x \$a; \$a; rm \$a" <%s' % (sshopts, host_full, args['<script>'])
 		elif args['<command>']:
-			# TODO: the -t seems to be breaking logins to windows machines - figure shomething out
-			cmd = 'ssh -o ConnectTimeout=2 -t %s "%s"' % (host_full, args['<command>'])
+			cmd = 'ssh %s %s "%s"' % (sshopts, host_full, args['<command>'])
 		#endif
 
 		if args['--pass']:
@@ -179,6 +179,7 @@ def main():
 	#endfor
 
 	forks = {}
+	forks_finished = set()
 	outs = {}
 	rets = {}
 
@@ -192,21 +193,15 @@ def main():
 		while cmds and len(forks) < MAX_FORKS:
 			cmd = cmds.pop(0)
 			pid, f = fork_it(cmd)
-			fcntl.ioctl(f, termios.TIOCSWINSZ, struct.pack('HHHH', rows, cols, 0, 0))
+			fcntl.ioctl(f, termios.TIOCSWINSZ, struct.pack('HHHH', rows, cols, 0, 0))  # send terminal size
 			forks[cmd] = (pid, f)
 			outs[cmd] = ''
 			if DEBUG: dot('+')
 		#endif
 
 		if not cur_cmd:
-			if forks:
-				cur_cmd = sorted(list(forks.keys()))[0]
-			#endif
-
-			# print out finished forks
-			for cmd in sorted(list(outs.copy().keys())):
+			for cmd in sorted(list(outs.keys())):
 				if cmd in forks: continue  # still active
-				if cmd == cur_cmd: continue  # we'll write this later
 
 				i += 1
 				print('%s(%d/%d) %s%s%s' % (color.YELLOW, i, total, color.BOLD, cmd, color.END))
@@ -216,7 +211,11 @@ def main():
 				del outs[cmd]
 			#endfor
 
-			if not cur_cmd: break  # we're done
+			if forks:
+				cur_cmd = sorted(list(forks.keys()))[0]
+			else:
+				break  # we're done
+			#endif
 
 			pid, f = forks[cur_cmd]
 			inp = ''
@@ -226,7 +225,7 @@ def main():
 
 			if cur_cmd in outs:
 				sys.stdout.write(outs[cur_cmd])
-				outs[cur_cmd] = ''
+				del outs[cur_cmd]
 			#endif
 		#endif
 
@@ -248,7 +247,7 @@ def main():
 				t = time.monotonic()
 				if t - last_ctrl_c < 1: raise
 				last_ctrl_c = t
-				inp += '\x03'
+				inp += '\x03'  # ctrl-c
 			#endtry
 
 			continue
@@ -265,13 +264,13 @@ def main():
 			#endif
 		#endif
 
-		wait_for = []
+		just_finished = set()
 		for cmd, (pid, f) in forks.items():
 			if f in r:
 				try:
 					out_ = os.read(f, 10000).decode()
 				except:
-					wait_for.append(cmd)
+					just_finished.add(cmd)
 					out_ = None
 				#endtry	
 
@@ -291,29 +290,19 @@ def main():
 			#endif
 		#endfor
 
-		for cmd in wait_for:
-			pid, f = forks[cmd]
-
-			os.close(f)
-			_, ret = os.waitpid(pid, 0)
-			del forks[cmd]
+		for cmd in just_finished:
 			if DEBUG: dot('-')
 
-			if cmd == cur_cmd:
-				sys.stdout.write(outs[cmd])
-				sys.stdout.flush()
-				del outs[cmd]
-			#endif
+			pid, f = forks[cmd]
+			os.close(f)
+			_, ret = os.waitpid(pid, 0)
 
-			if not ret in rets:
-				rets[ret] = set()
-			#endif
-
+			if not ret in rets: rets[ret] = set()
 			rets[ret].add(cmd)
 
-			if cmd == cur_cmd:
-				cur_cmd = None
-			#endif
+			del forks[cmd]
+
+			if cmd == cur_cmd: cur_cmd = None
 		#endfor
 	#endif
 
