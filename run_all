@@ -194,6 +194,8 @@ def main():
 		sess = tmuxp.Server().list_sessions()[0]
 		cmds_to_go = cmds.copy()
 		ids = {}
+		total = len(cmds_to_go)
+		i = 0
 		while 1:
 			while len(ids) < nprocs and cmds_to_go:
 				host = sorted(list(cmds_to_go.keys()))[0]
@@ -202,8 +204,10 @@ def main():
 
 				w = sess.new_window(attach=False)
 				w.rename_window(host)
-				print('adding %s %s' % (w._window_id, cmd))
 				ids[w._window_id] = w
+
+				i += 1
+				print('(%d/%d) added %s %s' % (i, total, w._window_id, cmd))
 
 				if args['--interactive']:
 					w.list_panes()[0].send_keys(cmd)
@@ -223,10 +227,10 @@ def main():
 
 			active_ids = list_window_ids(sess)
 
-			for i in ids.copy().keys():
-				if not i in active_ids:
-					print('removing %s' % i)
-					del ids[i]
+			for id_ in ids.copy().keys():
+				if not id_ in active_ids:
+					print('removing %s' % id_)
+					del ids[id_]
 				#endif
 			#endfor
 
