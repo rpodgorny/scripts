@@ -31,7 +31,6 @@ import pwd
 import socket
 import time
 import subprocess
-import tmuxp
 import re
 
 
@@ -102,17 +101,33 @@ def check_pub_key(fn):
 #enddef
 
 
-def list_window_ids(session):
-	ret = []
+def tmux_list_windows():
+	res = subprocess.check_output(['/usr/bin/tmux', 'list-windows', '-F', '#{window_id}'], universal_newlines=True)
+	return res.split('\n')
+#enddef
 
-	t = session.tmux('list-windows')
-	for line in t.stdout:
-		m = re.search('.*(\@\d+).*', line)
-		id_ = m.groups()[0]
-		ret.append(id_)
-	#endfor
 
-	return ret
+def tmux_new_window(name, cmd=None):
+	lst =['/usr/bin/tmux', 'new-window', '-n', name, '-P', '-F', '#{window_id}', '-d']
+	if cmd:
+		lst.append(cmd)
+	#endif
+	res = subprocess.check_output(lst, universal_newlines=True)
+	return res.split('\n')[0]
+#enddef
+
+
+def tmux_send_keys(w_id, cmd, enter=True):
+	lst = ['/usr/bin/tmux', 'send-keys', '-t', ':%s' % w_id, '-l', cmd]
+	if enter:
+		lst.extend([';', 'send-keys', '-t', ':%s' % w_id, 'Enter'])
+	#endif
+	res = subprocess.check_output(lst, universal_newlines=True)
+#enddef
+
+
+def tmux_respawn_pane(w_id, cmd):
+	res = subprocess.check_output(['/usr/bin/tmux', 'respawn-pane', '-t', ':%s' % w_id, '-k', cmd], universal_newlines=True)
 #enddef
 
 
@@ -191,7 +206,6 @@ def main():
 			nprocs = 10
 		#endtry
 
-		sess = tmuxp.Server().list_sessions()[0]
 		cmds_to_go = cmds.copy()
 		ids = {}
 		total = len(cmds_to_go)
@@ -202,30 +216,35 @@ def main():
 				cmd = cmds_to_go[host]
 				del cmds_to_go[host]
 
-				w = sess.new_window(attach=False)
-				w.rename_window(host)
-				ids[w._window_id] = w
+				if args['--interactive']:
+					w_id = tmux_new_window(host)
+					tmux_send_keys(w_id, cmd)
+				else:
+					w_id = tmux_new_window(host, cmd)
+				#endif
+
+				ids[w_id] = w_id  # TODO: ugly
 
 				i += 1
-				print('(%d/%d) added %s %s' % (i, total, w._window_id, cmd))
+				print('(%d/%d) added %s %s' % (i, total, w_id, cmd))
 
+				'''
 				if args['--interactive']:
-					w.list_panes()[0].send_keys(cmd)
+					tmux_send_keys(w_id, cmd)
 				else:
-					w.tmux('respawn-pane', '-k', cmd)
-					
-					'''
-					if args['<script>']:
+					tmux_respawn_pane(w_id, cmd)
+
+					###if args['<script>']:
 						data = open(args['<script>'], 'r').read()
 						w.list_panes()[0].send_keys(data, enter=False)
 						#w.list_panes()[0].send_keys('$\'\\004\'', enter=False)
 						#w.list_panes()[0].tmux('send-keys', 'C-d')
 					#endif
-					'''
 				#endif
+				'''
 			#endwhile
 
-			active_ids = list_window_ids(sess)
+			active_ids = tmux_list_windows()
 
 			for id_ in ids.copy().keys():
 				if not id_ in active_ids:
@@ -235,18 +254,6 @@ def main():
 			#endfor
 
 			if not ids and not cmds_to_go: break
-
-
-			'''
-			ws = sess.list_windows()
-			for w in wins:
-				if not w in ws:
-					print('removing %s' % w)
-					#w.kill_window()
-					wins.remove(w)
-				#endif
-			#endfor
-			'''
 
 			time.sleep(1)
 		#endwhile
