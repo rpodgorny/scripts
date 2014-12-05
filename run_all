@@ -285,6 +285,7 @@ def main():
 				dead_map[w_id] = is_dead
 			#endfor
 
+			# TODO: don't kill the window if it's currently open?
 			for id_ in ids.copy().keys():
 				#if not id_ in active_ids:
 				if id_ in dead_map and dead_map[id_]:
