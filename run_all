@@ -103,18 +103,34 @@ def check_pub_key(fn):
 
 
 def tmux_list_windows():
-	res = subprocess.check_output(['/usr/bin/tmux', 'list-windows', '-F', '#{window_id}'], universal_newlines=True)
-	return res.split('\n')
+	ret = []
+
+	res = subprocess.check_output(['/usr/bin/tmux', 'list-windows', '-F', '#{window_id} #{pane_dead}'], universal_newlines=True)
+
+	for line in res.split('\n'):
+		if not line: continue
+
+		w_id, pane_dead = line.split()
+		pane_dead = {'0': False, '1': True}[pane_dead]
+		ret.append((w_id, pane_dead))
+	#endfor
+
+	return ret
 #enddef
 
 
 def tmux_new_window(name, cmd=None):
-	lst =['/usr/bin/tmux', 'new-window', '-n', name, '-P', '-F', '#{window_id}', '-d']
+	lst = ['/usr/bin/tmux', 'new-window', '-n', name, '-P', '-F', '#{window_id}', '-d']
 	if cmd:
 		lst.append(cmd)
 	#endif
 	res = subprocess.check_output(lst, universal_newlines=True)
 	return res.split('\n')[0]
+#enddef
+
+
+def tmux_kill_window(w_id):
+	res = subprocess.call(['/usr/bin/tmux', 'kill-window', '-t', ':%s' % w_id], universal_newlines=True)
 #enddef
 
 
@@ -129,6 +145,17 @@ def tmux_send_keys(w_id, cmd, enter=True):
 
 def tmux_respawn_pane(w_id, cmd):
 	res = subprocess.check_output(['/usr/bin/tmux', 'respawn-pane', '-t', ':%s' % w_id, '-k', cmd], universal_newlines=True)
+#enddef
+
+
+def tmux_capture_pane(w_id):
+	out = subprocess.check_output(['/usr/bin/tmux', 'capture-pane', '-t', ':%s' % w_id, '-p'], universal_newlines=True)
+#enddef
+
+
+def tmux_set_window_option(w_id, option, value):
+	# TODO: why is the window_id format different here?
+	res = subprocess.call(['/usr/bin/tmux', 'set-window-option', '-t', '%s' % w_id, option, value], universal_newlines=True)
 #enddef
 
 
@@ -229,6 +256,8 @@ def main():
 					w_id = tmux_new_window(host, cmd)
 				#endif
 
+				tmux_set_window_option(w_id, 'set-remain-on-exit', 'on')
+
 				ids[w_id] = w_id  # TODO: ugly
 
 				i += 1
@@ -250,11 +279,16 @@ def main():
 				'''
 			#endwhile
 
-			active_ids = tmux_list_windows()
+			dead_map = {}
+			for w_id, is_dead in tmux_list_windows():
+				dead_map[w_id] = is_dead
+			#endfor
 
 			for id_ in ids.copy().keys():
-				if not id_ in active_ids:
+				#if not id_ in active_ids:
+				if id_ in dead_map and dead_map[id_]:
 					print('removing %s' % id_)
+					tmux_kill_window(id_)
 					del ids[id_]
 				#endif
 			#endfor
