@@ -9,14 +9,15 @@ Usage:
   run_all [options] --copy-keys
 
 Options:
-  -t <tag>       Only consider hosts with <tag>.
-  --user=<user>  Username to use for the remote host.
-  --pass=<pass>  Password to use for sshpass.
-  --interactive  Interactive mode. You have to disconnect manually.
-  -p <num>       Number of parallel processes to run.
-  --single       Run in single thread - skip tmux at all.
-  --sudo         Use sudo on remote system.
-  --copy-keys    Copy local ssh keys to remote servers.
+  -t <tag>                       Only consider hosts with <tag>.
+  --user=<user>                  Username to use for the remote host.
+  --pass=<pass>                  Password to use for sshpass.
+  --no-strict-host-key-checking  Disable ssh host key checking.
+  --interactive                  Interactive mode. You have to disconnect manually.
+  -p <num>                       Number of parallel processes to run.
+  --single                       Run in single thread - skip tmux at all.
+  --sudo                         Use sudo on remote system.
+  --copy-keys                    Copy local ssh keys to remote servers.
 
 Arguments:
   <command>  Command to run.
@@ -148,9 +149,14 @@ def main():
 		#endif
 	#endfor
 
+	sshopts = ''
+	#sshopts += ' -o ConnectTImeout=2'
 	# TODO: the -t seems to be breaking logins to windows machines - figure shomething out
-	#sshopts = '-t -o ConnectTImeout=2'
-	sshopts = '-t'
+	sshopts += '-t'
+
+	if args['--no-strict-host-key-checking']:
+		sshopts += ' -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+	#endif
 
 	cmds = {}
 	for host in hosts:
