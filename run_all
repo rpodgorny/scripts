@@ -53,6 +53,7 @@ HOSTS = [
 	'simir.podgorny.cz arch linux podgorny',
 	'taurus.asterix.cz arch asterix linux router',
 	'ucho.podgorny.cz arch arm linux podgorny',
+	'zombie.asterix.cz arch linux asterix',
 ]
 
 #for i in range(1, 13):
