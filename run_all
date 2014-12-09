@@ -234,6 +234,8 @@ def main():
 		cmds[host] = cmd
 	#endfor
 
+	exits = {}
+
 	if args['--single']:
 		total = len(cmds)
 		i = 0
@@ -241,7 +243,18 @@ def main():
 			cmd = cmds[host]
 			i += 1
 			print('%s(%d/%d) %s%s%s' % (color.YELLOW, i, total, color.BOLD, cmd, color.END))
-			subprocess.call(cmd, shell=True)
+			exit_status = subprocess.call(cmd, shell=True)
+
+			if not exit_status in exits: exits[exit_status] = set()
+			exits[exit_status].add(host)
+
+			if exit_status == 0:
+				col = color.GREEN
+			else:
+				col = color.RED
+			#endif
+
+			print('%s%s -> ret: %d%s' % (col, cmd, exit_status, color.END))
 		#endfor
 	else:
 		try:
@@ -251,11 +264,11 @@ def main():
 		#endtry
 
 		cmds_to_go = cmds.copy()
-		ids = {}
+		running = {}
 		total = len(cmds_to_go)
 		i = 0
 		while 1:
-			while len(ids) < nprocs and cmds_to_go:
+			while len(running) < nprocs and cmds_to_go:
 				host = sorted(list(cmds_to_go.keys()))[0]
 				cmd = cmds_to_go[host]
 				del cmds_to_go[host]
@@ -269,10 +282,10 @@ def main():
 
 				tmux_set_window_option(w_id, 'set-remain-on-exit', 'on')
 
-				ids[w_id] = w_id  # TODO: ugly
+				running[w_id] = (host, cmd)
 
 				i += 1
-				print('(%d/%d) added %s %s' % (i, total, w_id, cmd))
+				print('%s(%d/%d) (%s) %s%s' % (color.YELLOW, i, total, w_id, cmd, color.END))
 
 				'''
 				if args['--interactive']:
@@ -291,21 +304,51 @@ def main():
 			#endwhile
 
 			for w_id, is_dead, exit_status in tmux_list_windows():
-				if not w_id in ids: continue
+				if not w_id in running: continue
 				if not is_dead: continue
 
 				# TODO: don't kill the window if it's currently open?
 
-				print('removing %s -> ret: %d' % (w_id, exit_status))
+				host, cmd = running[w_id]
+
+				if not exit_status in exits: exits[exit_status] = set()
+				exits[exit_status].add(host)
+
+				if exit_status is None:
+					col = color.GREEN
+					exit_status = 'unknown'  # TODO: not very nice
+				elif exit_status == 0:
+					col = color.GREEN
+				else:
+					col = color.RED
+				#endif
+
+				print('%s(%s) %s -> ret: %s%s' % (col, w_id, cmd, exit_status, color.END))
+
 				tmux_kill_window(w_id)
-				del ids[w_id]
+				del running[w_id]
 			#endfor
 
-			if not ids and not cmds_to_go: break
+			if not running and not cmds_to_go: break
 
 			time.sleep(1)
 		#endwhile
 	#endif
+
+	rets = []
+	for ret in sorted(exits.keys()):
+		if ret is None:
+			col = color.YELLOW
+		elif ret == 0:
+			col = color.GREEN
+		else:
+			col = color.RED
+		#endif
+
+		rets.append(' %s%s: %d' % (col, ret, len(exits[ret])))
+	#endfor
+
+	print('rets: %s%s' % (', '.join(rets), color.END))
 #enddef
 
 
