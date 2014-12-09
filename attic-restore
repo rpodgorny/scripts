@@ -1,0 +1,74 @@
+#!/bin/sh
+
+set -x
+
+DEV=$1
+HOSTNAME=$2
+
+REMOTE=backup@milhouse.podgorny.cz
+ARCHIVE=`date +%Y%m%dT%H%M%S` 
+
+if [ -z "$DEV" ]; then
+	echo 'no device specified!'
+	exit
+fi
+
+if [ -z "$HOSTNAME" ]; then
+	HOSTNAME=`hostname`
+	echo no hostname specified, using $HOSTNAME
+fi
+
+REPO=$REMOTE:attic/$HOSTNAME
+
+ARCHIVE=`attic list $REPO | tail -n 1 | cut -f1 -d' '`
+echo $ARCHIVE
+
+dd if=/dev/zero of=$DEV bs=2048 count=1
+
+echo 'n
+p
+1
+
++100M
+n
+p
+2
+
+
+t
+1
+c
+a
+1
+w' | fdisk $DEV
+sleep 5
+partprobe
+
+mkfs.vfat -n BOOT ${DEV}1
+mkfs.btrfs -f -L ROOT ${DEV}2
+
+rm -rf /tmp/attic_restore
+mkdir -p /tmp/attic_restore
+mount ${DEV}2 -o compress=lzo /tmp/attic_restore
+mkdir /tmp/attic_restore/boot
+mount ${DEV}1 /tmp/attic_restore/boot
+
+cd /tmp/attic_restore
+
+mkdir dev
+mkdir proc
+mkdir run
+mkdir sys
+mkdir tmp
+
+attic extract $REPO::$ARCHIVE
+
+echo "/usr/bin/extlinux --install /boot" | arch-chroot .
+
+cd -
+
+umount -R /tmp/attic_restore
+
+dd if=/usr/lib/syslinux/bios/mbr.bin of=$DEV
+
+sync
