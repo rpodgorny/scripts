@@ -315,7 +315,7 @@ def main():
 				exits[exit_status].add(host)
 
 				if exit_status is None:
-					col = color.GREEN
+					col = color.YELLOW
 					exit_status = 'unknown'  # TODO: not very nice
 				elif exit_status == 0:
 					col = color.GREEN
