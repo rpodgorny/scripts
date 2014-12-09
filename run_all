@@ -35,7 +35,12 @@ import subprocess
 import re
 
 
-TMUX = '/home/radek/work/tmux/tmux'
+TMUX = '/usr/bin/tmux'
+SSHPASS = '/usr/bin/sshpass'
+PUB_KEY_FN = os.path.expanduser('~/.ssh/id_ecdsa.pub')
+MAX_FORKS = 10
+DEBUG = 0
+
 
 HOSTS = [
 	'admiral.podgorny.cz arch linux podgorny',
@@ -69,11 +74,6 @@ for i in range(1, 200):
 for i in range(1, 1000):
 	HOSTS.append('mj%dd.asterix.cz asterix windows' % i)
 #endfor
-
-
-PUB_KEY_FN = os.path.expanduser('~/.ssh/id_ecdsa.pub')
-MAX_FORKS = 10
-DEBUG = 0
 
 
 class color:
@@ -224,11 +224,11 @@ def main():
 		#endif
 
 		if args['--pass']:
-			if not os.path.isfile('/usr/bin/sshpass'):
-				raise Exception('/usr/bin/sshpass does not exist')
+			if not os.path.isfile(SSHPASS):
+				raise Exception('%s does not exist' % SSHPASS)
 			#endif
 
-			cmd = '/usr/bin/sshpass -p%s %s' % (args['--pass'], cmd)
+			cmd = '%s -p%s %s' % (SSHPASS, args['--pass'], cmd)
 		#endif
 
 		cmds[host] = cmd
@@ -257,6 +257,10 @@ def main():
 			print('%s%s -> ret: %d%s' % (col, cmd, exit_status, color.END))
 		#endfor
 	else:
+		if not os.path.isfile(TMUX):
+			raise Exception('%s does not exist' % TMUX)
+		#endif
+
 		try:
 			nprocs = int(args['-p'])
 		except:
