@@ -142,7 +142,7 @@ def tmux_new_window(name, cmd=None):
 
 
 def tmux_kill_window(w_id):
-	res = subprocess.call([TMUX, 'kill-window', '-t', ':%s' % w_id], universal_newlines=True)
+	res = subprocess.check_call([TMUX, 'kill-window', '-t', ':%s' % w_id], universal_newlines=True)
 #enddef
 
 
@@ -167,7 +167,7 @@ def tmux_capture_pane(w_id):
 
 def tmux_set_window_option(w_id, option, value):
 	# TODO: why is the window_id format different here?
-	res = subprocess.call([TMUX, 'set-window-option', '-t', '%s' % w_id, option, value], universal_newlines=True)
+	res = subprocess.check_call([TMUX, 'set-window-option', '-t', '%s' % w_id, option, value], universal_newlines=True)
 #enddef
 
 
