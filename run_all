@@ -123,6 +123,7 @@ def tmux_list_windows():
 		else:
 			pane_dead_status = None
 		#endif
+
 		ret.append((w_id, pane_dead, pane_dead_status))
 	#endfor
 
@@ -160,7 +161,7 @@ def tmux_respawn_pane(w_id, cmd):
 
 
 def tmux_capture_pane(w_id):
-	out = subprocess.check_output([TMUX, 'capture-pane', '-t', ':%s' % w_id, '-p'], universal_newlines=True)
+	res = subprocess.check_output([TMUX, 'capture-pane', '-t', ':%s' % w_id, '-p'], universal_newlines=True)
 #enddef
 
 
@@ -283,6 +284,8 @@ def main():
 				else:
 					w_id = tmux_new_window(host, cmd)
 				#endif
+
+				assert w_id
 
 				tmux_set_window_option(w_id, 'set-remain-on-exit', 'on')
 
