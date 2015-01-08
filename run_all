@@ -262,6 +262,11 @@ def main():
 
 	exits = {}
 
+	if not os.path.isfile(TMUX):
+		print('%s%s not found, implying --single%s' % (color.RED, TMUX, color.END))
+		args['--single'] = True
+	#endif
+
 	if args['--single']:
 		total = len(cmds)
 		i = 0
@@ -283,10 +288,6 @@ def main():
 			print('%s%s -> ret: %d%s' % (col, cmd, exit_status, color.END))
 		#endfor
 	else:
-		if not os.path.isfile(TMUX):
-			raise Exception('%s does not exist' % TMUX)
-		#endif
-
 		try:
 			nprocs = int(args['-p'])
 		except:
