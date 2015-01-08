@@ -42,40 +42,6 @@ MAX_FORKS = 10
 DEBUG = 0
 
 
-HOSTS = [
-	'admiral.podgorny.cz arch linux podgorny',
-	'berta.podgorny.cz arch arm linux podgorny',
-	'chuck.podgorny.cz arch linux podgorny',
-	'europa.podgorny.cz arch arm linux podgorny router',
-	'hubert.asterix.cz arch asterix linux',
-	'kulicka.podgorny.cz arch arm linux podgorny',
-	'milan.podgorny.cz arch arm linux podgorny',
-	'milhouse.podgorny.cz arch linux podgorny sureboot',
-	'mrtvola.asterix.cz arch asterix linux',
-	'orion.asterix.cz arch asterix linux sureboot',
-	'pimiento.podgorny.cz arch linux podgorny',
-	'kapitan.podgorny.cz gentoo linux podgorny',
-	'pokuston.podgorny.cz arch arm linux podgorny',
-	'rpodgorny.podgorny.cz arch linux podgorny',
-	'simir.podgorny.cz arch linux podgorny',
-	'taurus.asterix.cz arch asterix linux router',
-	'ucho.podgorny.cz arch arm linux podgorny',
-	'zombie.asterix.cz arch linux asterix',
-]
-
-#for i in range(1, 13):
-#	HOSTS.append('miner%d.asterix.cz arch asterix linux miner' % i)
-#endfor
-
-for i in range(1, 200):
-	HOSTS.append('mj%d.asterix.cz asterix atx300 windows' % i)
-#endfor
-
-for i in range(1, 1000):
-	HOSTS.append('mj%dd.asterix.cz asterix windows' % i)
-#endfor
-
-
 class color:
 	PURPLE = '\033[95m'
 	CYAN = '\033[96m'
@@ -88,6 +54,66 @@ class color:
 	UNDERLINE = '\033[4m'
 	END = '\033[0m'
 #endclass
+
+
+def get_hosts():
+	lines = [
+		'admiral.podgorny.cz arch linux podgorny',
+		'berta.podgorny.cz arch arm linux podgorny',
+		'chuck.podgorny.cz arch linux podgorny',
+		'europa.podgorny.cz arch arm linux podgorny router',
+		'hubert.asterix.cz arch asterix linux',
+		'kulicka.podgorny.cz arch arm linux podgorny',
+		'milan.podgorny.cz arch arm linux podgorny',
+		'milhouse.podgorny.cz arch linux podgorny sureboot',
+		'mj[1-200].asterix.cz asterix atx300 windows',
+		'mj[1-2000]d.asterix.cz asterix windows',
+		'mrtvola.asterix.cz arch asterix linux',
+		'orion.asterix.cz arch asterix linux sureboot',
+		'pimiento.podgorny.cz arch linux podgorny',
+		'kapitan.podgorny.cz gentoo linux podgorny',
+		'pokuston.podgorny.cz arch arm linux podgorny',
+		'rpodgorny.podgorny.cz arch linux podgorny',
+		'simir.podgorny.cz arch linux podgorny',
+		'taurus.asterix.cz arch asterix linux router',
+		'ucho.podgorny.cz arch arm linux podgorny',
+		'zombie.asterix.cz arch linux asterix',
+	]
+
+	lines_exp = []
+	for line in lines:
+		lines_exp.extend(expand(line))
+	#endfor
+
+	ret = {}
+	for i in lines_exp:
+		host, *tags = i.split()
+		if not host in ret: ret[host] = set()
+		ret[host] |= set(tags)
+	#endfor
+
+	return ret
+#enddef
+
+
+def expand(s):
+	if not '[' in s or not '-' in s or not ']' in s: return [s, ]
+
+	pre = s.split('[')[0]
+	post = s.split(']')[1]
+
+	from_ = s.split('[')[1].split('-')[0]
+	to_ = s.split(']')[0].split('-')[1]
+	from_ = int(from_)
+	to_ = int(to_)
+
+	ret = []
+	for i in range(from_, to_ + 1):
+		ret.append('%s%s%s' % (pre, i, post))
+	#endfor
+
+	return ret
+#enddef
 
 
 def check_pub_key(fn):
@@ -181,8 +207,7 @@ def main():
 	tag = args['-t']
 
 	hosts = set()
-	for i in HOSTS:
-		host, *tags = i.split()
+	for host, tags in get_hosts().items():
 		if not tag or tag in tags:
 			hosts.add(host)
 		#endif
