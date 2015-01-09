@@ -4,11 +4,13 @@
 Run command on multiple hosts.
 
 Usage:
-  run_all [options] [<command>]
+  run_all [options]
+  run_all [options] <command>
   run_all [options] [--sudo] --script <script>
   run_all [options] --copy-keys
 
 Options:
+  -H <host1,host2,...>           Comma sparated list of hosts to connect to.
   -t <tag>                       Only consider hosts with <tag>.
   --user=<user>                  Username to use for the remote host.
   --pass=<pass>                  Password to use for sshpass.
@@ -204,14 +206,18 @@ def main():
 		raise Exception('i don\'t like the public key')
 	#endif
 
-	tag = args['-t']
+	if args['-H']:
+		hosts = set(args['-H'].split(','))
+	else:
+		tag = args['-t']
 
-	hosts = set()
-	for host, tags in get_hosts().items():
-		if not tag or tag in tags:
-			hosts.add(host)
-		#endif
-	#endfor
+		hosts = set()
+		for host, tags in get_hosts().items():
+			if not tag or tag in tags:
+				hosts.add(host)
+			#endif
+		#endfor
+	#endif
 
 	sshopts = ''
 	#sshopts += ' -o ConnectTImeout=2'
