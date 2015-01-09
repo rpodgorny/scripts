@@ -4,7 +4,7 @@
 Run command on multiple hosts.
 
 Usage:
-  run_all [options] <command>
+  run_all [options] [<command>]
   run_all [options] [--sudo] --script <script>
   run_all [options] --copy-keys
 
@@ -247,6 +247,8 @@ def main():
 			#cmd = 'ssh %s %s "cat | %s sh"' % (sshopts, host_full, sudo)
 		elif args['<command>']:
 			cmd = 'ssh %s %s "%s"' % (sshopts, host_full, args['<command>'].replace('"', '\\"'))
+		else:
+			cmd = 'ssh %s %s' % (sshopts, host_full)
 		#endif
 
 		if args['--pass']:
