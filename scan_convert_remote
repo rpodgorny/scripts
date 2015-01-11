@@ -7,9 +7,11 @@ sshfs kulicka.podgorny.cz:scan /tmp/scan_convert || exit
 
 cd /tmp/scan_convert
 
-for i in *.pnm; do
-	convert ${i} ${i:0: -4}.jpg && rm ${i}
-done
+if [ -n "`ls *.pnm`" ]; then
+	for i in *.pnm; do
+		convert ${i} ${i:0: -4}.jpg && rm ${i}
+	done
+fi
 
 cd -
 
