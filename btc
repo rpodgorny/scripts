@@ -32,7 +32,15 @@ def main():
 		f.write(hostname)
 		f.close()
 
-		subprocess.call('bitcoin-qt -datadir=%s' % local_path, shell=True)
+		if '--reindex' in sys.argv:
+			reindex = '-reindex'
+		else:
+			reindex = ''
+		#endif
+
+		cmd = 'bitcoin-qt %s -datadir=%s' % (reindex, local_path)
+		print(cmd)
+		subprocess.call(cmd, shell=True)
 
 		os.remove(lock_fn)
 
