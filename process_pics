@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+set -x
+
+which mmv
+which convert
+which jpegoptim
+
+mmv "*" "#l1"
+
+for i in `ls *.jpg`; do
+	convert $i -auto-orient auto_$i && mv auto_$i $i
+done
+
+jpegoptim -p -m85 *.jpg
