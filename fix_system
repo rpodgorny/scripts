@@ -6,9 +6,15 @@ import glob
 import socket
 
 
-def call(cmd):
-	print('>>> %s' % cmd)
-	return subprocess.call(cmd, shell=True)
+def call(cmd, silent=False):
+	if not silent:
+		print('>>> %s' % cmd)
+		stdout = None
+	else:
+		stdout = subprocess.DEVNULL
+	#endif
+
+	return subprocess.call(cmd, shell=True, stdout=stdout)
 #enddef
 
 
@@ -33,7 +39,7 @@ def fix_mkinitcpio():
 	fn = '/etc/mkinitcpio.conf'
 
 	if not os.path.isfile(fn): return
-	if call('grep "^HOOKS=.*autodetect.*" %s' % fn) != 0: return
+	if call('grep "^HOOKS=.*autodetect.*" %s' % fn, silent=True) != 0: return
 
 	if not ask('fix mkinitcpio?'): return
 
@@ -47,7 +53,7 @@ def fix_mkinitcpio():
 def fix_locale_gen():
 	fn = '/etc/locale.gen'
 
-	if call('grep "^#en_US.UTF-8" %s' % fn) != 0: return
+	if call('grep "^#en_US.UTF-8" %s' % fn, silent=True) != 0: return
 
 	if not ask('fix locale.gen? (en_US.UTF-8)'): return
 
@@ -68,7 +74,7 @@ def fix_locale():
 
 
 def fix_radek():
-	if call('grep "^radek:" /etc/passwd') == 0: return
+	if call('grep "^radek:" /etc/passwd', silent=True) == 0: return
 
 	if not ask('add user radek?'): return
 
@@ -132,7 +138,7 @@ def fix_services():
 def fix_pacman_sources():
 	fn = '/etc/pacman.conf'
 
-	if call('grep "^\[rpodgorny\]$" %s' % fn) == 0: return
+	if call('grep "^\[rpodgorny\]$" %s' % fn, silent=True) == 0: return
 
 	if not ask('add rpodgorny repo to pacman.conf?'): return
 
