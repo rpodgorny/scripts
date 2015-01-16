@@ -198,6 +198,13 @@ def fix_fstrim():
 #enddef
 
 
+def fix_backup():
+	if os.path.isfile('/etc/cron.d/backup'): return
+
+	print('no /etc/cron.d/backup')
+#enddef
+
+
 def fix_ssh_host_keys_hostname():
 	should_be = 'root@%s' % socket.gethostname()
 
@@ -276,6 +283,7 @@ def main():
 	fix_ssh_user_keys_hostname()
 	fix_ssh_user_keys_wrong_type()
 	fix_fstrim()
+	fix_backup()
 	fix_root()
 	fix_radek()
 	fix_x()
