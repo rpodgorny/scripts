@@ -39,7 +39,7 @@ import re
 
 TMUX = '/usr/bin/tmux'
 SSHPASS = '/usr/bin/sshpass'
-PUB_KEY_FN = os.path.expanduser('~/.ssh/id_ecdsa.pub')
+#PUB_KEY_FN = os.path.expanduser('~/.ssh/id_ecdsa.pub')
 MAX_FORKS = 10
 DEBUG = 0
 
@@ -202,8 +202,8 @@ def tmux_set_window_option(w_id, option, value):
 def main():
 	args = docopt.docopt(__doc__, version=__version__)
 
-	if args['--copy-keys'] and not check_pub_key(PUB_KEY_FN):
-		raise Exception('i don\'t like the public key')
+	#if args['--copy-keys'] and not check_pub_key(PUB_KEY_FN):
+	#	raise Exception('i don\'t like the public key')
 	#endif
 
 	if args['-H']:
@@ -237,7 +237,8 @@ def main():
 		#endif
 
 		if args['--copy-keys']:
-			cmd = 'ssh-copy-id -i %s %s' % (PUB_KEY_FN, host_full)
+			#cmd = 'ssh-copy-id -i %s %s' % (PUB_KEY_FN, host_full)
+			cmd = 'ssh-copy-id %s' % (host_full, )
 		elif args['<script>']:
 			if args['--sudo']:
 				sudo = 'sudo'
