@@ -208,7 +208,7 @@ def fix_ssh_host_keys_hostname():
 		#endwith
 
 		if user_and_host != should_be:
-			print('i dont like hostname in ssh host key in %s' % fn)
+			print('i dont like %s in ssh host key in %s' % (user_and_host, fn))
 		#endif
 	#endfor
 #enddef
@@ -217,7 +217,7 @@ def fix_ssh_host_keys_hostname():
 def fix_ssh_user_keys_hostname():
 	fns = glob.glob('/home/*/.ssh/*.pub')
 	for fn in fns:
-		user = fn.split('/')[1]
+		user = fn.split('/')[2]
 		should_be = '%s@%s' % (user, socket.gethostname())
 
 		with open(fn, 'r') as f:
@@ -225,7 +225,7 @@ def fix_ssh_user_keys_hostname():
 		#endwith
 
 		if user_and_host != should_be:
-			print('i dont like hostname in ssh user key in %s' % fn)
+			print('i dont like %s in ssh user key in %s' % (user_and_host, fn))
 		#endif
 	#endfor
 
@@ -239,7 +239,7 @@ def fix_ssh_user_keys_hostname():
 		#endwith
 
 		if user_and_host != should_be:
-			print('i dont like hostname in ssh user key in %s' % fn)
+			print('i dont like %s in ssh user key in %s' % (user_and_host, fn))
 		#endif
 	#endfor
 #enddef
