@@ -269,6 +269,13 @@ def fix_ssh_user_keys_wrong_type():
 #enddef
 
 
+def fix_ssh_root_authorized_keys():
+	if not os.path.isfile('/root/.ssh/authorized_keys'): return
+
+	print('/root/.ssh/authorized_keys exists')
+#enddef
+
+
 
 def main():
 	fix_mkinitcpio()
@@ -282,6 +289,7 @@ def main():
 	fix_ssh_host_keys_hostname()
 	fix_ssh_user_keys_hostname()
 	fix_ssh_user_keys_wrong_type()
+	fix_ssh_root_authorized_keys()
 	fix_fstrim()
 	fix_backup()
 	fix_root()
