@@ -22,7 +22,8 @@ $REPO::$ARCHIVE \
 --exclude '/home/backup/*' \
 --exclude '/home/*/tmp/*' \
 --exclude '/home/*/.cache/*' \
---exclude '/home/*/.thumbnails/*'
+--exclude '/home/*/.thumbnails/*' \
+|| exit 1
 
 attic prune \
 --stats \
