@@ -3,9 +3,11 @@
 set -x
 
 cd ~/dotfiles
-hg pull -u
+#hg pull -u
+git pull --all
 cd -
 
 cd ~/scripts
-hg pull -u
+#hg pull -u
+git pull --all
 cd -
