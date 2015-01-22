@@ -99,7 +99,7 @@ def fix_root():
 
 
 def fix_packages():
-	for p in ['cronie', 'ntp', ('openssh', 'openssh-hpn'), 'postfix', 'uptimed', ]:
+	for p in ['cronie', 'git', 'ntp', ('openssh', 'openssh-hpn'), 'postfix', 'uptimed', ]:
 		installed = False
 
 		if isinstance(p, tuple):
