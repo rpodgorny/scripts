@@ -125,7 +125,7 @@ def fix_packages():
 
 def fix_services():
 	for s in ['cronie', 'ntpd', 'sshd', 'postfix', 'uptimed', ]:
-		if os.path.islink('/etc/systemd/system/multi-user.target.wants/%s.service' % s): return
+		if os.path.islink('/etc/systemd/system/multi-user.target.wants/%s.service' % s): continue
 
 		if not ask('enable and start %s?' % s): continue
 
