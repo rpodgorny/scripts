@@ -146,7 +146,7 @@ def fix_pacman_sources():
 
 [rpodgorny]
 SigLevel = Never
-Server = http://archlinux.podgorny.cz/$repo/os/$arch" >> %s''' % fn)
+Server = http://archlinux.podgorny.cz/\$repo/os/\$arch" >> %s''' % fn)
 #enddef
 
 
