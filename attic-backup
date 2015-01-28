@@ -20,6 +20,7 @@ $REPO::$ARCHIVE \
 --exclude '/var/log/journal/*' \
 --exclude '/var/cache/pacman/pkg/*' \
 --exclude '/home/backup/*' \
+--exclude '/home/*/mnt/*' \
 --exclude '/home/*/tmp/*' \
 --exclude '/home/*/.cache/*' \
 --exclude '/home/*/.thumbnails/*' \
