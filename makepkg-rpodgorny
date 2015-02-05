@@ -4,6 +4,6 @@ set -x
 
 rm -f *.pkg.*
 makepkg $@
-rsync -avP ./*.pkg.* milhouse.podgorny.cz:archlinux/rpodgorny/
-ssh milhouse.podgorny.cz "cd archlinux/rpodgorny; ./update.py"
+rsync -avP ./*.pkg.* admiral.podgorny.cz:archlinux/rpodgorny/
+ssh admiral.podgorny.cz "cd archlinux/rpodgorny; ./update"
 
