@@ -276,6 +276,19 @@ def fix_ssh_root_authorized_keys():
 #enddef
 
 
+def fix_postfix():
+	if call('grep "^inet_protocols = ipv4,ipv6$" /etc/postfix/main.cf', silent=True) == 0: return
+
+	if call('grep "^inet_protocols = ipv4$" /etc/postfix/main.cf', silent=True) != 0:
+		print('"^inet_protocols = ipv4$" not found in /etc/postfix/main.cf, this is weird')
+		return
+	#endif
+
+	if ask('ipv6 not set for postfix. fix?'):
+		call('sed -i "s/^inet_protocols = ipv4$/inet_protocols = ipv4,ipv6/g" /etc/postfix/main.cf')
+	#endif
+#enddef
+
 
 def main():
 	fix_mkinitcpio()
@@ -290,6 +303,7 @@ def main():
 	fix_ssh_user_keys_hostname()
 	fix_ssh_user_keys_wrong_type()
 	fix_ssh_root_authorized_keys()
+	fix_postfix()
 	fix_fstrim()
 	fix_backup()
 	fix_root()
