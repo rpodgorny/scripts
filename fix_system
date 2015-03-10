@@ -212,7 +212,7 @@ def fix_nginx():
 
 	if call('grep "ssl_protocols TLSv1 TLSv1.1 TLSv1.2;" %s' % fn, silent=True) == 0: return
 
-	print('%s found but sslv3 seems to be not disabled')
+	print('%s found but sslv3 seems to be not disabled' % fn)
 #enddef
 
 
