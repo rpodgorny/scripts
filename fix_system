@@ -216,6 +216,13 @@ def fix_nginx():
 #enddef
 
 
+def fix_ntp_sync():
+	if call('timedatectl | grep "NTP synchronized: yes"', silent=True) == 0: return
+
+	print('time not synced with ntp')
+#enddef
+
+
 def fix_ssh_host_keys_hostname():
 	should_be = 'root@%s' % socket.gethostname()
 
@@ -321,6 +328,7 @@ def main():
 	fix_root()
 	fix_radek()
 	fix_x()
+	fix_ntp_sync()
 #enddef
 
 
