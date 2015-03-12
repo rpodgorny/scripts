@@ -99,7 +99,7 @@ def fix_root():
 
 
 def fix_packages():
-	for p in ['cronie', 'git', 'ntp', ('openssh', 'openssh-hpn'), 'postfix', 'uptimed', ]:
+	for p in ['cronie', 'git', 'haveged', 'ntp', ('openssh', 'openssh-hpn'), 'postfix', 'uptimed', ]:
 		installed = False
 
 		if isinstance(p, tuple):
@@ -124,7 +124,7 @@ def fix_packages():
 
 
 def fix_services():
-	for s in ['cronie', 'ntpd', 'sshd', 'postfix', 'uptimed', ]:
+	for s in ['cronie', 'haveged', 'ntpd', 'sshd', 'postfix', 'uptimed', ]:
 		if os.path.islink('/etc/systemd/system/multi-user.target.wants/%s.service' % s): continue
 
 		if not ask('enable and start %s?' % s): continue
