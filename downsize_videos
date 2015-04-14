@@ -1,0 +1,5 @@
+#!/bin/sh
+
+for f in *.mov; do
+	ffmpeg -i $f -strict -2 -vf scale=iw/2:ih/2 small/$f;
+done
