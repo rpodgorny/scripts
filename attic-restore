@@ -1,31 +1,65 @@
-#!/bin/sh
+#!/usr/bin/python3
 
-set -x
+'''
+attic-restore.
 
-DEV=$1
-HOSTNAME=$2
+Usage:
+  attic-restore [--swap] [--fs=<fs>] <device> <hostname>
 
-REMOTE=backup@milhouse.podgorny.cz
-ARCHIVE=`date +%Y%m%dT%H%M%S` 
+Arguments:
+  --fs=<fs>  Filesystem to use.
+  --swap     Create swap.
+'''
 
-if [ -z "$DEV" ]; then
-	echo 'no device specified!'
-	exit
-fi
+__version__ = '0.0'
 
-if [ -z "$HOSTNAME" ]; then
-	HOSTNAME=`hostname`
-	echo no hostname specified, using $HOSTNAME
-fi
+import docopt
+import subprocess
+import os
+import time
 
-REPO=$REMOTE:attic/$HOSTNAME
 
-ARCHIVE=`attic list $REPO | tail -n 1 | cut -f1 -d' '`
-echo $ARCHIVE
+def run(cmd):
+	print('>>> %s' % cmd)
+	return subprocess.check_output(cmd, shell=True).decode()
+#enddef
 
-dd if=/dev/zero of=$DEV bs=2048 count=1
 
-echo 'n
+def main():
+	assert os.path.isfile('/usr/bin/arch-chroot')
+
+	args = docopt.docopt(__doc__, version=__version__)
+
+	dev = args['<device>']
+	hostname = args['<hostname>']
+	fs = args['--fs']
+
+	while not fs in ('btrfs', 'ext4'):
+		fs = input('fs: ')
+	#endwhile
+
+	remote = 'backup@milhouse.podgorny.cz'
+	repo = '%s:attic/%s' % (remote, hostname)
+
+	archives_raw = run('attic list %s' % repo)
+	archives = [i.strip().split()[0] for i in archives_raw.split('\n') if i]
+	archives = list(reversed(sorted(archives)))
+
+	for i, archive in enumerate(archives):
+		print('%s: %s' % (i, archive))
+	#endfor
+
+	n = input('select archive [0]: ')
+	if n:
+		n = int(n)
+	else:
+		n = 0
+	#endif
+	archive = archives[n]
+
+	run('dd if=/dev/zero of=%s bs=2048 count=1' % dev)
+
+	run('''echo "n
 p
 1
 
@@ -40,35 +74,50 @@ t
 c
 a
 1
-w' | fdisk $DEV
-sleep 5
-partprobe
+w" | fdisk %s''' % dev)
 
-mkfs.vfat -n BOOT ${DEV}1
-mkfs.btrfs -f -L ROOT ${DEV}2
+	time.sleep(5)
 
-rm -rf /tmp/attic_restore
-mkdir -p /tmp/attic_restore
-mount ${DEV}2 -o compress=lzo /tmp/attic_restore
-mkdir /tmp/attic_restore/boot
-mount ${DEV}1 /tmp/attic_restore/boot
+	run('partprobe')
 
-cd /tmp/attic_restore
+	run('rm -rf /tmp/attic_restore')
+	run('mkdir -p /tmp/attic_restore')
 
-mkdir dev
-mkdir proc
-mkdir run
-mkdir sys
-mkdir tmp
+	run('mkfs.vfat -n BOOT %s1' % dev)
 
-attic extract $REPO::$ARCHIVE
+	if fs == 'btrfs':
+		run('mkfs.btrfs -f -L ROOT %s2' % dev)
+		run('mount %s2 -o compress=lzo /tmp/attic_restore' % dev)
+	elif fs == 'ext4':
+		run('mkfs.ext4 -L ROOT %s2' % dev)
+		run('mount %s2 /tmp/attic_restore' % dev)
+	else:
+		raise('what?')
+	#endif
 
-echo "/usr/bin/extlinux --install /boot" | arch-chroot .
+	run('mkdir /tmp/attic_restore/boot')
+	run('mount %s1 /tmp/attic_restore/boot' % dev)
 
-cd -
+	cwd = os.getcwd()
+	os.chdir('/tmp/attic_restore')
 
-umount -R /tmp/attic_restore
+	run('mkdir dev proc run sys tmp')
 
-dd if=/usr/lib/syslinux/bios/mbr.bin of=$DEV
+	run('attic extract %s::%s' % (repo, archive))
 
-sync
+	#run('echo "/usr/bin/extlinux --install /boot" | arch-chroot .')
+
+	os.chdir(cwd)
+
+	run('umount -R /tmp/attic_restore')
+
+	run('dd if=/usr/lib/syslinux/bios/mbr.bin of=%s' % dev)
+
+	run('sync')
+#enddef
+
+
+if __name__ == '__main__':
+	main()
+#endif
+
