@@ -9,6 +9,8 @@ for user in $(ls ${mailroot} | sort); do
 		continue
 	fi
 
+	echo "processing $user"
+
 	for dir in "spam" "learn-spam" "learn-ham"; do
 		if [ ! -d "${maildir}/.${dir}/" ]; then
 			echo "${user}: creating ${dir}"
