@@ -19,11 +19,11 @@ for user in $(ls ${mailroot} | sort); do
 
 	find "${maildir}/.learn-spam/cur/" -type f \
 	-exec echo "${user}: spam - {}" \; \
-	-exec /usr/local/bin/dspam-relearn "{}" "${user}" spam \; \
+	-exec dspam-relearn "{}" "${user}" spam \; \
 	-exec mv "{}" "${maildir}/.spam/cur/" \;
 
 	find "${maildir}/.learn-ham/cur/" -type f \
 	-exec echo "${user}: ham - {}" \; \
-	-exec /usr/local/bin/dspam-relearn "{}" "${user}" innocent \; \
+	-exec dspam-relearn "{}" "${user}" innocent \; \
 	-exec mv "{}" "${maildir}/cur/" \;
 done
