@@ -1,0 +1,29 @@
+#!/bin/sh
+
+mailroot=/home
+
+for user in $(ls ${mailroot} | sort); do
+	maildir="${mailroot}/${user}/.maildir"
+
+	if [ -z "$(groups ${user} | grep dspam)" ]; then
+		continue
+	fi
+
+	for dir in "spam" "learn-spam" "learn-ham"; do
+		if [ ! -d "${maildir}/.${dir}/" ]; then
+			echo "${user}: creating ${dir}"
+			su - ${user} -c "mkdir -p ${maildir}/.${dir}/new"
+			su - ${user} -c "mkdir -p ${maildir}/.${dir}/cur"
+		fi
+	done
+
+	find "${maildir}/.learn-spam/cur/" -type f \
+	-exec echo "${user}: spam - {}" \; \
+	-exec /usr/local/bin/dspam-relearn "{}" "${user}" spam \; \
+	-exec mv "{}" "${maildir}/.spam/cur/" \;
+
+	find "${maildir}/.learn-ham/cur/" -type f \
+	-exec echo "${user}: ham - {}" \; \
+	-exec /usr/local/bin/dspam-relearn "{}" "${user}" innocent \; \
+	-exec mv "{}" "${maildir}/cur/" \;
+done

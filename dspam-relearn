@@ -1,0 +1,3 @@
+#!/bin/sh
+
+dspam --user ${2} --class=${3} --source=error --stdout <${1}
