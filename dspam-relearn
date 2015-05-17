@@ -1,3 +1,4 @@
 #!/bin/sh
+set -e
 
-dspam --user ${2} --class=${3} --source=error --stdout <${1}
+/usr/bin/dspam --user ${2} --class=${3} --source=error --stdout <${1}
