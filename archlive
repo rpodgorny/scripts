@@ -1,0 +1,119 @@
+#!/bin/sh
+set -e
+set -x
+
+DEV=$1
+DIR=/var/tmp/archlive
+
+test "$DEV"
+test -b $DEV
+
+rm -rf $DIR
+mkdir -p $DIR
+cp -r /usr/share/archiso/configs/releng/* $DIR
+
+echo '
+[rpodgorny]
+SigLevel = Never
+Server = http://archlinux.podgorny.cz/$repo/os/$arch
+' >> $DIR/pacman.conf
+
+echo '
+acpi
+beep
+dd_rescue
+dosfstools
+dstat
+faddnsc-git
+fish
+htop
+git
+lm_sensors
+mercurial
+networkmanager
+openssh
+rsync
+smartmontools
+sshfs
+sudo
+tmux
+uptimed
+vim
+zramswap
+' >> $DIR/packages.both
+
+echo '
+cpuminer
+rowhammer-test-git
+' >> $DIR/packages.x86_64
+
+echo '
+systemctl enable NetworkManager
+systemctl enable systemd-timesyncd
+systemctl enable zramswap
+
+cd /root
+git clone https://github.com/rpodgorny/dotfiles
+git clone https://github.com/rpodgorny/scripts
+cd -
+cd /root/dotfiles
+./install
+cd -
+
+chsh -s /usr/bin/fish
+' >> $DIR/airootfs/root/customize_airootfs.sh
+
+mkdir $DIR/airootfs/root/.ssh
+
+echo '
+-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAxG2Oyl+3nSsEEhjtTZkTrIpDEgCCR55JcU6Cik3/aac6m5a+
+fz30YeUgp5ExuuyfpAXHYu+EGFlNVNE0TpfaRClsUw6wMuXOthxyoaNbHGZGCNKK
++kvbLCgPFpM7/453vAafqZNMTX/YP8uD1vdS3OJEmRSZtXYvJoKNdSWzA1xoXIGN
+GVVYaFQ6f3MfPXHQddoonMkTq2vH0K4Yhz/52sDs2KOfKs6ijwAr+xzhrmDEzC8O
+JCFxXwUzT3KKAUtgJU/LZz1M8/GnpJ17b4FzfLb7CFwzUYJDpfFt6ZuKg8/NuQEb
+6/u+O2rEI+lI5mmGlg+6yaGQiMNmlvdeE9gIEwIDAQABAoIBACdHRSNgqoXKIUFB
+LMq0joOVDj5eTa7mjwcSTPY9DJLi9sxAA43MJL8iozn+xbP8NxwEb89v17lKujT4
+tH32zZWNtvSQ3lj/LSurWpzJ3qE6Lkz7VQEiBAy7YfEAtiGvKnA13t147+wbYXG4
+T3+/6xjyQgdeYDIyFNGdj43aYQaNrTq1+5sNPRaksmzn0f5FzlTSDnJgeYSa1OtG
+4G5r9CsZGWHhgHiBhLyGgGgV3M4YemAy911lNyHBzRI7RStHwa77RpXiXY8aHGSx
+sOn+SyeH3cma+oexgVoXi/fQLCB0+ZgiaVaISnQJL0VM7Cb9juFM0ns2sUJrO9r6
+rQ53EbECgYEA5AuU4JSay4JsqINPQVUTLiONH7OCjxmIsKAOfPZe/hsmZK+gmidk
+3fEDH+0+lfiOE9YzVgO2XkYz2fxdaXkXNXF8iwj53beN0PjOtKq7kvFb8D7rqySN
+OrD4lCncWDeM5+WjHm3JGKseQkA5SfcqPlERDly3fHP8MBzwIkoVqWsCgYEA3IHG
+tk35+ewt6anlGreEie4eypZuWc6m8/yRZGoEY1HLedx/T5iUOzrdmQr905zfNCQ7
+/xGoihoRvPMzTNNaxIq+sKZJxkrLG6G+7Avz5ch1kFXRu6zPWhx5DfUwynqnYeMm
+o8CfW055fUoQbdByaB0Scl49lE27MZbAz5VnffkCgYBuEzEPnmuBpDjytj9BV+Fk
+OgDatnlkvXx/VSLpKrr7iPtlSmkJP86uWrGZbZjyJwHdjV1GPZB/vP82T1x/ltWf
+FGJ7ch+55+nqXs7X4jmcWih4tMZo28HX/KhgTDxx0I6ROQUdoPyaja6TaBC/JTEc
+12CWQCbJSesHBlDbHEuMdQKBgQCUVtmPGrXn43KflqOBbaPEBmTAdKKX1+WIjYhh
+vNBm4Ee6GxOqQEK39cnNgw9upEGjmhyiYwa2oQL90b3ZGPYe8heGTteihf5NAGqn
+8QKKumgcSR9m2cJEJJNrSF8iV5Dy0RTVZGfPzOL93i1fMrNERwp51dwnQIOFwJzF
+CQUuQQKBgBJD2m+42OtuPGFR2STnPnFW3oMcCztE2X3PmYUHJa4RiNjrcZMno7Wx
+nWzfn2xBKv/NxJ9tUrmMSmKBD2kdG/XfbcsD5e5ck3RkRoCsAZbDFRauHtW6CCBq
+nPHMrpyQ/cOK/0d5t0RgVomyVjclhmx0xldIjAFIYN82mhsI0JUU
+-----END RSA PRIVATE KEY-----
+' >> $DIR/airootfs/root/.ssh/id_rsa
+chmod g-rwx $DIR/airootfs/root/.ssh/id_rsa
+chmod o-rwx $DIR/airootfs/root/.ssh/id_rsa
+
+echo '
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDEbY7KX7edKwQSGO1NmROsikMSAIJHnklxToKKTf9ppzqblr5/PfRh5SCnkTG67J+kBcdi74QYWU1U0TROl9pEKWxTDrAy5c62HHKho1scZkYI0or6S9ssKA8Wkzv/jne8Bp+pk0xNf9g/y4PW91Lc4kSZFJm1di8mgo11JbMDXGhcgY0ZVVhoVDp/cx89cdB12iicyROra8fQrhiHP/nawOzYo58qzqKPACv7HOGuYMTMLw4kIXFfBTNPcooBS2AlT8tnPUzz8aeknXtvgXN8tvsIXDNRgkOl8W3pm4qDz825ARvr+747asQj6UjmaYaWD7rJoZCIw2aW914T2AgT root@sysresccd
+' >> $DIR/airootfs/root/.ssh/id_rsa.pub
+
+echo '
+orion.asterix.cz,2002:57ec:c733:8800:d63d:7eff:fe9a:da94 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBK4eKU7pIJ4opaOAtqb4vJXa9GIq8EMRyynypNk5WTMxYxY1tlBhlx20bjkD+0MEqYbds5Cf3+p3zYkBb0B4HNU=
+' >> $DIR/airootfs/root/.ssh/known_hosts
+
+echo '
+tools@orion.asterix.cz: /tools fuse.sshfs x-systemd.automount,_netdev 0 0
+' >> $DIR/airootfs/etc/fstab
+
+cd $DIR
+./build.sh -v
+cd -
+
+dd_rescue $DIR/out/*iso $DEV
+sync
+
+rm -rf $DIR
