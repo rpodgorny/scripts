@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import os
 import subprocess
@@ -32,7 +32,9 @@ def main():
 		f.write(hostname)
 		f.close()
 
-		subprocess.call('litecoin-qt -datadir=%s' % local_path, shell=True)
+		cmd = 'litecoin-qt -datadir=%s' % local_path
+		print(cmd)
+		subprocess.call(cmd, shell=True)
 
 		os.remove(lock_fn)
 
