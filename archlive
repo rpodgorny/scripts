@@ -43,7 +43,7 @@ zramswap
 ' >> $DIR/packages.both
 
 echo '
-cpuminer
+cpuminer-git
 rowhammer-test-git
 ' >> $DIR/packages.x86_64
 
