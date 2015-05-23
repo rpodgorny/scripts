@@ -1,8 +1,11 @@
 #!/bin/sh
+set -e -x
 
-set -x
-
+# only a single pool is supported :-(
 #POOL_URL="stratum+tcp://europe.mine-litecoin.com"
-POOL_URL="stratum+tcp://ltc-eu.give-me-coins.com:3334/"
+#POOL_URL="stratum+tcp://ltc-eu.give-me-coins.com:3334/"
+#POOL_URL="stratum+tcp://freedom.wemineltc.com:3339"
+POOL_URL="stratum+tcp://global.wemineltc.com:3333"
+#POOL_URL="stratum+tcp://easymining.eu:3333"
 
 exec nice minerd -o ${POOL_URL} -u rpodgorny.x -p x
