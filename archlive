@@ -116,4 +116,14 @@ cd -
 dd_rescue $DIR/out/*iso $DEV
 sync
 
+MNT=/tmp/archlive_mnt
+mkdir -p $MNT
+mount ${DEV}2 $MNT
+cp /home/radek/scripts/archlive_memtest86.efi $MNT/memtest86.efi
+echo 'title Memtest86 6
+linux memtest86.efi
+' > $MNT/loader/entries/memtest86.conf
+umount $MNT
+rmdir $MNT
+
 rm -rf $DIR
