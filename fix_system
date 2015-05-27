@@ -74,16 +74,22 @@ def fix_locale():
 
 
 def fix_radek():
-	if call('grep "^radek:" /etc/passwd', silent=True) == 0: return
+	if call('grep "^radek:" /etc/passwd', silent=True) != 0:
+		if not ask('add user radek?'): return
 
-	if not ask('add user radek?'): return
+		call('useradd -m radek')
+		call('passwd radek')
 
-	call('useradd -m radek')
-	call('passwd radek')
+		call('pacman -Sy --noconfirm --needed sudo')
+		call('usermod -aG wheel radek')
+	#endif
 
-	call('pacman -Sy --noconfirm --needed sudo zsh')
-	call('usermod -aG wheel radek')
-	call('usermod -s /usr/bin/zsh radek')
+	if call('grep "^radek:" /etc/passwd | grep /usr/bin/fish', silent=True) != 0:
+		if ask('set fish as default shell for radek?'):
+			call('pacman -Sy --noconfirm --needed fish')
+			call('usermod -s /usr/bin/fish radek')
+		#endif
+	#endif
 #enddef
 
 
@@ -99,7 +105,7 @@ def fix_root():
 
 
 def fix_packages():
-	for p in ['cronie', 'git', 'haveged', 'ntp', ('openssh', 'openssh-hpn'), 'postfix', 'uptimed', ]:
+	for p in ['cronie', 'git', 'haveged', ('openssh', 'openssh-hpn'), 'postfix', 'uptimed', ]:
 		installed = False
 
 		if isinstance(p, tuple):
@@ -124,7 +130,7 @@ def fix_packages():
 
 
 def fix_services():
-	for s in ['cronie', 'haveged', 'ntpd', 'sshd', 'postfix', 'uptimed', ]:
+	for s in ['cronie', 'haveged', 'sshd', 'postfix', 'uptimed', ]:
 		if os.path.islink('/etc/systemd/system/multi-user.target.wants/%s.service' % s): continue
 
 		if not ask('enable and start %s?' % s): continue
@@ -220,6 +226,10 @@ def fix_ntp_sync():
 	if call('timedatectl | grep "NTP synchronized: yes"', silent=True) == 0: return
 
 	print('time not synced with ntp')
+
+	if not ask('enable systemd ntp sync?'): return
+
+	call('systemctl enable systemd-timesyncd')
 #enddef
 
 
