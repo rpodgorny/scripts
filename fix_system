@@ -223,13 +223,15 @@ def fix_nginx():
 
 
 def fix_ntp_sync():
-	if call('timedatectl | grep "NTP synchronized: yes"', silent=True) == 0: return
+	if call('timedatectl | grep "NTP synchronized: yes"', silent=True) != 0:
+		print('time not synced with ntp')
+	#endif
 
-	print('time not synced with ntp')
-
-	if not ask('enable systemd ntp sync?'): return
-
-	call('systemctl enable systemd-timesyncd')
+	if call('timedatectl | grep "NTP enabled: yes"', silent=True) != 0:
+		if ask('enable systemd ntp sync?'):
+			call('systemctl enable systemd-timesyncd')
+		#endif
+	#endif
 #enddef
 
 
