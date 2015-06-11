@@ -320,6 +320,15 @@ def fix_postfix():
 #enddef
 
 
+def check_kernel():
+	ver = subprocess.check_output('uname -r', shell=True).decode().strip()
+
+	if os.path.isdir('/lib/modules/%s' % ver): return
+
+	print('running old kernel, reboot recommended!')
+#enddef
+
+
 def main():
 	fix_mkinitcpio()
 	fix_hostname()
@@ -341,6 +350,7 @@ def main():
 	fix_radek()
 	fix_x()
 	fix_ntp_sync()
+	check_kernel()
 #enddef
 
 
