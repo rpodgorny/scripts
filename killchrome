@@ -16,9 +16,9 @@ for p in psutil.get_process_list():
         if (p.name == 'chromium' and any('type=renderer' in part for part in p.cmdline)
            and p.uids.real == uid):
             m = p.get_memory_info()
-            print p.pid,m, m.rss / 1024 / 1024, m.vms / 1024 / 1024
+            print(p.pid,m, m.rss / 1024 / 1024, m.vms / 1024 / 1024)
             if (m.rss / 1024 / 1024) > limit: # kill if rss is greater than limit
-                print 'Killed', p.pid
+                print('Killed', p.pid)
                 p.kill()
     except psutil.error.NoSuchProcess:
         pass
