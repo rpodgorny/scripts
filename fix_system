@@ -227,7 +227,7 @@ def fix_ntp_sync():
 		print('time not synced with ntp')
 	#endif
 
-	if call('timedatectl | grep "NTP enabled: yes"', silent=True) != 0:
+	if not os.path.islink('/etc/systemd/system/sysinit.target.wants/systemd-timesyncd.service'):
 		if ask('enable systemd ntp sync?'):
 			call('systemctl enable systemd-timesyncd')
 		#endif
