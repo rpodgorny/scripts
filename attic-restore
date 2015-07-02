@@ -27,6 +27,7 @@ def run(cmd):
 
 def main():
 	assert os.path.isfile('/usr/bin/arch-chroot')
+	assert os.path.isfile('/usr/lib/syslinux/bios/mbr.bin')
 
 	args = docopt.docopt(__doc__, version=__version__)
 
