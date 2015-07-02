@@ -106,7 +106,7 @@ w" | fdisk %s''' % dev)
 
 	run('attic extract %s::%s' % (repo, archive))
 
-	#run('echo "/usr/bin/extlinux --install /boot" | arch-chroot .')
+	run('echo "/usr/bin/extlinux --install /boot" | arch-chroot .')
 
 	os.chdir(cwd)
 
