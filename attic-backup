@@ -24,6 +24,7 @@ $REPO::$ARCHIVE \
 --exclude '/home/*/tmp/*' \
 --exclude '/home/*/.cache/*' \
 --exclude '/home/*/.thumbnails/*' \
+--exclude '/root/.cache/*' \
 || exit 1
 
 attic prune \
