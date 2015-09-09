@@ -1,0 +1,36 @@
+#!/bin/sh
+set -e -x
+
+HOSTNAME=`hostname`
+REMOTE=backup@milhouse.podgorny.cz
+REPO=$REMOTE:borg/$HOSTNAME
+ARCHIVE=`date +%Y%m%dT%H%M%S` 
+
+ssh-copy-id $REMOTE
+
+borg init $REPO || true
+
+borg create \
+--progress \
+--do-not-cross-mountpoints --stats \
+$REPO::$ARCHIVE \
+/ /boot \
+--exclude-caches \
+--exclude '/tmp/*' \
+--exclude '/var/log/journal/*' \
+--exclude '/var/cache/pacman/pkg/*' \
+--exclude '/home/backup/*' \
+--exclude '/home/*/mnt/*' \
+--exclude '/home/*/tmp/*' \
+--exclude '/home/*/.cache/*' \
+--exclude '/home/*/.thumbnails/*' \
+--exclude '/root/.cache/*'
+
+borg prune \
+--stats \
+--keep-within 7d \
+--keep-daily 30 \
+--keep-monthly 12 \
+--keep-yearly 10 \
+$REPO
+
