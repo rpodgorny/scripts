@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 
 FN=`cat ~/.quodlibet/current|grep filename|cut -f 2 -d=`
 
