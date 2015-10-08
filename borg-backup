@@ -10,8 +10,8 @@ ssh-copy-id $REMOTE
 
 borg init $REPO || true
 
+#--progress \
 borg create \
---progress \
 --do-not-cross-mountpoints --stats \
 $REPO::$ARCHIVE \
 / /boot \
