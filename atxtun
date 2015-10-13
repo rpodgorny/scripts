@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e -x
 
 HOST="admiral.podgorny.cz"
 T="$1.asterix.cz"
