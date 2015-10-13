@@ -60,7 +60,30 @@ def main():
 
 	run('dd if=/dev/zero of=%s bs=2048 count=1' % dev)
 
-	run('''echo "n
+	if args['--swap']:
+		run('''echo "n
+p
+1
+
++100M
+n
+p
+2
+
++1000M
+n
+p
+3
+
+
+t
+1
+c
+a
+1
+w" | fdisk %s''' % dev)
+	else:
+		run('''echo "n
 p
 1
 
@@ -76,6 +99,7 @@ c
 a
 1
 w" | fdisk %s''' % dev)
+	#endif
 
 	time.sleep(5)
 
@@ -86,12 +110,24 @@ w" | fdisk %s''' % dev)
 
 	run('mkfs.vfat -n BOOT %s1' % dev)
 
+	if args['--swap']:
+		dev_swap = '%s2' % dev
+		dev_root = '%s3' % dev
+	else:
+		dev_swap = None
+		dev_root = '%s2' % dev
+	#endif
+
+	if args['--swap']:
+		run('mkswap -L SWAP %s' % dev_swap)
+	#endif
+
 	if fs == 'btrfs':
-		run('mkfs.btrfs -f -L ROOT %s2' % dev)
-		run('mount %s2 -o compress=lzo /tmp/attic_restore' % dev)
+		run('mkfs.btrfs -f -L ROOT %s' % dev_root)
+		run('mount %s -o compress=lzo /tmp/attic_restore' % dev_root)
 	elif fs == 'ext4':
-		run('mkfs.ext4 -L ROOT %s2' % dev)
-		run('mount %s2 /tmp/attic_restore' % dev)
+		run('mkfs.ext4 -L ROOT %s' % dev_root)
+		run('mount %s /tmp/attic_restore' % dev_root)
 	else:
 		raise('what?')
 	#endif
