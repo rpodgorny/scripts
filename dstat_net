@@ -1,4 +1,4 @@
 #!/bin/sh
 
 # this contains all interfaces on europa and taurus - the nonexistent on each machine are just ignored
-dstat -n -N ppp0,tomodem,czfree,ap,eth0,lan
+dstat -n -N ppp0,tomodem,czfree,ap,eth0,lan $*
