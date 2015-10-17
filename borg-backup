@@ -4,15 +4,17 @@ set -e -x
 HOSTNAME=`hostname`
 REMOTE=backup@milhouse.podgorny.cz
 REPO=$REMOTE:borg/$HOSTNAME
-ARCHIVE=`date +%Y%m%dT%H%M%S` 
+ARCHIVE=`date +%Y%m%dT%H%M%S`
 
-ssh-copy-id $REMOTE
-
-borg init $REPO || true
+if [ "$1" = "--init" ]; then
+	ssh-copy-id $REMOTE
+	borg init $REPO
+fi
 
 #--progress \
 borg create \
---do-not-cross-mountpoints --stats \
+--do-not-cross-mountpoints \
+--stats \
 $REPO::$ARCHIVE \
 / /boot \
 --exclude-caches \
@@ -20,6 +22,7 @@ $REPO::$ARCHIVE \
 --exclude '/var/log/journal/*' \
 --exclude '/var/cache/pacman/pkg/*' \
 --exclude '/home/backup/*' \
+--exclude '/home/incoming/*' \
 --exclude '/home/*/mnt/*' \
 --exclude '/home/*/tmp/*' \
 --exclude '/home/*/.cache/*' \
