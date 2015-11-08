@@ -1,0 +1,160 @@
+#!/usr/bin/python3
+
+'''
+borg-restore.
+
+Usage:
+  borg-restore [--swap] [--fs=<fs>] <device> <hostname>
+
+Arguments:
+  --fs=<fs>  Filesystem to use.
+  --swap     Create swap.
+'''
+
+__version__ = '0.0'
+
+import docopt
+import subprocess
+import os
+import time
+
+
+def run(cmd):
+	print('>>> %s' % cmd)
+	return subprocess.check_output(cmd, shell=True).decode()
+#enddef
+
+
+def main():
+	assert os.path.isfile('/usr/bin/arch-chroot')
+	assert os.path.isfile('/usr/lib/syslinux/bios/mbr.bin')
+
+	args = docopt.docopt(__doc__, version=__version__)
+
+	dev = args['<device>']
+	hostname = args['<hostname>']
+	fs = args['--fs']
+
+	while not fs in ('btrfs', 'ext4'):
+		fs = input('fs: ')
+	#endwhile
+
+	remote = 'backup@milhouse.podgorny.cz'
+	repo = '%s:borg/%s' % (remote, hostname)
+
+	archives_raw = run('borg list %s' % repo)
+	archives = [i.strip().split()[0] for i in archives_raw.split('\n') if i]
+	archives = list(reversed(sorted(archives)))
+
+	for i, archive in enumerate(archives):
+		print('%s: %s' % (i, archive))
+	#endfor
+
+	n = input('select archive [0]: ')
+	if n:
+		n = int(n)
+	else:
+		n = 0
+	#endif
+	archive = archives[n]
+
+	run('dd if=/dev/zero of=%s bs=2048 count=1' % dev)
+
+	if args['--swap']:
+		run('''echo "n
+p
+1
+
++100M
+n
+p
+2
+
++1000M
+n
+p
+3
+
+
+t
+1
+c
+a
+1
+w" | fdisk %s''' % dev)
+	else:
+		run('''echo "n
+p
+1
+
++100M
+n
+p
+2
+
+
+t
+1
+c
+a
+1
+w" | fdisk %s''' % dev)
+	#endif
+
+	time.sleep(5)
+
+	run('partprobe')
+
+	run('rm -rf /tmp/borg_restore')
+	run('mkdir -p /tmp/borg_restore')
+
+	run('mkfs.vfat -n BOOT %s1' % dev)
+
+	if args['--swap']:
+		dev_swap = '%s2' % dev
+		dev_root = '%s3' % dev
+	else:
+		dev_swap = None
+		dev_root = '%s2' % dev
+	#endif
+
+	if args['--swap']:
+		run('mkswap -L SWAP %s' % dev_swap)
+	#endif
+
+	if fs == 'btrfs':
+		run('mkfs.btrfs -f -L ROOT %s' % dev_root)
+		run('mount %s -o compress=lzo /tmp/borg_restore' % dev_root)
+	elif fs == 'ext4':
+		run('mkfs.ext4 -L ROOT %s' % dev_root)
+		run('mount %s /tmp/borg_restore' % dev_root)
+	else:
+		raise('what?')
+	#endif
+
+	run('mkdir /tmp/borg_restore/boot')
+	run('mount %s1 /tmp/borg_restore/boot' % dev)
+
+	cwd = os.getcwd()
+	os.chdir('/tmp/borg_restore')
+
+	run('mkdir dev proc run sys tmp')
+
+	run('borg extract %s::%s' % (repo, archive))
+
+	#run('echo "/usr/bin/extlinux --install /boot" | arch-chroot .')
+
+	os.chdir(cwd)
+
+	run('umount -R /tmp/borg_restore')
+
+	run('dd if=/usr/lib/syslinux/bios/mbr.bin of=%s' % dev)
+
+	run('sync')
+#enddef
+
+
+if __name__ == '__main__':
+	main()
+#endif
+
