@@ -13,7 +13,8 @@ fi
 
 #--progress \
 borg create \
---do-not-cross-mountpoints \
+--compression zlib,6 \
+--one-file-system \
 --stats \
 $REPO::$ARCHIVE \
 / /boot \
