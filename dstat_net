@@ -1,4 +1,3 @@
 #!/bin/sh
 
-# this contains all interfaces on europa and taurus - the nonexistent on each machine are just ignored
-dstat -n -N ppp0,tomodem,czfree,ap,eth0,lan $*
+dstat -c -n -N total,`ls /sys/class/net|grep -v lo|sort|tr '\n' ','|sed 's/,$//'` $*
