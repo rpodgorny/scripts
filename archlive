@@ -1,6 +1,5 @@
 #!/bin/sh
-set -e
-set -x
+set -e -x
 
 DEV=$1
 DIR=/var/tmp/archlive
@@ -115,6 +114,8 @@ cd -
 
 dd_rescue $DIR/out/*iso $DEV
 sync
+
+partprobe
 
 MNT=/tmp/archlive_mnt
 mkdir -p $MNT
