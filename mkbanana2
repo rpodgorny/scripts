@@ -3,11 +3,10 @@ set -e -x
 
 DEV=$1
 
-#test ${DEV}
-#test -b ${DEV}
+test ${DEV}
+test -b ${DEV}
 
 #TMP=`mktemp -d`
-ROOT=root
 MNT=banana_mnt
 
 CWD=`pwd`
@@ -15,11 +14,6 @@ CWD=`pwd`
 
 #rm -rf ArchLinuxARM-armv7-latest.tar.gz
 test -f ArchLinuxARM-armv7-latest.tar.gz || wget -c http://archlinuxarm.org/os/ArchLinuxARM-armv7-latest.tar.gz
-
-rm -rf ${ROOT}
-mkdir -p ${ROOT}
-#bsdtar -xpf ArchLinuxARM-armv7-latest.tar.gz -C ${ROOT}
-tar xvf ArchLinuxARM-armv7-latest.tar.gz -C ${ROOT}
 
 rm -rf u-boot
 #git clone --depth=1 git://git.denx.de/u-boot.git
@@ -33,16 +27,12 @@ cd ..
 
 rm -rf boot.txt
 wget https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/5b6a03409f982d566930b5cf078b55c9decf3a7c/alarm/uboot-sunxi/boot.txt
-u-boot/tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d boot.txt ${ROOT}/boot/boot.scr
-rm -rf boot.txt
-
-cp u-boot/arch/arm/dts/sun7i-a20-lamobo-r1.dtb ${ROOT}/boot/dtbs/
-
-#exit
+#rm -rf boot.txt
 
 dd if=/dev/zero of=${DEV} bs=10M count=1
 #parted --script -a optimal ${DEV} -- mklabel msdos mkpart primary fat32 0% 100MB mkpart primary ext2 100MB 100%
 parted --script -a optimal ${DEV} -- mklabel msdos mkpart primary ext2 0% 100%
+partprobe
 #mkfs.vfat ${DEV}1
 #mkfs.ext4 -F ${DEV}2
 mkfs.ext4 -F ${DEV}1
@@ -51,12 +41,16 @@ umount -R ${MNT} || true
 rmdir ${MNT} || true
 mkdir -p ${MNT}
 mount ${DEV}1 ${MNT}
-cp -av ${ROOT}/* ${MNT}
+
+bsdtar -xpf ArchLinuxARM-armv7-latest.tar.gz -C ${MNT}
+#tar xvf ArchLinuxARM-armv7-latest.tar.gz -C ${MNT}
+
+u-boot/tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d boot.txt ${MNT}/boot/boot.scr
+cp u-boot/arch/arm/dts/sun7i-a20-lamobo-r1.dtb ${MNT}/boot/dtbs/
+
 sync
 umount -R ${MNT}
 rmdir ${MNT}
-
-#rm -rf ${ROOT}
 
 dd if=u-boot/u-boot-sunxi-with-spl.bin of=${DEV} bs=1024 seek=8
 
