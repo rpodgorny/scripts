@@ -252,7 +252,7 @@ def fix_ssh_host_keys_hostname():
 
 
 def fix_ssh_user_keys_hostname():
-	fns = glob.glob('/home/*/.ssh/*.pub')
+	fns = glob.glob('/home/*/.ssh/id_rsa.pub')
 	for fn in fns:
 		user = fn.split('/')[2]
 		should_be = '%s@%s' % (user, socket.gethostname())
@@ -266,7 +266,7 @@ def fix_ssh_user_keys_hostname():
 		#endif
 	#endfor
 
-	fns = glob.glob('/root/.ssh/*.pub')
+	fns = glob.glob('/root/.ssh/id_rsa.pub')
 	for fn in fns:
 		user = 'root'
 		should_be = '%s@%s' % (user, socket.gethostname())
