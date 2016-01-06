@@ -25,8 +25,8 @@ make CROSS_COMPILE=arm-linux-gnueabihf- Lamobo_R1_defconfig
 make CROSS_COMPILE=arm-linux-gnueabihf-
 cd ..
 
-rm -rf boot.txt
-wget https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/5b6a03409f982d566930b5cf078b55c9decf3a7c/alarm/uboot-sunxi/boot.txt
+#rm -rf boot.txt
+#wget https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/5b6a03409f982d566930b5cf078b55c9decf3a7c/alarm/uboot-sunxi/boot.txt
 #rm -rf boot.txt
 
 dd if=/dev/zero of=${DEV} bs=10M count=1
@@ -45,8 +45,13 @@ mount ${DEV}1 ${MNT}
 bsdtar -xpf ArchLinuxARM-armv7-latest.tar.gz -C ${MNT}
 #tar xvf ArchLinuxARM-armv7-latest.tar.gz -C ${MNT}
 
-u-boot/tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d boot.txt ${MNT}/boot/boot.scr
-cp u-boot/arch/arm/dts/sun7i-a20-lamobo-r1.dtb ${MNT}/boot/dtbs/
+#u-boot/tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d boot.txt ${MNT}/boot/boot.scr
+#cp u-boot/arch/arm/dts/sun7i-a20-lamobo-r1.dtb ${MNT}/boot/dtbs/
+
+u-boot/tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d legacy_boot.txt ${MNT}/boot/boot.scr
+cp legacy_uImage ${MNT}/boot/uImage
+cp legacy_dtb ${MNT}/boot/dtb
+cp -av 3.19.0-rc5bpi ${MNT}/lib/modules/
 
 sync
 umount -R ${MNT}
