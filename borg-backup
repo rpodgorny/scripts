@@ -9,6 +9,17 @@ ARCHIVE=`date +%Y%m%dT%H%M%S`
 if [ "$1" = "--init" ]; then
 	ssh-copy-id $REMOTE
 	borg init $REPO
+	exit
+elif [ "$1" = "--break-lock" ]; then
+	borg break-lock $REPO
+	exit
+fi
+
+# TODO: isn't this handled by the --exclude below?
+if [ -e /home/incoming ]; then
+	INCOMING=/home/incoming
+else
+	INCOMING=""
 fi
 
 #--progress \
@@ -17,7 +28,7 @@ borg create \
 --one-file-system \
 --stats \
 $REPO::$ARCHIVE \
-/ /boot \
+/ /boot ${INCOMING} \
 --exclude-caches \
 --exclude '/tmp/*' \
 --exclude '/var/log/journal/*' \
