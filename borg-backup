@@ -26,7 +26,7 @@ fi
 borg create \
 --compression zlib,6 \
 --one-file-system \
---stats \
+--verbose --stats --progress \
 $REPO::$ARCHIVE \
 / /boot ${INCOMING} \
 --exclude-caches \
@@ -42,7 +42,7 @@ $REPO::$ARCHIVE \
 --exclude '/root/.cache/*'
 
 borg prune \
---stats \
+--verbose --stats \
 --keep-within 7d \
 --keep-daily 30 \
 --keep-monthly 12 \
