@@ -26,7 +26,7 @@ fi
 borg create \
 --compression zlib,6 \
 --one-file-system \
---verbose --stats --progress \
+--verbose --stats \
 $REPO::$ARCHIVE \
 / /boot ${INCOMING} \
 --exclude-caches \
