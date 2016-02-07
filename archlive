@@ -20,6 +20,8 @@ Server = http://archlinux.podgorny.cz/$repo/os/$arch
 echo '
 acpi
 beep
+borg
+cpupower
 dd_rescue
 dosfstools
 dstat
@@ -31,6 +33,7 @@ lm_sensors
 mercurial
 networkmanager
 openssh
+pmount
 rsync
 smartmontools
 sshfs
