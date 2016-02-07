@@ -8,4 +8,4 @@ set -e -x
 #POOL_URL="stratum+tcp://global.wemineltc.com:3333"
 POOL_URL="stratum+tcp://stratum.hashfaster.com:3333"
 
-exec nice minerd -o ${POOL_URL} -u rpodgorny.x -p x
+exec nice minerd -o ${POOL_URL} -u rpodgorny.x -p x $*
