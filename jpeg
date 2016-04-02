@@ -1,0 +1,2 @@
+jhead -autorot *jpg
+jpegoptim -m85 *jpg
