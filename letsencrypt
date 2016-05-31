@@ -6,5 +6,5 @@ test $1
 export DOMAINS="-d $1"
 export DIR=/tmp/letsencrypt-auto
 mkdir -p $DIR
-letsencrypt certonly -a webroot --webroot-path=$DIR $DOMAINS
-#letsencrypt certonly --standalone $DOMAINS
+/usr/bin/letsencrypt certonly -a webroot --webroot-path=$DIR $DOMAINS
+#/usr/bin/letsencrypt certonly --standalone $DOMAINS
