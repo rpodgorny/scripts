@@ -1,2 +1,18 @@
-jhead -autorot *jpg
-jpegoptim -m85 *jpg
+#!/bin/sh
+set -e -x
+
+which mmv
+which convert
+which jpegoptim
+
+mmv "*" "#l1"
+
+# tohle je mozna lepsi nez to dole
+#jhead -autorot *.jpg
+#jpegoptim -m85 *.jpg
+
+for i in `ls *.jpg`; do
+	convert $i -auto-orient auto_$i && mv auto_$i $i
+done
+
+jpegoptim -p -m85 *.jpg
