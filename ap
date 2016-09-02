@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e -x
+
+create_ap wlp2s0 wlp0s20u2 radatko.net hovnokleslo
