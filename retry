@@ -1,0 +1,23 @@
+#!/usr/bin/hy
+
+(import sys)
+(import subprocess)
+(import time)
+
+(defn run-cmd [cmd]
+  (print (% "+ %s" (.join " " cmd)))
+  (subprocess.call cmd))
+
+(defn main [&rest args]
+  (setv args (car args))  ; TODO: this is weird
+  ;; TODO: don't use setv - try with let (or something) instead
+  (setv cmd (cut args 1))
+  (while 1
+    ;; TODO: don't use setv - try with let (or something) instead (but then the break does not work?)
+    (setv res (run-cmd cmd))
+    (when (= res 0) (break))
+	(print (% "returned %s. sleeping and retrying..." res))
+    (time.sleep 1)))  ; TODO: hard-coded shit
+
+(defmain [&rest args]
+  (main args))
