@@ -1,0 +1,59 @@
+#!/usr/bin/hy
+
+(import logging)
+(import sh)
+(import time)
+
+(setv IFACE "wlp2s0")
+(setv VPN "asterix")
+(setv SLEEP 10)
+
+(defn openvpn-active? [vpn]
+  (let [cmd (sh.systemctl "is-active" (% "openvpn@%s.service" vpn) :_ok_code [0 3])]
+    (= cmd.exit_code 0)))
+
+(defn start-stop-openvpn [vpn action]
+  ;;(logging.info action)
+  (print action)
+  (sh.systemctl action (% "openvpn@%s.service" vpn)))
+
+(defn get-ipv6-addrs []
+  (let [cmd (sh.ip "addr")
+        out (.decode cmd.stdout)
+        ret {}
+        cur None]
+    (for [line (.split out "\n")]
+      (if (in "mtu" line)
+        (let [iface (.strip (get (.split line ":") 1))]
+          (assoc ret iface [])
+          (nonlocal cur)
+          (setv cur iface))
+        (if (and cur (in "inet6" line))
+          (let [addr (get (.split line) 1)]
+            (.append (get ret cur) addr)))))
+    ret))
+
+(defn public-addr? [addr]
+  (.startswith addr "20"))
+
+(defn tick [iface vpn]
+  (let [addrs (get-ipv6-addrs)
+        has-public-addr (any (map public-addr? (get addrs iface)))
+        openvpn-active (openvpn-active? vpn)]
+    (cond
+     [(and has-public-addr openvpn-active) (start-stop-openvpn vpn "stop")]
+     [(and (not has-public-addr) (not openvpn-active)) (start-stop-openvpn vpn "start")])))
+
+(defn main [&rest args]
+  ;;(logging.basicConfig :level "INFO")
+  (print "starting autovpn")
+  (try
+   (while true
+     (tick IFACE VPN)
+     (time.sleep SLEEP))
+   (except [KeyboardInterrupt]))
+  (print "exit"))
+
+
+(defmain [&rest args]
+  (main args))
