@@ -3,6 +3,7 @@
 (import logging)
 (import sh)
 (import time)
+(import ipaddress)
 
 (setv IFACE "wlp2s0")
 (setv VPN "asterix")
@@ -34,7 +35,7 @@
     ret))
 
 (defn public-addr? [addr]
-  (.startswith addr "20"))
+  (. (ipaddress.ip_address (get (.split addr "/") 0)) is_global))
 
 (defn tick [iface vpn]
   (let [addrs (get-ipv6-addrs)
