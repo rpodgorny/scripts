@@ -2,3 +2,6 @@
 set -e -x
 
 create_ap wlp2s0 wlp0s20u2 radatko.net hovnokleslo
+
+# nebo (asi lepsi):
+#sudo nmcli dev wifi hotspot ifname wlp2s0 ssid pokus password pokuspokus

@@ -1,18 +1,19 @@
 #!/bin/sh
 set -e -x
 
-which mmv
-which convert
-which jpegoptim
+which exiv2 jhead jpegoptim jpegtran mogrify mmv parallel
 
-mmv "*" "#l1"
+mmv "*" "xxx_#l1"
 
-# tohle je mozna lepsi nez to dole
+# tohle kdyztak dela casovy posun
+#jhead -ta+2:30 *.jpg
+#exiv2 adjust -a +2:30 --keep *.jpg
+
+exiv2 rename -F --keep *.jpg
+
+# nefunguje
 #jhead -autorot *.jpg
-#jpegoptim -m85 *.jpg
 
-for i in `ls *.jpg`; do
-	convert $i -auto-orient auto_$i && mv auto_$i $i
-done
-
-jpegoptim -p -m85 *.jpg
+parallel "mogrify -auto-orient -identify {} || mv {} {}_ERROR" ::: *.jpg
+parallel "jpegoptim -p -m85 {}" ::: *.jpg
+parallel "echo {}; jpegtran -optimize -progressive -copy all {} >{}_; mv {}_ {}" ::: *.jpg
