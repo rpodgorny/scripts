@@ -22,7 +22,6 @@ import time
 def run(cmd):
 	print('>>> %s' % cmd)
 	return subprocess.check_output(cmd, shell=True).decode()
-#enddef
 
 
 def main():
@@ -37,7 +36,6 @@ def main():
 
 	while not fs in ('btrfs', 'ext4'):
 		fs = input('fs: ')
-	#endwhile
 
 	remote = 'backup@milhouse.podgorny.cz'
 	repo = '%s:borg/%s' % (remote, hostname)
@@ -48,14 +46,12 @@ def main():
 
 	for i, archive in enumerate(archives):
 		print('%s: %s' % (i, archive))
-	#endfor
 
 	n = input('select archive [0]: ')
 	if n:
 		n = int(n)
 	else:
 		n = 0
-	#endif
 	archive = archives[n]
 
 	run('dd if=/dev/zero of=%s bs=2048 count=1' % dev)
@@ -99,7 +95,6 @@ c
 a
 1
 w" | fdisk %s''' % dev)
-	#endif
 
 	time.sleep(5)
 
@@ -116,11 +111,9 @@ w" | fdisk %s''' % dev)
 	else:
 		dev_swap = None
 		dev_root = '%s2' % dev
-	#endif
 
 	if args['--swap']:
 		run('mkswap -L SWAP %s' % dev_swap)
-	#endif
 
 	if fs == 'btrfs':
 		run('mkfs.btrfs -f -L ROOT %s' % dev_root)
@@ -130,7 +123,6 @@ w" | fdisk %s''' % dev)
 		run('mount %s /tmp/borg_restore' % dev_root)
 	else:
 		raise('what?')
-	#endif
 
 	run('mkdir /tmp/borg_restore/boot')
 	run('mount %s1 /tmp/borg_restore/boot' % dev)
@@ -151,10 +143,8 @@ w" | fdisk %s''' % dev)
 	run('dd if=/usr/lib/syslinux/bios/mbr.bin of=%s' % dev)
 
 	run('sync')
-#enddef
 
 
 if __name__ == '__main__':
 	main()
-#endif
 
