@@ -47,10 +47,11 @@ bsdtar -xpf ArchLinuxARM-armv7-latest.tar.gz -C ${MNT}
 #tar xvf ArchLinuxARM-armv7-latest.tar.gz -C ${MNT}
 
 if [ 1 ]; then
-	rm -rf boot-sunxi.cmd
-	wget https://raw.githubusercontent.com/igorpecovnik/lib/master/config/bootscripts/boot-sunxi.cmd
-	u-boot/tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d boot-sunxi.cmd ${MNT}/boot/boot.scr
-	cp u-boot/arch/arm/dts/sun7i-a20-lamobo-r1.dtb ${MNT}/boot/dtbs/
+	#rm -rf boot-sunxi.cmd
+	#wget https://raw.githubusercontent.com/igorpecovnik/lib/master/config/bootscripts/boot-sunxi.cmd
+	#u-boot/tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d boot-sunxi.cmd ${MNT}/boot/boot.scr
+	u-boot/tools/mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "BananPI boot script" -d boot2.txt ${MNT}/boot/boot.scr
+	#cp u-boot/arch/arm/dts/sun7i-a20-lamobo-r1.dtb ${MNT}/boot/dtbs/
 else
 	u-boot/tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d legacy_boot.txt ${MNT}/boot/boot.scr
 	cp legacy_uImage ${MNT}/boot/uImage
