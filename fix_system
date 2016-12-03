@@ -119,7 +119,7 @@ def fix_getty1():
 	if os.path.islink('/etc/systemd/system/getty.target.wants/getty@tty2.service'):
 		return
 	if not ask('fix getty1 (should be getty2) symlink?'):
-		continue
+		return
 	call('mv /etc/systemd/system/getty.target.wants/getty@tty1.service /etc/systemd/system/getty.target.wants/getty@tty2.service')
 
 
