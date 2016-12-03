@@ -115,13 +115,20 @@ def fix_services():
 		call('systemctl start %s.service' % s)
 
 
+def fix_getty1():
+	if os.path.islink('/etc/systemd/system/getty.target.wants/getty@tty2.service'):
+		return
+	if not ask('fix getty1 (should be getty2) symlink?'):
+		continue
+	call('mv /etc/systemd/system/getty.target.wants/getty@tty1.service /etc/systemd/system/getty.target.wants/getty@tty2.service')
+
+
 def fix_pacman_sources():
 	fn = '/etc/pacman.conf'
-
-	if call('grep "^\[rpodgorny\]$" %s' % fn, silent=True) == 0: return
-
-	if not ask('add rpodgorny repo to pacman.conf?'): return
-
+	if call('grep "^\[rpodgorny\]$" %s' % fn, silent=True) == 0:
+		return
+	if not ask('add rpodgorny repo to pacman.conf?'):
+		return
 	call('''echo "
 
 [rpodgorny]
@@ -266,6 +273,7 @@ def main():
 	fix_pacman_sources()
 	fix_packages()
 	fix_services()
+	fix_getty1()
 	fix_ssh_host_keys_hostname()
 	fix_ssh_user_keys_hostname()
 	fix_ssh_user_keys_wrong_type()
