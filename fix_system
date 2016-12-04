@@ -12,17 +12,14 @@ def call(cmd, silent=False):
 		stdout = None
 	else:
 		stdout = subprocess.DEVNULL
-	#endif
-
 	return subprocess.call(cmd, shell=True, stdout=stdout)
-#enddef
 
 
 def ask(question):
 	res = input(question)
-	if res == 'y': return True
+	if res == 'y':
+		return True
 	return False
-#enddef
 
 
 def is_package_installed(package):
@@ -31,224 +28,185 @@ def is_package_installed(package):
 		return True
 	except:
 		return False
-	#endtry
-#enddef
 
 
 def fix_mkinitcpio():
 	fn = '/etc/mkinitcpio.conf'
-
-	if not os.path.isfile(fn): return
-	if call('grep "^HOOKS=.*autodetect.*" %s' % fn, silent=True) != 0: return
-
-	if not ask('fix mkinitcpio?'): return
-
+	if not os.path.isfile(fn):
+		return
+	if call('grep "^HOOKS=.*autodetect.*" %s' % fn, silent=True) != 0:
+		return
+	if not ask('fix mkinitcpio?'):
+		return
 	call('sed -e "/^HOOKS=/s/autodetect //g" -i %s' % fn)
 	call('mkinitcpio -p linux')
 	call('pacman -Sy --noconfirm --needed syslinux')
 	call('sureboot')
-#enddef
 
 
 def fix_locale_gen():
 	fn = '/etc/locale.gen'
-
-	if call('grep "^#en_US.UTF-8" %s' % fn, silent=True) != 0: return
-
-	if not ask('fix locale.gen? (en_US.UTF-8)'): return
-
+	if call('grep "^#en_US.UTF-8" %s' % fn, silent=True) != 0:
+		return
+	if not ask('fix locale.gen? (en_US.UTF-8)'):
+		return
 	call('sed -e "s/^#en_US.UTF-8/en_US.UTF-8/g" -i %s' % fn)
 	call('locale-gen')
-#enddef
 
 
 def fix_locale():
 	fn = '/etc/locale.conf'
-
-	if os.path.isfile(fn): return
-
-	if not ask('fix locale.conf? (en_US.UTF-8)'): return
-
+	if os.path.isfile(fn):
+		return
+	if not ask('fix locale.conf? (en_US.UTF-8)'):
+		return
 	call('echo "LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8\n" > %s' % fn)
-#enddef
 
 
 def fix_radek():
 	if call('grep "^radek:" /etc/passwd', silent=True) != 0:
-		if not ask('add user radek?'): return
-
+		if not ask('add user radek?'):
+			return
 		call('useradd -m radek')
 		call('passwd radek')
-
 		call('pacman -Sy --noconfirm --needed sudo')
 		call('usermod -aG wheel radek')
-	#endif
 
 	if call('grep "^radek:" /etc/passwd | grep /usr/bin/fish', silent=True) != 0:
 		if ask('set fish as default shell for radek?'):
 			call('pacman -Sy --noconfirm --needed fish')
 			call('usermod -s /usr/bin/fish radek')
-		#endif
-	#endif
-#enddef
 
 
 def fix_root():
 	fn = '/root/.forward'
-
-	if os.path.exists(fn): return
-
-	if not ask('add .forward to radek@podgorny.cz for root?'): return
-
+	if os.path.exists(fn):
+		return
+	if not ask('add .forward to radek@podgorny.cz for root?'):
+		return
 	call('echo "radek@podgorny.cz" > %s' % fn)
-#enddef
 
 
 def fix_packages():
 	for p in ['cronie', 'git', 'haveged', ('openssh', 'openssh-hpn'), 'postfix', 'uptimed', ]:
 		installed = False
-
 		if isinstance(p, tuple):
 			for i in p:
 				if is_package_installed(i):
 					installed = True
-				#endif
-			#endfor
 		else:
 			installed = is_package_installed(p)
-		#endif
-
-		if installed: continue
-
-		if isinstance(p, tuple): p = p[0]  # TODO: quick hack
-
-		if not ask('install %s?' % p): continue
-
+		if installed:
+			continue
+		if isinstance(p, tuple):
+			p = p[0]  # TODO: quick hack
+		if not ask('install %s?' % p):
+			continue
 		call('pacman -Sy --noconfirm %s' % p)
-	#endfor
-#enddef
 
 
 def fix_services():
 	for s in ['cronie', 'haveged', 'sshd', 'postfix', 'uptimed', ]:
-		if os.path.islink('/etc/systemd/system/multi-user.target.wants/%s.service' % s): continue
-
-		if not ask('enable and start %s?' % s): continue
-
+		if os.path.islink('/etc/systemd/system/multi-user.target.wants/%s.service' % s):
+			continue
+		if not ask('enable and start %s?' % s):
+			continue
 		call('systemctl enable %s.service' % s)
 		call('systemctl start %s.service' % s)
-	#endfor
-#enddef
+
+
+def fix_getty1():
+	if os.path.islink('/etc/systemd/system/getty.target.wants/getty@tty2.service'):
+		return
+	if not ask('fix getty1 (should be getty2) symlink?'):
+		return
+	call('mv /etc/systemd/system/getty.target.wants/getty@tty1.service /etc/systemd/system/getty.target.wants/getty@tty2.service')
 
 
 def fix_pacman_sources():
 	fn = '/etc/pacman.conf'
-
-	if call('grep "^\[rpodgorny\]$" %s' % fn, silent=True) == 0: return
-
-	if not ask('add rpodgorny repo to pacman.conf?'): return
-
+	if call('grep "^\[rpodgorny\]$" %s' % fn, silent=True) == 0:
+		return
+	if not ask('add rpodgorny repo to pacman.conf?'):
+		return
 	call('''echo "
 
 [rpodgorny]
 SigLevel = Never
 Server = http://archlinux.podgorny.cz/\$repo/os/\$arch" >> %s''' % fn)
-#enddef
 
 
 def fix_timezone():
 	fn = '/etc/localtime'
-
-	if os.path.islink(fn): return
-
-	if not ask('set timezone to Europe/Prague?'): return
-
+	if os.path.islink(fn):
+		return
+	if not ask('set timezone to Europe/Prague?'):
+		return
 	call('ln -s /usr/share/zoneinfo/Europe/Prague %s' % fn)
-#enddef
 
 
 def fix_hostname():
 	fn = '/etc/hostname'
-
-	if os.path.isfile(fn): return
-
-	if not ask('set hostname?'): return
-
+	if os.path.isfile(fn):
+		return
+	if not ask('set hostname?'):
+		return
 	hostname = None
 	while not hostname:
 		hostname = input('enter hostname: ').strip()
-	#endwhile
-
 	call('echo "%s" > %s' % (hostname, fn))
-#enddef
 
 
 def fix_x():
 	# TODO: find a better way to test for X
-	if not os.path.isfile('/usr/bin/X'): return
-
-	if is_package_installed('terminus-font'): return
-
-	if not ask('install terminus font?'): return
-
+	if not os.path.isfile('/usr/bin/X'):
+		return
+	if is_package_installed('terminus-font'):
+		return
+	if not ask('install terminus font?'):
+		return
 	call('pacman -Sy terminus-font')
-#enddef
 
 
 def fix_fstrim():
-	if os.path.islink('/etc/systemd/system/multi-user.target.wants/fstrim.timer'): return
-
-	if not ask('enable fstrim timer?'): return
-
+	if os.path.islink('/etc/systemd/system/multi-user.target.wants/fstrim.timer'):
+		return
+	if not ask('enable fstrim timer?'):
+		return
 	call('systemctl enable fstrim.timer')
-#enddef
 
 
 def fix_backup():
-	if os.path.isfile('/etc/cron.d/backup'): return
-
+	if os.path.isfile('/etc/cron.d/backup'):
+		return
 	print('no /etc/cron.d/backup')
-#enddef
 
 
 def fix_nginx():
 	fn = '/etc/nginx/nginx.conf'
-
-	if not os.path.isfile(fn): return
-
-	if call('grep "ssl_protocols TLSv1 TLSv1.1 TLSv1.2;" %s' % fn, silent=True) == 0: return
-
+	if not os.path.isfile(fn):
+		return
+	if call('grep "ssl_protocols TLSv1 TLSv1.1 TLSv1.2;" %s' % fn, silent=True) == 0:
+		return
 	print('%s found but sslv3 seems to be not disabled' % fn)
-#enddef
 
 
 def fix_ntp_sync():
 	if call('timedatectl | grep "NTP synchronized: yes"', silent=True) != 0:
 		print('time not synced with ntp')
-	#endif
-
 	if not os.path.islink('/etc/systemd/system/sysinit.target.wants/systemd-timesyncd.service'):
 		if ask('enable systemd ntp sync?'):
 			call('systemctl enable systemd-timesyncd')
-		#endif
-	#endif
-#enddef
 
 
 def fix_ssh_host_keys_hostname():
 	should_be = 'root@%s' % socket.gethostname()
-
 	fns = glob.glob('/etc/ssh/*_key.pub')
 	for fn in fns:
 		with open(fn, 'r') as f:
 			user_and_host = f.readline().split()[-1]
-		#endwith
-
 		if user_and_host != should_be:
 			print('i dont like %s in ssh host key in %s' % (user_and_host, fn))
-		#endif
-	#endfor
-#enddef
 
 
 def fix_ssh_user_keys_hostname():
@@ -256,77 +214,59 @@ def fix_ssh_user_keys_hostname():
 	for fn in fns:
 		user = fn.split('/')[2]
 		should_be = '%s@%s' % (user, socket.gethostname())
-
 		with open(fn, 'r') as f:
 			user_and_host = f.readline().split()[-1]
-		#endwith
-
 		if user_and_host != should_be:
 			print('i dont like %s in ssh user key in %s' % (user_and_host, fn))
-		#endif
-	#endfor
-
 	fns = glob.glob('/root/.ssh/id_rsa.pub')
 	for fn in fns:
 		user = 'root'
 		should_be = '%s@%s' % (user, socket.gethostname())
-
 		with open(fn, 'r') as f:
 			user_and_host = f.readline().split()[-1]
-		#endwith
-
 		if user_and_host != should_be:
 			print('i dont like %s in ssh user key in %s' % (user_and_host, fn))
-		#endif
-	#endfor
-#enddef
 
 
 def fix_ssh_user_keys_wrong_type():
 	fns = glob.glob('/home/*/.ssh/id_*')
 	for fn in fns:
-		if 'rsa' in fn: continue
-
+		if 'rsa' in fn:
+			continue
 		print('wrong ssh key found at %s' % fn)
-	#endfor
-
 	fns = glob.glob('/root/.ssh/id_*')
 	for fn in fns:
-		if 'rsa' in fn: continue
-
+		if 'rsa' in fn:
+			continue
 		print('wrong type ssh user key found at %s' % fn)
-	#endfor
-#enddef
 
 
 def fix_ssh_root_authorized_keys():
-	if not os.path.isfile('/root/.ssh/authorized_keys'): return
-
+	if not os.path.isfile('/root/.ssh/authorized_keys'):
+		return
 	print('/root/.ssh/authorized_keys exists')
-#enddef
 
 
 def fix_postfix():
-	if call('grep "^inet_protocols = ipv4,ipv6$" /etc/postfix/main.cf', silent=True) == 0: return
-
+	if call('grep "^inet_protocols = ipv4,ipv6$" /etc/postfix/main.cf', silent=True) == 0:
+		return
 	if call('grep "^inet_protocols = ipv4$" /etc/postfix/main.cf', silent=True) != 0:
 		print('"^inet_protocols = ipv4$" not found in /etc/postfix/main.cf, this is weird')
 		return
-	#endif
-
 	if ask('ipv6 not set for postfix. fix?'):
 		call('sed -i "s/^inet_protocols = ipv4$/inet_protocols = ipv4,ipv6/g" /etc/postfix/main.cf')
-	#endif
-#enddef
+
+
+def fix_watchdog():
+	if call('grep "#RuntimeWatchdogSec" /etc/systemd/system.conf', silent=True) == 0:
+		print('watchdog does not seem to enabled')
 
 
 def check_kernel():
 	ver = subprocess.check_output('uname -r', shell=True).decode().strip()
-
-	if os.path.isdir('/lib/modules/%s' % ver): return
-
+	if os.path.isdir('/lib/modules/%s' % ver):
+		return
 	print('running old kernel, reboot recommended!')
-#enddef
 
 
 def main():
@@ -338,6 +278,7 @@ def main():
 	fix_pacman_sources()
 	fix_packages()
 	fix_services()
+	fix_getty1()
 	fix_ssh_host_keys_hostname()
 	fix_ssh_user_keys_hostname()
 	fix_ssh_user_keys_wrong_type()
@@ -350,11 +291,10 @@ def main():
 	fix_radek()
 	fix_x()
 	fix_ntp_sync()
+	fix_watchdog()
 	check_kernel()
-#enddef
 
 
 if __name__ == '__main__':
 	main()
-#endif
 
