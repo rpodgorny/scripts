@@ -257,6 +257,11 @@ def fix_postfix():
 		call('sed -i "s/^inet_protocols = ipv4$/inet_protocols = ipv4,ipv6/g" /etc/postfix/main.cf')
 
 
+def fix_watchdog():
+	if call('grep "#RuntimeWatchdogSec" /etc/systemd/system.conf', silent=True) == 0:
+		print('watchdog does not seem to enabled')
+
+
 def check_kernel():
 	ver = subprocess.check_output('uname -r', shell=True).decode().strip()
 	if os.path.isdir('/lib/modules/%s' % ver):
@@ -286,6 +291,7 @@ def main():
 	fix_radek()
 	fix_x()
 	fix_ntp_sync()
+	fix_watchdog()
 	check_kernel()
 
 
