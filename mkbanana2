@@ -8,6 +8,7 @@ test -b ${DEV}
 
 #TMP=`mktemp -d`
 MNT=banana_mnt
+MAKEOPTS="-j5"
 
 CWD=`pwd`
 #cd ${TMP}
@@ -16,13 +17,13 @@ CWD=`pwd`
 test -f ArchLinuxARM-armv7-latest.tar.gz || wget -c http://archlinuxarm.org/os/ArchLinuxARM-armv7-latest.tar.gz
 
 rm -rf u-boot
-#git clone --depth=1 git://git.denx.de/u-boot.git
-git clone https://github.com/rpodgorny/u-boot -b lamobo-r1 --depth=1
+git clone --depth=1 git://git.denx.de/u-boot.git
+#git clone https://github.com/rpodgorny/u-boot -b lamobo-r1 --depth=1
 
 cd u-boot
 #git checkout lamobo-r1
-make CROSS_COMPILE=arm-linux-gnueabihf- Lamobo_R1_defconfig
-make CROSS_COMPILE=arm-linux-gnueabihf-
+make CROSS_COMPILE=arm-linux-gnueabihf- ${MAKEOPTS} Lamobo_R1_defconfig
+make CROSS_COMPILE=arm-linux-gnueabihf- ${MAKEOPTS}
 cd ..
 
 #rm -rf boot.txt
@@ -45,13 +46,18 @@ mount ${DEV}1 ${MNT}
 bsdtar -xpf ArchLinuxARM-armv7-latest.tar.gz -C ${MNT}
 #tar xvf ArchLinuxARM-armv7-latest.tar.gz -C ${MNT}
 
-#u-boot/tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d boot.txt ${MNT}/boot/boot.scr
-#cp u-boot/arch/arm/dts/sun7i-a20-lamobo-r1.dtb ${MNT}/boot/dtbs/
-
-u-boot/tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d legacy_boot.txt ${MNT}/boot/boot.scr
-cp legacy_uImage ${MNT}/boot/uImage
-cp legacy_dtb ${MNT}/boot/dtb
-cp -av 3.19.0-rc5bpi ${MNT}/lib/modules/
+if [ 1 ]; then
+	#rm -rf boot-sunxi.cmd
+	#wget https://raw.githubusercontent.com/igorpecovnik/lib/master/config/bootscripts/boot-sunxi.cmd
+	#u-boot/tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d boot-sunxi.cmd ${MNT}/boot/boot.scr
+	u-boot/tools/mkimage -A arm -O linux -T script -C none -a 0 -e 0 -n "BananPI boot script" -d boot2.txt ${MNT}/boot/boot.scr
+	#cp u-boot/arch/arm/dts/sun7i-a20-lamobo-r1.dtb ${MNT}/boot/dtbs/
+else
+	u-boot/tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d legacy_boot.txt ${MNT}/boot/boot.scr
+	cp legacy_uImage ${MNT}/boot/uImage
+	cp legacy_dtb ${MNT}/boot/dtb
+	cp -av 3.19.0-rc5bpi ${MNT}/lib/modules/
+fi
 
 sync
 umount -R ${MNT}

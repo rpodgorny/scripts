@@ -1,2 +1,19 @@
-jhead -autorot *jpg
-jpegoptim -m85 *jpg
+#!/bin/sh
+set -e -x
+
+which exiv2 jhead jpegoptim jpegtran mogrify mmv parallel
+
+mmv "*" "xxx_#l1"
+
+# tohle kdyztak dela casovy posun
+#jhead -ta+2:30 *.jpg
+#exiv2 adjust -a +2:30 --keep *.jpg
+
+exiv2 rename -F --keep *.jpg
+
+# nefunguje
+#jhead -autorot *.jpg
+
+parallel "mogrify -auto-orient -identify {} || mv {} {}_ERROR" ::: *.jpg
+parallel "jpegoptim -p -m85 {}" ::: *.jpg
+parallel "echo {}; jpegtran -optimize -progressive -copy all {} >{}_; mv {}_ {}" ::: *.jpg
