@@ -26,7 +26,6 @@ def main():
 
 	if args['--random']:
 		random.shuffle(fns)
-	#endif
 
 	while 1:
 		for fn in fns:
@@ -35,17 +34,12 @@ def main():
 				cmd = 'omxplayer -o hdmi "./%s"' % fn
 			else:
 				cmd = 'omxplayer -b -o hdmi "./%s"' % fn
-			#endif
 
 			print('>>> %s' % cmd)
 			subprocess.call(cmd, shell=True)
-		#endfor
 
 		time.sleep(1)
-	#endwhile
-#enddef
 
 
 if __name__ == '__main__':
 	main()
-#endif

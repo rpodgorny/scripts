@@ -16,7 +16,6 @@ def main():
 
 		if not os.listdir(local_path):
 			raise Exception('%s empty after mount' % local_path)
-		#endif
 
 		lock_fn = '%s/_lock' % local_path
 
@@ -26,17 +25,11 @@ def main():
 			f.close()
 			subprocess.call('fusermount -u %s' % local_path, shell=True)
 			raise Exception('already locked by %s' % line)
-		#endif
 
-		f = open(lock_fn, 'w')
-		f.write(hostname)
-		f.close()
+		with open(lock_fn, 'w') as f:
+			f.write(hostname)
 
-		if '--reindex' in sys.argv:
-			reindex = '-reindex'
-		else:
-			reindex = ''
-		#endif
+		reindex = '-reindex' if '--reindex' in sys.argv else ''
 
 		cmd = 'bitcoin-qt %s -datadir=%s' % (reindex, local_path)
 		print(cmd)
@@ -45,8 +38,6 @@ def main():
 		os.remove(lock_fn)
 
 		subprocess.call('fusermount -u %s' % local_path, shell=True)
-	#endwith
-#enddef
 
 
 if __name__ == '__main__': main()

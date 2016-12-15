@@ -21,7 +21,6 @@ class color:
 	BOLD = '\033[1m'
 	UNDERLINE = '\033[4m'
 	END = '\033[0m'
-#endclass
 
 
 def get_extents(fn):
@@ -30,15 +29,12 @@ def get_extents(fn):
 
 	if not r:
 		raise Exception('get_extents failed for %s' % fn)
-	#endif
 
 	return int(r.group(1))
-#enddef
 
 
 def defrag(fn):
 	return subprocess.call('btrfs filesystem defrag -clzo %s >/dev/null 2>&1' % shlex.quote(fn), shell=True) == 0
-#enddef
 
 
 def main():
@@ -49,16 +45,16 @@ def main():
 	fns = set()
 	for root, dirs, files in os.walk(path):
 		for d in dirs[:]:
-			if os.path.ismount(os.path.join(root, d)): dirs.remove(d)
-		#endfor
+			if os.path.ismount(os.path.join(root, d)):
+				dirs.remove(d)
 
 		for fn in files:
 			fn = os.path.join(root, fn)
-			if not os.path.isfile(fn): continue
-			if os.path.islink(fn): continue
+			if not os.path.isfile(fn):
+				continue
+			if os.path.islink(fn):
+				continue
 			fns.add(fn)
-		#endfor
-	#endfor
 	print('will consider %d files (threshold is %d extents)' % (len(fns), thresh))
 
 	extents_before_total = 0
@@ -67,14 +63,14 @@ def main():
 	for fn in fns:
 		extents_before = get_extents(fn)
 
-		if extents_before < thresh: continue
+		if extents_before < thresh:
+			continue
 
 		sys.stdout.write('%s: %d' % (fn, extents_before))
 		sys.stdout.flush()
 
 		if not defrag(fn):
 			sys.stdout.write(' %serror%s' % (color.RED, color.END))
-		#endif
 
 		extents_after = get_extents(fn)
 
@@ -84,13 +80,11 @@ def main():
 			clr = color.RED
 		else:
 			clr = color.YELLOW
-		#endif
 
 		sys.stdout.write(' -> %s%d%s\n' % (clr, extents_after, color.END))
 
 		extents_before_total += extents_before
 		extents_after_total	+= extents_after
-	#endfor
 
 	if extents_after_total < extents_before_total:
 		clr = color.GREEN
@@ -98,9 +92,8 @@ def main():
 		clr = color.RED
 	else:
 		clr = color.YELLOW
-	#endif
 
 	print('total: %s -> %s%d%s' % (extents_before_total, clr, extents_after_total, color.END))
-#enddef
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+	main()
