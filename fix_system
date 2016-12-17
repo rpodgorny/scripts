@@ -200,6 +200,7 @@ def fix_ntp_sync():
 
 
 def fix_ssh_host_keys_hostname():
+	deleted = False
 	should_be = 'root@%s' % socket.gethostname()
 	fns = glob.glob('/etc/ssh/*_key.pub')
 	for fn in fns:
@@ -207,6 +208,11 @@ def fix_ssh_host_keys_hostname():
 			user_and_host = f.readline().split()[-1]
 		if user_and_host != should_be:
 			print('i dont like %s in ssh host key in %s' % (user_and_host, fn))
+			if ask('delete?'):
+				os.remove(fn)
+				deleted = True
+	if deleted:
+		call('systemctl start sshdgenkeys')
 
 
 def fix_ssh_user_keys_hostname():
