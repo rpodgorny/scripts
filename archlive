@@ -6,7 +6,7 @@ DIR=/var/tmp/archlive
 
 test "$DEV"
 test -b $DEV
-grep 1 /sys/block/$DEV/removable
+grep 1 /sys/block/`basename $DEV`/removable
 
 umount /var/tmp/archlive/work/efiboot || true
 
