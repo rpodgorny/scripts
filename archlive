@@ -14,10 +14,6 @@ rm -rf $DIR
 mkdir -p $DIR
 cp -r /usr/share/archiso/configs/releng/* $DIR
 
-# it seems the current size limit is too low so i have to disable something - i decided to get rid of pxe
-# see https://bugs.manjaro.org/index.php?do=details&task_id=41 for some details
-sed -i 's/archiso_pxe_common//g;s/archiso_pxe_nbd//g;s/archiso_pxe_http//g;s/archiso_pxe_nfs//g' $DIR/mkinitcpio.conf
-
 echo '
 [rpodgorny]
 SigLevel = Never
