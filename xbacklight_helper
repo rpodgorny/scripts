@@ -1,0 +1,31 @@
+#!/usr/bin/python3
+
+'''
+xbacklight_helper.
+
+Usage:
+  xbacklight_helper inc <delta>
+  xbacklight_helper dec <delta>
+'''
+
+import sh
+import docopt
+import math
+
+
+__version__ = '0.0'
+
+
+def main():
+	args = docopt.docopt(__doc__, version=__version__)
+	delta = float(args['<delta>'])
+	if args['dec']:
+		delta *= -1
+	cur_val = round(float(sh.xbacklight()))
+	new_val = min(max(cur_val + delta, 0), 100)
+	sh.xbacklight('=%s' % new_val)
+	print(sh.xbacklight())
+
+
+if __name__ == '__main__':
+	main()
