@@ -3,15 +3,18 @@ set -e -x
 
 DEV=$1
 DIR=/var/tmp/archlive
+MNT=/tmp/archlive_mnt
 
 test "$DEV"
 test -b $DEV
 grep 1 /sys/block/`basename $DEV`/removable
-
 umount /var/tmp/archlive/work/efiboot || true
 
 rm -rf $DIR
 mkdir -p $DIR
+rmdir $MNT || true
+mkdir -p $MNT
+
 cp -r /usr/share/archiso/configs/releng/* $DIR
 
 echo '
@@ -115,22 +118,28 @@ tools@orion.asterix.cz: /tools fuse.sshfs x-systemd.automount,_netdev 0 0
 ' >> $DIR/airootfs/etc/fstab
 
 cd $DIR
-./build.sh -v
+./build.sh -v -L ARCHISO_ATX
 cd -
 
-dd_rescue $DIR/out/*iso $DEV
-sync
+#dd_rescue $DIR/out/*iso $DEV
 
+
+dd if=/dev/zero of=${DEV} bs=10M count=1
+parted --script -a optimal ${DEV} -- mklabel msdos mkpart primary fat32 0% 100% set 1 boot on
+mkfs.vfat -n ARCHISO_ATX ${DEV}1
+mount ${DEV}1 ${MNT}
+bsdtar -x --exclude=isolinux/ --exclude=EFI/archiso/ --exclude=arch/boot/syslinux/ -f ${DIR}/out/*iso -C ${MNT}
+umount ${MNT}
+
+sync
 partprobe
 
-MNT=/tmp/archlive_mnt
-mkdir -p $MNT
-mount ${DEV}2 $MNT
+mount ${DEV}1 $MNT
 cp /home/radek/scripts/archlive_memtest86.efi $MNT/memtest86.efi
-echo 'title Memtest86 6
+echo 'title Memtest86
 linux memtest86.efi
 ' > $MNT/loader/entries/memtest86.conf
 umount $MNT
-rmdir $MNT
 
+rmdir $MNT
 rm -rf $DIR
