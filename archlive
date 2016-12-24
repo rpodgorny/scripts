@@ -135,10 +135,16 @@ sync
 partprobe
 
 mount ${DEV}1 $MNT
-cp /home/radek/scripts/archlive_memtest86.efi $MNT/memtest86.efi
+
+cp ${MNT}/loader/entries/archiso-x86_64.conf ${MNT}/loader/entries/archiso-x86_64_copytoram.conf
+sed -i 's/\(title.*\)/\1 in RAM/g' ${MNT}/loader/entries/archiso-x86_64_copytoram.conf
+sed -i 's/\(options.*\)/\1 copytoram/g' ${MNT}/loader/entries/archiso-x86_64_copytoram.conf
+
+cp /home/radek/scripts/archlive_memtest86.efi $MNT/EFI/memtest86.efi
 echo 'title Memtest86
-linux memtest86.efi
+linux EFI/memtest86.efi
 ' > $MNT/loader/entries/memtest86.conf
+
 umount $MNT
 
 rmdir $MNT
