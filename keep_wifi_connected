@@ -1,0 +1,67 @@
+#!/usr/bin/python3
+
+'''
+Keeps the shitty wifi connected (hopefully).
+
+Usage:
+  keep_wifi_connected [options] <con_name>
+
+Arguments:
+  <con_name>  NetworkManager connection name.
+
+Options:
+  --interval <n>  Time to sleep between checks (in seconds). [default: 60]
+'''
+
+
+import docopt
+import sys
+import sh
+import time
+import subprocess
+
+
+__version__ = '0.0'
+
+
+def run(cmd, echo=False):
+	if echo:
+		print('+ %s' % cmd)
+	return subprocess.getoutput(cmd)
+
+
+def reconnect(con_name):
+	#run('nmcli r wifi off')
+	#run('nmcli r wifi on')
+	run('sudo systemctl restart NetworkManager')
+	run('nmcli c down %s' % con_name)
+	run('nmcli c up %s' % con_name)
+
+
+def is_active(con_name):
+	lines = run('nmcli -c no -f name c show --active')
+	for line in lines.split('\n'):
+		line = line.strip()
+		if line == con_name:
+			return True
+	return False
+
+
+def main():
+	args = docopt.docopt(__doc__, version=__version__)
+	print('args: %s' % args)
+	con_name = args['<con_name>']
+	interval = float(args['--interval'])
+	while 1:
+		sys.stdout.write('.')
+		sys.stdout.flush()
+		if not is_active(con_name):
+			sys.stdout.write('r')
+			sys.stdout.flush()
+			reconnect(con_name)
+		time.sleep(interval)
+	return 0
+
+
+if __name__ == '__main__':
+	sys.exit(main())
