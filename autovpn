@@ -10,13 +10,13 @@
 (setv SLEEP 10)
 
 (defn openvpn-active? [vpn]
-  (let [cmd (sh.systemctl "is-active" (% "openvpn@%s.service" vpn) :_ok_code [0 3])]
+  (let [cmd (sh.systemctl "is-active" (% "openvpn-client@%s.service" vpn) :_ok_code [0 3])]
     (= cmd.exit_code 0)))
 
 (defn start-stop-openvpn [vpn action]
   ;;(logging.info action)
   (print action)
-  (sh.systemctl action (% "openvpn@%s.service" vpn)))
+  (sh.systemctl action (% "openvpn-client@%s.service" vpn)))
 
 (defn get-ipv6-addrs []
   (let [cmd (sh.ip "addr")
