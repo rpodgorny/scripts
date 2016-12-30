@@ -1,7 +1,17 @@
 #!/bin/sh
 set -e -x
 
-create_ap wlp2s0 wlp0s20u2 radatko.net hovnokleslo
+IFACE_AP=wlp2s0
+IFACE_INET=wlp0s20u2
 
-# nebo (asi lepsi):
-#sudo nmcli dev wifi hotspot ifname wlp2s0 ssid pokus password pokuspokus
+create_ap $@ ${IFACE_AP} ${IFACE_INET} radatko.net hovnokleslo
+
+# nebo (asi lepsi, ale nefunguje)
+#sudo nmcli dev wifi hotspot ifname wlp2s0 con-name hotspot ssid radatko.net password hovnokleslo
+
+# anebo (taky asi nefunguje)
+#sudo nmcli c add type wifi ifname wlp2s0 con-name hotspot autoconnect no ssid radatko.net
+#sudo nmcli c modify hotspot wifi-sec.psk "hovnokleslo"
+#sudo nmcli c modify hotspot wifi-sec.key-mgmt wpa-psk
+#sudo nmcli c modify hotspot 802-11-wireless.mode ap 802-11-wireless.band bg ipv4.method shared
+#sudo nmcli c up hotspot
