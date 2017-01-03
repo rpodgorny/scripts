@@ -149,7 +149,9 @@ LABEL freedos
 MENU LABEL FreeDOS
 LINUX boot/syslinux/memdisk
 APPEND initrd=boot/freedos.img floppy
-' >> ${MNT}/arch/boot/syslinux/archiso_tail.cfg
+' > ${MNT}/arch/boot/syslinux/archiso_tail.cfg_
+cat ${MNT}/arch/boot/syslinux/archiso_tail.cfg >> ${MNT}/arch/boot/syslinux/archiso_tail.cfg_
+mv ${MNT}/arch/boot/syslinux/archiso_tail.cfg_ ${MNT}/arch/boot/syslinux/archiso_tail.cfg
 
 cp /home/radek/scripts/archlive_memtest86.efi $MNT/EFI/memtest86.efi
 echo 'title Memtest86
