@@ -143,6 +143,9 @@ cp ${MNT}/loader/entries/archiso-x86_64.conf ${MNT}/loader/entries/archiso-x86_6
 sed -i 's/\(title.*\)/\1 in RAM/g' ${MNT}/loader/entries/archiso-x86_64_copytoram.conf
 sed -i 's/\(options.*\)/\1 copytoram/g' ${MNT}/loader/entries/archiso-x86_64_copytoram.conf
 
+sed -i 's/timeout.*/timeout 20/g' ${MNT}/loader/loader.conf
+sed -i 's/default archiso-x86_64/default archiso-x86_64_copytoram/g' ${MNT}/loader/loader.conf
+
 cp /home/radek/scripts/archlive_freedos.img ${MNT}/arch/boot/freedos.img
 echo '
 LABEL freedos
