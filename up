@@ -1,13 +1,10 @@
 #!/bin/sh
-set -e
-set -x
+set -e -x
 
 cd ~/dotfiles
-#hg pull -u
 git pull --all
 cd -
 
 cd ~/scripts
-#hg pull -u
 git pull --all
 cd -
