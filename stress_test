@@ -3,7 +3,7 @@ set -x
 
 cd /tmp
 
-timeout 1m mprime -t
+timeout 24h mprime -t
 if [ ! $? -eq 124 ]; then
   echo 'mprime runtime error!'
   exit
@@ -26,7 +26,7 @@ if [ $? -eq 0 ]; then
   exit
 fi
 
-timeout 1m rowhammer-test
+timeout 24h rowhammer-test
 if [ ! $? -eq 124 ]; then
   echo 'rowhammer runtime error!'
   exit
