@@ -36,12 +36,10 @@ def fix_mkinitcpio():
 		return
 	if call('grep "^HOOKS=.*autodetect.*" %s' % fn, silent=True) != 0:
 		return
-	if not ask('fix mkinitcpio?'):
+	if not ask('fix mkinitcpio (remove autodetect hook)?'):
 		return
 	call('sed -e "/^HOOKS=/s/autodetect //g" -i %s' % fn)
 	call('mkinitcpio -p linux')
-	call('pacman -Sy --noconfirm --needed syslinux')
-	call('sureboot')
 
 
 def fix_locale_gen():
