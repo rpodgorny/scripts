@@ -22,6 +22,11 @@ def ask(question):
 	return False
 
 
+# TODO: this is probably unused
+def is_virtual_machine():
+	return call('systemd-detect-virt -q') == 0
+
+
 def is_package_installed(package):
 	try:
 		subprocess.check_output('pacman -Qi %s' % package, shell=True, stderr=subprocess.PIPE)
@@ -111,6 +116,17 @@ def fix_services():
 			continue
 		call('systemctl enable %s.service' % s)
 		call('systemctl start %s.service' % s)
+
+
+def fix_mcelog():
+	if not os.path.isfile('/dev/mcelog'):
+		return
+	if not is_package_installed('mcelog'):
+		if ask('install mcelog?'):
+			call('pacman -Sy --noconfirm mcelog')
+	if not os.path.islink('/etc/systemd/system/multi-user.target.wants/mcelog.service'):
+		if ask('enable and start mcelog?'):
+			call('systemctl enable --now mcelog.service')
 
 
 def fix_getty1():
@@ -262,6 +278,8 @@ def fix_postfix():
 
 
 def fix_watchdog():
+	if not os.path.isfile('/dev/watchdog'):
+		return
 	if call('grep "#RuntimeWatchdogSec" /etc/systemd/system.conf', silent=True) == 0:
 		print('watchdog does not seem to enabled')
 
@@ -296,6 +314,7 @@ def main():
 	fix_x()
 	fix_ntp_sync()
 	fix_watchdog()
+	fix_mcelog()
 	check_kernel()
 
 
