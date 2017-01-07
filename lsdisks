@@ -7,19 +7,22 @@ import os
 
 def get_serial_number(dev):
 	cmd = 'smartctl -i %s' % dev
-	o = subprocess.check_output(cmd, shell=True).decode()
-	for line in o.split('\n'):
-		if not 'Serial Number:' in line: continue
-		return line.split(':', 1)[1].strip()
-	raise Exception('serial number not found!')
+	try:
+		o = subprocess.check_output(cmd, shell=True).decode()
+		for line in o.split('\n'):
+			if not 'Serial Number:' in line:
+				continue
+			return line.split(':', 1)[1].strip()
+	except:
+		pass
+	return None
 
 
 # this returns sectors, not bytes :-(
 def get_size(dev):
 	d = os.path.basename(dev)
-	f = open('/sys/block/%s/size' % d, 'r')
-	size = int(f.read().strip())
-	f.close()
+	with open('/sys/block/%s/size' % d, 'r') as f:
+		size = int(f.read().strip())
 	return size
 
 
@@ -37,4 +40,5 @@ def main():
 		print('%s: %s' % (dev, sn))
 
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+	main()
