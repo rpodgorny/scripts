@@ -1,8 +1,37 @@
 #!/bin/sh
-set -e -x
+set -x
 
-# not tested, yet
+cd /tmp
 
-timeout 24h mprime -t
-dmesg|grep mce:
-timeout 24h rowhammer-test
+timeout 1m mprime -t
+if [ ! $? -eq 124 ]; then
+  echo 'mprime runtime error!'
+  exit
+fi
+
+if [ ! -f results.txt ]; then
+  echo 'no mprime results?'
+  exit
+fi
+
+cat results.txt|grep ERROR
+if [ $? -eq 0 ]; then
+  echo 'mprime result error!'
+  exit
+fi
+
+dmesg|grep mce:|grep rror
+if [ $? -eq 0 ]; then
+  echo 'mce error!'
+  exit
+fi
+
+timeout 1m rowhammer-test
+if [ ! $? -eq 124 ]; then
+  echo 'rowhammer runtime error!'
+  exit
+fi
+
+
+echo ''
+echo 'EVERYTHING IS OK!!!'
