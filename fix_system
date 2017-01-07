@@ -115,6 +115,17 @@ def fix_services():
 		call('systemctl start %s.service' % s)
 
 
+def fix_mcelog():
+	if not os.path.isfile('/dev/mcelog'):
+		return
+	if not is_package_installed('mcelog'):
+		if ask('install mcelog?'):
+			call('pacman -Sy --noconfirm mcelog')
+	if not os.path.islink('/etc/systemd/system/multi-user.target.wants/mcelog.service'):
+		if ask('enable and start mcelog?'):
+			call('systemctl enable --now mcelog.service')
+
+
 def fix_getty1():
 	if os.path.islink('/etc/systemd/system/getty.target.wants/getty@tty2.service'):
 		return
