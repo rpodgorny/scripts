@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e -x
+
+# not tested, yet
+
+timeout 24h mprime -t
+dmesg|grep mce:
+timeout 24h rowhammer-test
