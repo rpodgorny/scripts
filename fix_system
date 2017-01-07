@@ -91,14 +91,8 @@ def fix_root():
 
 
 def fix_packages():
-	for p in ['cronie', 'git', 'haveged', ('openssh', 'openssh-hpn'), 'postfix', 'uptimed', ]:
-		installed = False
-		if isinstance(p, tuple):
-			for i in p:
-				if is_package_installed(i):
-					installed = True
-		else:
-			installed = is_package_installed(p)
+	for p in ['cronie', 'git', 'haveged', ('openssh', 'openssh-hpn', 'openssh-hpn-git'), 'postfix', 'uptimed', ]:
+		installed = any(map(is_package_installed, p)) if isinstance(p, tuple) else is_package_installed(p)
 		if installed:
 			continue
 		if isinstance(p, tuple):
@@ -114,8 +108,7 @@ def fix_services():
 			continue
 		if not ask('enable and start %s?' % s):
 			continue
-		call('systemctl enable %s.service' % s)
-		call('systemctl start %s.service' % s)
+		call('systemctl enable --now %s.service' % s)
 
 
 def fix_mcelog():
@@ -185,9 +178,9 @@ def fix_x():
 def fix_fstrim():
 	if os.path.islink('/etc/systemd/system/multi-user.target.wants/fstrim.timer'):
 		return
-	if not ask('enable fstrim timer?'):
+	if not ask('enable and start fstrim timer?'):
 		return
-	call('systemctl enable fstrim.timer')
+	call('systemctl enable --now fstrim.timer')
 
 
 def fix_backup():
@@ -209,8 +202,8 @@ def fix_ntp_sync():
 	if call('timedatectl | grep "NTP synchronized: yes"', silent=True) != 0:
 		print('time not synced with ntp')
 	if not os.path.islink('/etc/systemd/system/sysinit.target.wants/systemd-timesyncd.service'):
-		if ask('enable systemd ntp sync?'):
-			call('systemctl enable systemd-timesyncd')
+		if ask('enable systemd and start systemd-timesyncd?'):
+			call('systemctl enable --now systemd-timesyncd')
 
 
 def fix_ssh_host_keys_hostname():
