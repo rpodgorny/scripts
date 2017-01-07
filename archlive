@@ -37,7 +37,6 @@ htop
 git
 lm_sensors
 mercurial
-mprime
 networkmanager
 openssh
 pmount
@@ -53,6 +52,7 @@ zramswap
 
 echo '
 cpuminer-git
+mprime
 rowhammer-test-git
 ' >> $DIR/packages.x86_64
 
