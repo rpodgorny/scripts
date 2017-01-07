@@ -6,6 +6,8 @@ if [ `hostname` = 'kulicka' ]; then
 	FONT_SIZE=19
 elif [ `hostname` = 'kostik' ]; then
 	FONT_SIZE=18
+elif [ `hostname` = 'pupik' ]; then
+	FONT_SIZE=18
 fi
 
 FONT="-*-terminus-medium-*-*-*-${FONT_SIZE}-*-*-*-*-*-*-*"
