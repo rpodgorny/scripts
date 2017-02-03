@@ -1,0 +1,124 @@
+#!/usr/bin/python
+
+'''
+Borg backup checker.
+
+Usage:
+  backup-check [options] [<path>]
+
+Arguments:
+  <path>            Path to root of backups.
+
+Options:
+  --check           Also do repo checking.
+  --filter-age=<n>  Show only older than <n> seconds.
+  --verbose         Be verbose (show full output).
+'''
+
+import docopt
+import sys
+import os
+import sh
+import arrow
+import subprocess
+import pprint
+import multiprocessing
+
+
+__version__ = '0.0'
+
+
+def humanize_dt(dt):
+	h, m, s = 0, 0, dt
+	while s >= 60:
+		m += 1
+		s -= 60
+	while m >= 60:
+		h += 1
+		m -= 60
+	return '{:d}:{:02d}:{:02d}'.format(h, m, s)
+
+
+def run(cmd):
+	return sh.sh(cmd)
+
+
+def parse_borg_list(s):
+	for line in s.split('\n'):
+		name = line.split(' ')[0]
+		if not name:
+			continue
+		yield name
+
+
+def parse_name(s):
+	return arrow.get(s, 'YYYYMMDDTHHmmss').replace(tzinfo='local').timestamp
+
+
+def check_repo(path, repo):
+	repo_path = '%s/%s' % (path, repo)
+	#cmd = 'borg check --last 3 %s' % repo_path
+	cmd = 'borg check %s' % repo_path
+	return subprocess.call(cmd, shell=True)
+
+
+def process_repo(path, repo, t_now, check, verbose):
+	if verbose:
+		print('processing %s' % repo)
+	repo_path = '%s/%s' % (path, repo)
+	archives = list(parse_borg_list(sh.borg.list(repo_path)))
+	archives = [i for i in archives if 'snapshot' not in i]
+	t_max = max(map(parse_name, archives))
+	check_status = check_repo(path, repo) if check else None
+	d = {
+		'repo': repo,
+		't_max': t_max,
+		'latest_archive': arrow.get(t_max).to('local').format('YYYY-MM-DD HH:mm:ss'),
+		'age_max': t_now - t_max,
+		'age_max_human': humanize_dt(t_now - t_max),
+		'check_status': check_status,
+	}
+	return d
+
+
+# TODO: hacky
+def try_call(func, *args, **kwargs):
+	try:
+		return func(*args, **kwargs)
+	except:
+		return None
+
+
+def parse_filter_age(s):
+	if s is None:
+		return None
+	if s.endswith('d'):
+		return int(s[:-1]) * 3600 * 24
+	return int(s)
+
+
+def main():
+	args = docopt.docopt(__doc__, version=__version__)
+
+	path = args['<path>']
+	if path is None:
+		path = '/home/backup/borg'
+	filter_age = parse_filter_age(args['--filter-age'])
+	check = args['--check']
+	verbose = args['--verbose']
+	t_now = arrow.now().timestamp
+	repos = os.listdir(path)
+	res = {repo: try_call(process_repo, path, repo, t_now, check, verbose) for repo in repos}
+	# TODO: fuck! unable to pickle lambda
+	#ex = multiprocessing.Pool()
+	#res = {repo: d for repo, d in zip(repos, ex.map(lambda x: try_call(process_repo, path, x, t_now, check, verbose), repos))}
+	if filter_age is not None:
+		res = {k: v for k, v in res.items() if v['age_max'] > filter_age}
+	if verbose:
+		pprint.pprint(res)
+	else:
+		pprint.pprint({k: v['age_max_human'] for k, v in res.items()})
+
+
+if __name__ == '__main__':
+	sys.exit(main())
