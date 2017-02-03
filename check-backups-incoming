@@ -1,0 +1,43 @@
+#!/usr/bin/python3
+
+import os
+import time
+import pprint
+
+
+# TODO: move this to some common place
+def humanize_dt(dt):
+	if dt is None:
+		return None
+	h, m, s = 0, 0, dt
+	while s >= 60:
+		m += 1
+		s -= 60
+	while m >= 60:
+		h += 1
+		m -= 60
+	return '{:d}:{:02d}:{:02f}'.format(h, m, s)
+
+
+def find_age(path, t):
+	t_max = -1
+	for root, dirs, files in os.walk(path):
+		for f in files + dirs:
+			s = os.stat('%s/%s' % (root, f), follow_symlinks=False)
+			t_max = max(t_max, s.st_mtime)
+	return t - t_max if t_max != -1 else None
+
+
+def main():
+	path = '/home/incoming'
+	t = time.time()
+	d = {}
+	for fn in os.listdir(path):
+		fn_full = '%s/%s' % (path, fn)
+		if 'mj' in fn and os.path.isdir(fn_full):
+			d[fn] = humanize_dt(find_age(fn_full, t))
+	pprint.pprint(d)
+
+
+if __name__ == '__main__':
+	main()
