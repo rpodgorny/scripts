@@ -49,7 +49,7 @@
   ;;(logging.basicConfig :level "INFO")
   (print "starting autovpn")
   (try
-   (while True
+   (while 1
      (tick IFACE VPN)
      (time.sleep SLEEP))
    (except [KeyboardInterrupt]))
