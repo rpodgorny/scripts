@@ -184,9 +184,9 @@ def fix_fstrim():
 
 
 def fix_backup():
-	if os.path.isfile('/etc/cron.d/backup'):
+	if os.path.islink('/etc/systemd/system/multi-user.target.wants/borg-backup.timer'):
 		return
-	print('no /etc/cron.d/backup')
+	print('no backup set up')
 
 
 def fix_nginx():

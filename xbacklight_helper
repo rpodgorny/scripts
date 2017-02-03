@@ -16,13 +16,24 @@ import math
 __version__ = '0.0'
 
 
+def nearest(val, step):
+	ret, diff_min = None, None
+	for i in range(0, 101, int(step)):
+		diff = abs(i - val)
+		if diff_min is None or diff < diff_min:
+			diff_min = diff
+			ret = i
+	return ret
+
+
 def main():
 	args = docopt.docopt(__doc__, version=__version__)
 	delta = float(args['<delta>'])
 	if args['dec']:
 		delta *= -1
 	cur_val = round(float(sh.xbacklight()))
-	new_val = min(max(cur_val + delta, 0), 100)
+	#new_val = min(max(cur_val + delta, 0), 100)
+	new_val = nearest(cur_val + delta, abs(delta))
 	sh.xbacklight('=%s' % new_val)
 	print(sh.xbacklight())
 
