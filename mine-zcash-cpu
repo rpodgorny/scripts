@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e -x
+
+ZCASH_ADDR="t1M5mT6hZdcxTkHUPb64KyRBtstcFmrRKFz"
+
+# only a single pool is supported :-(
+POOL_URL="eu1-zcash.flypool.org:3333"
+
+exec nice nheqminer_cpu -l ${POOL_URL} -u ${ZCASH_ADDR}
