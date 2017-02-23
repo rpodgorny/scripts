@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e -x
+
+test -x $1
+
+curl -F c=@- https://ptpb.pw < $1
