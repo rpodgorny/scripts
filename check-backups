@@ -117,7 +117,7 @@ def main():
 	if verbose:
 		pprint.pprint(res)
 	else:
-		pprint.pprint({k: v['age_max_human'] for k, v in res.items()})
+		pprint.pprint({k: v['age_max_human'] if v else None for k, v in res.items()})
 
 
 if __name__ == '__main__':
