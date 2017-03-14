@@ -99,7 +99,6 @@ def parse_filter_age(s):
 
 def main():
 	args = docopt.docopt(__doc__, version=__version__)
-
 	path = args['<path>']
 	if path is None:
 		path = '/home/backup/borg'
@@ -108,6 +107,7 @@ def main():
 	verbose = args['--verbose']
 	t_now = arrow.now().timestamp
 	repos = os.listdir(path)
+	repos = [i for i in repos if not i.endswith('_')]
 	res = {repo: try_call(process_repo, path, repo, t_now, check, verbose) for repo in repos}
 	# TODO: fuck! unable to pickle lambda
 	#ex = multiprocessing.Pool()
