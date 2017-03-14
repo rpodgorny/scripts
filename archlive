@@ -48,6 +48,7 @@ tmux
 uptimed
 vim
 zramswap
+zstd
 ' >> $DIR/packages.both
 
 echo '
