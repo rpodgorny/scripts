@@ -179,7 +179,7 @@ def fix_x():
 
 
 def fix_fstrim():
-	if os.path.islink('/etc/systemd/system/multi-user.target.wants/fstrim.timer'):
+	if os.path.islink('/etc/systemd/system/timers.target.wants/fstrim.timer'):
 		return
 	if not ask('enable and start fstrim timer?'):
 		return
