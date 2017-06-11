@@ -80,14 +80,17 @@ def fix_radek():
 			call('pacman -Sy --noconfirm --needed fish')
 			call('usermod -s /usr/bin/fish radek')
 
+	fn = '/home/radek/.forward'
+	if not os.path.exists(fn):
+		if ask('add .forward to radek@podgorny.cz for radek?'):
+			call('echo "radek@podgorny.cz" > %s' % fn)
+
 
 def fix_root():
 	fn = '/root/.forward'
-	if os.path.exists(fn):
-		return
-	if not ask('add .forward to radek@podgorny.cz for root?'):
-		return
-	call('echo "radek@podgorny.cz" > %s' % fn)
+	if not os.path.exists(fn):
+		if ask('add .forward to radek@podgorny.cz for root?'):
+			call('echo "radek@podgorny.cz" > %s' % fn)
 
 
 def fix_packages():
@@ -103,7 +106,7 @@ def fix_packages():
 
 
 def fix_services():
-	for s in ['cronie', 'haveged', 'sshd', 'postfix', 'uptimed', ]:
+	for s in ['cronie', 'haveged', 'sshd', 'postfix', 'systemd-networkd', 'systemd-resolved', 'uptimed', ]:
 		if os.path.islink('/etc/systemd/system/multi-user.target.wants/%s.service' % s):
 			continue
 		if not ask('enable and start %s?' % s):
@@ -284,6 +287,12 @@ def check_kernel():
 	print('running old kernel, reboot recommended!')
 
 
+def check_ucode():
+	for fn in glob.glob('/boot/loader/entries/*.conf'):
+		if call('grep ucode %s' % fn, silent=True) != 0:
+			print('ucode does not seem to enabled for %s' % fn)
+
+
 def main():
 	fix_mkinitcpio()
 	fix_hostname()
@@ -309,6 +318,7 @@ def main():
 	fix_watchdog()
 	fix_mcelog()
 	check_kernel()
+	check_ucode()
 
 
 if __name__ == '__main__':
