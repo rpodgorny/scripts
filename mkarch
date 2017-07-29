@@ -34,6 +34,17 @@ def main():
 
 	run('pacstrap -c /mnt base openssh')
 
+	run('arch-chroot /mnt bootctl install')
+
+	run('arch-chroot /mnt mkdir -p /boot/loader/entries')
+	s = '''title   Arch Linux
+	linux   /vmlinuz-linux
+	initrd  /intel-ucode.img
+	initrd  /initramfs-linux.img
+	options root=/dev/disk/by-label/%s_ROOT rw''' % name
+	with open('/mnt/boot/loader/entries/arch.conf', 'w') as f:
+		f.write(s)
+
 	run('arch-chroot /mnt systemctl enable systemd-networkd')
 	run('arch-chroot /mnt systemctl enable sshd')
 
