@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e -x
+
+DEV=$1
+NAME=$2
+
+#parted --script -a optimal $DEV -- mklabel msdos mkpart primary fat32 0% 200MB mkpart primary linux-swap 100MB 1.2GB mkpart primary btrfs 1.2GB 100% set 1 boot on
+parted --script -a optimal $DEV -- mklabel gpt mkpart primary fat32 0% 200MB mkpart primary linux-swap 200MB 1.2GB mkpart primary btrfs 1.2GB 100% set 1 boot on
+
+mkfs.vfat -n ${NAME}_BOOT ${DEV}1
+mkswap -L ${NAME}_SWAP ${DEV}2
+mkfs.btrfs -f -L ${NAME}_ROOT ${DEV}3
+
+mount ${DEV}3 /mnt
+mkdir /mnt/boot
+mount ${DEV}1 /mnt/boot
+
+pacstrap -c /mnt base
+
+umount -R /mnt
