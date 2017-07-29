@@ -41,7 +41,7 @@ def main():
 	linux   /vmlinuz-linux
 	initrd  /intel-ucode.img
 	initrd  /initramfs-linux.img
-	options root=/dev/disk/by-label/%s_ROOT rw''' % name
+	options root=/dev/disk/by-label/%s_ROOT rw''' % name.upper()
 	with open('/mnt/boot/loader/entries/arch.conf', 'w') as f:
 		f.write(s)
 
