@@ -4,10 +4,11 @@
 mmm.
 
 Usage:
-  mmm [--random]
+  mmm [options]
 
 Options:
-  --random  Randomize order.
+  --random     Randomize order.
+  --no-repeat  Don't play forever.
 '''
 
 __version__ = '0.0'
@@ -17,27 +18,28 @@ import subprocess
 import time
 import random
 import docopt
+import platform
 
 
 def main():
 	args = docopt.docopt(__doc__, version=__version__)
-
 	fns = sorted(os.listdir('.'))
-
 	if args['--random']:
 		random.shuffle(fns)
-
 	while 1:
 		for fn in fns:
-			if fn.lower().endswith('.mp3'):
-				#cmd = 'mplayer "./%s"' % fn
-				cmd = 'omxplayer -o hdmi "./%s"' % fn
+			if 'arm' in platform.machine():
+				if fn.lower().endswith('.mp3'):
+					#cmd = 'mplayer "./%s"' % fn
+					cmd = 'omxplayer -o hdmi "./%s"' % fn
+				else:
+					cmd = 'omxplayer -b -o hdmi "./%s"' % fn
 			else:
-				cmd = 'omxplayer -b -o hdmi "./%s"' % fn
-
+				cmd = 'mplayer "./%s"' % fn
 			print('>>> %s' % cmd)
 			subprocess.call(cmd, shell=True)
-
+		if args['--no-repeat']:
+			break
 		time.sleep(1)
 
 
