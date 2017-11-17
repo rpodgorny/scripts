@@ -18,7 +18,7 @@ Options:
 import docopt
 import sys
 import os
-import sh
+import traceback
 import arrow
 import subprocess
 import pprint
@@ -58,7 +58,7 @@ def parse_name(s):
 def check_repo(path, repo):
 	repo_path = '%s/%s' % (path, repo)
 	#cmd = 'borg check --last 3 %s' % repo_path
-	cmd = 'borg check %s' % repo_path
+	cmd = 'env BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=yes borg check %s' % repo_path
 	return subprocess.call(cmd, shell=True)
 
 
@@ -66,7 +66,9 @@ def process_repo(path, repo, t_now, check, verbose):
 	if verbose:
 		print('processing %s' % repo)
 	repo_path = '%s/%s' % (path, repo)
-	archives = list(parse_borg_list(sh.borg.list(repo_path)))
+	#archives = list(parse_borg_list(sh.borg.list(repo_path)))
+	cmd = 'env BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=yes borg list %s' % repo_path
+	archives = list(parse_borg_list(subprocess.check_output(cmd, shell=True).decode()))
 	archives = [i for i in archives if 'snapshot' not in i]
 	t_max = max(map(parse_name, archives))
 	check_status = check_repo(path, repo) if check else None
@@ -86,6 +88,7 @@ def try_call(func, *args, **kwargs):
 	try:
 		return func(*args, **kwargs)
 	except:
+		traceback.print_exc()
 		return None
 
 
@@ -109,6 +112,7 @@ def main():
 	repos = os.listdir(path)
 	repos = [i for i in repos if not i.endswith('_')]
 	res = {repo: try_call(process_repo, path, repo, t_now, check, verbose) for repo in repos}
+	#res = {repo: process_repo(path, repo, t_now, check, verbose) for repo in repos}
 	# TODO: fuck! unable to pickle lambda
 	#ex = multiprocessing.Pool()
 	#res = {repo: d for repo, d in zip(repos, ex.map(lambda x: try_call(process_repo, path, x, t_now, check, verbose), repos))}
