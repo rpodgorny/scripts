@@ -1,0 +1,17 @@
+#!/usr/bin/python3
+
+import sys
+import subprocess
+import os
+
+
+def main():
+	fn = subprocess.check_output('cmus-remote -Q|grep "^file\ "|sed "s/^file\ //g"', shell=True).decode().strip()
+	print(fn)
+	os.remove(fn)
+	subprocess.call('cmus-remote --next', shell=True)
+	return 0
+
+
+if __name__ == '__main__':
+	sys.exit(main())

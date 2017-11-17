@@ -1,0 +1,56 @@
+#!/usr/bin/python3
+
+import sys
+import subprocess
+
+
+def run(cmd):
+	print('+ %s' % cmd)
+	return subprocess.call(cmd, shell=True)
+
+
+def main():
+	dev = sys.argv[1]
+	name = sys.argv[2]
+
+	assert(dev)
+	assert(name)
+
+	run('test -b %s' % dev)
+	run('test ! -b %s1' % dev)
+
+	run('dd if=/dev/zero of=%s bs=10M count=1' % dev)
+
+	#parted --script -a optimal $DEV -- mklabel msdos mkpart primary fat32 0% 256MB mkpart primary linux-swap 256MB 1.256GB mkpart primary btrfs 1.256GB 100% set 1 boot on
+	run('parted --script -a optimal %s -- mklabel gpt mkpart primary fat32 0%% 256MB mkpart primary linux-swap 256MB 1.256GB mkpart primary btrfs 1.256GB 100%% set 1 boot on' % dev)
+
+	run('mkfs.vfat -n %s_BOOT %s1' % (name.upper(), dev))
+	run('mkswap -L SWAP %s2' % dev)
+	run('mkfs.btrfs -f -L %s_ROOT %s3' % (name.upper(), dev))
+
+	run('mount %s3 /mnt' % dev)
+	run('mkdir /mnt/boot')
+	run('mount %s1 /mnt/boot' % dev)
+
+	run('pacstrap -c /mnt base openssh intel-ucode')
+
+	run('arch-chroot /mnt bootctl install')
+
+	run('arch-chroot /mnt mkdir -p /boot/loader/entries')
+	s = '''title   Arch Linux
+	linux   /vmlinuz-linux
+	initrd  /intel-ucode.img
+	initrd  /initramfs-linux.img
+	options root=/dev/disk/by-label/%s_ROOT rw''' % name.upper()
+	with open('/mnt/boot/loader/entries/arch.conf', 'w') as f:
+		f.write(s)
+
+	run('arch-chroot /mnt systemctl enable systemd-networkd')
+	run('arch-chroot /mnt systemctl enable sshd')
+
+	run('umount -R /mnt')
+	return 0
+
+
+if __name__ == '__main__':
+	sys.exit(main())
