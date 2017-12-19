@@ -209,7 +209,7 @@ def fix_nginx():
 
 
 def fix_ntp_sync():
-	if call('timedatectl | grep "NTP synchronized: yes"', silent=True) != 0:
+	if call('timedatectl | grep "synchronized: yes"', silent=True) != 0:
 		print('time not synced with ntp')
 	if not os.path.islink('/etc/systemd/system/sysinit.target.wants/systemd-timesyncd.service'):
 		if ask('enable systemd and start systemd-timesyncd?'):
