@@ -60,6 +60,7 @@ rowhammer-test-git
 echo '
 systemctl enable NetworkManager
 systemctl enable systemd-timesyncd
+systemctl enable sshd
 systemctl enable zramswap
 
 cd /root
@@ -69,6 +70,8 @@ cd -
 cd /root/dotfiles
 ./install
 cd -
+
+echo "root:aaa" | chpasswd
 
 chsh -s /usr/bin/fish
 ' >> $DIR/airootfs/root/customize_airootfs.sh
