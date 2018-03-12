@@ -94,7 +94,7 @@ def fix_root():
 
 
 def fix_packages():
-	for p in ['cronie', 'git', 'haveged', ('openssh', 'openssh-hpn', 'openssh-hpn-git'), 'postfix', 'uptimed', ]:
+	for p in ['cronie', 'git', 'haveged', ('openssh', 'openssh-hpn', 'openssh-hpn-git'), 'postfix', 'systemd-check-failed', 'uptimed', ]:
 		installed = any(map(is_package_installed, p)) if isinstance(p, tuple) else is_package_installed(p)
 		if installed:
 			continue
@@ -106,7 +106,7 @@ def fix_packages():
 
 
 def fix_services():
-	for s in ['cronie', 'haveged', 'sshd', 'postfix', 'systemd-networkd', 'systemd-resolved', 'uptimed', ]:
+	for s in ['cronie', 'haveged', 'sshd', 'postfix', 'systemd-check-failed', 'systemd-networkd', 'systemd-resolved', 'uptimed', ]:
 		if os.path.islink('/etc/systemd/system/multi-user.target.wants/%s.service' % s):
 			continue
 		if not ask('enable and start %s?' % s):
