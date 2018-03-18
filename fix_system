@@ -301,6 +301,8 @@ def check_kernel():
 	if os.path.isdir('/lib/modules/%s' % ver):
 		return
 	print('running old kernel, reboot recommended!')
+	if ask('reboot?'):
+		call('shutdown -r')
 
 
 def check_ucode():
