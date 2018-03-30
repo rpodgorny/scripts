@@ -8,7 +8,7 @@ ARCHIVE=`date +%Y%m%dT%H%M%S`
 
 if [ "$1" = "--init" ]; then
 	ssh-copy-id $REMOTE
-	borg init $REPO
+	borg init --encryption=none --progress $REPO
 	exit
 elif [ "$1" = "--break-lock" ]; then
 	borg break-lock $REPO
