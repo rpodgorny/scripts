@@ -164,11 +164,11 @@ Server = http://archlinux.podgorny.cz/\$repo/os/\$arch" >> %s''' % fn)
 
 def fix_timezone():
 	fn = '/etc/localtime'
-	if os.path.islink(fn):
+	if call('readlink /etc/localtime | grep "Europe/Prague"', silent=True) == 0:
 		return
 	if not ask('set timezone to Europe/Prague?'):
 		return
-	call('ln -s /usr/share/zoneinfo/Europe/Prague %s' % fn)
+	call('ln -sf /usr/share/zoneinfo/Europe/Prague %s' % fn)
 
 
 def fix_hostname():
