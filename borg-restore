@@ -7,6 +7,7 @@ Usage:
   borg-restore [options] <device> <hostname>
 
 Options:
+  --gpt             Use GPT instead of MBR.
   --fs=<fs>         Filesystem to use.
   --swap            Create swap.
   --archive=<name>  Manually specify archive.
@@ -34,6 +35,7 @@ def main():
 
 	dev = args['<device>']
 	hostname = args['<hostname>']
+	lbl = 'gpt' if args['--gpt'] else 'msdos'
 	fs = args['--fs']
 
 	while not fs in ('btrfs', 'ext4'):
@@ -63,16 +65,18 @@ def main():
 	if args['--swap']:
 		dev_swap = '%s2' % dev
 		dev_root = '%s3' % dev
-		run('parted --script -a optimal %s -- mklabel msdos mkpart primary fat32 0%% 100MB mkpart primary swap 100MB 1000MB mkpart primary ext2 100MB 100%%' % dev)
+		#run('parted --script -a optimal %s -- mklabel msdos mkpart primary fat32 0%% 100MB mkpart primary linux-swap 100MB 1000MB mkpart primary ext2 100MB 100%%' % dev)
+		run('parted --script -a optimal %s -- mklabel %s mkpart primary fat32 0%% 256MB mkpart primary linux-swap 256MB 1.256GB mkpart primary btrfs 1.256GB 100%% set 1 boot on' % (dev, lbl))
 	else:
 		dev_swap = None
 		dev_root = '%s2' % dev
-		run('parted --script -a optimal %s -- mklabel msdos mkpart primary fat32 0%% 100MB mkpart primary ext2 100MB 100%%' % dev)
+		#run('parted --script -a optimal %s -- mklabel msdos mkpart primary fat32 0%% 100MB mkpart primary ext2 100MB 100%%' % dev)
+		run('parted --script -a optimal %s -- mklabel %s mkpart primary fat32 0%% 256MB mkpart primary btrfs 256MB 100%% set 1 boot on' % (dev, lbl))
 	run('partprobe')
 
 	if dev_boot:
 		assert(os.path.exists(dev_boot))
-		run('mkfs.vfat -n BOOT %s' % dev_boot)
+		run('mkfs.vfat -n %s_BOOT %s' % (hostname.upper(), dev_boot))
 	if dev_swap:
 		assert(os.path.exists(dev_swap))
 		run('mkswap -L SWAP %s' % dev_swap)
@@ -80,10 +84,10 @@ def main():
 	run('rm -rf /tmp/borg_restore')
 	run('mkdir -p /tmp/borg_restore')
 	if fs == 'btrfs':
-		run('mkfs.btrfs -f -L ROOT %s' % dev_root)
+		run('mkfs.btrfs -f -L %s_ROOT %s' % (hostname.upper(), dev_root))
 		run('mount %s -o compress=lzo /tmp/borg_restore' % dev_root)
 	elif fs == 'ext4':
-		run('mkfs.ext4 -L ROOT %s' % dev_root)
+		run('mkfs.ext4 -L %s_ROOT %s' % (hostname.upper(), dev_root))
 		run('mount %s /tmp/borg_restore' % dev_root)
 	else:
 		raise('what?')
@@ -101,7 +105,8 @@ def main():
 	os.chdir(cwd)
 
 	run('umount -R /tmp/borg_restore')
-	run('dd if=/usr/lib/syslinux/bios/mbr.bin of=%s' % dev)
+	if not args['--gpt']:
+		run('dd if=/usr/lib/syslinux/bios/mbr.bin of=%s' % dev)
 	run('sync')
 	return 0
 
