@@ -4,7 +4,7 @@
 borg-restore.
 
 Usage:
-  borg-restore [options] <device> <hostname>
+  borg-restore [options] <device> <hostname> [<new_hostname>]
 
 Options:
   --gpt             Use GPT instead of MBR.
@@ -20,6 +20,7 @@ import subprocess
 import os
 import time
 import sys
+import pprint
 
 
 def run(cmd):
@@ -33,16 +34,23 @@ def main():
 
 	args = docopt.docopt(__doc__, version=__version__)
 
-	dev = args['<device>']
-	hostname = args['<hostname>']
-	lbl = 'gpt' if args['--gpt'] else 'msdos'
-	fs = args['--fs']
+	cfg = {}
+	cfg['remote'] = 'backup@milhouse.podgorny.cz'
+	cfg['dev'] = args['<device>']
+	cfg['repo_hostname'] = args['<hostname>']
+	cfg['hostname'] = args['<new_hostname>'] if args['<new_hostname>'] else cfg['repo_hostname']
+	cfg['archive'] = args['--archive']
+	cfg['gpt'] = args['--gpt']
+	cfg['lbl'] = 'gpt' if cfg['gpt'] else 'msdos'
+	cfg['fs'] = args['--fs']
 
-	while not fs in ('btrfs', 'ext4'):
-		fs = input('fs: ')
+	while not cfg['fs'] in ['btrfs', 'ext4']:
+		cfg['fs'] = input('fs: ')
 
-	remote = 'backup@milhouse.podgorny.cz'
-	repo = '%s:borg/%s' % (remote, hostname)
+	pprint.pprint(cfg)
+	input('press enter to continue')
+
+	repo = '%s:borg/%s' % (cfg['remote'], cfg['repo_hostname'])
 
 	archives_raw = run('borg list %s' % repo)
 	archives = [i.strip().split()[0] for i in archives_raw.split('\n') if i]
@@ -51,49 +59,49 @@ def main():
 	n = None
 	for i, archive in enumerate(archives):
 		print('%s: %s' % (i, archive))
-		if archive == args['--archive']:
+		if archive == cfg['archive']:
 			n = i
 	if n is None:
 		n = input('select archive [0]: ')
 		n = int(n) if n else 0
 	archive = archives[n]
 
-	run('dd if=/dev/zero of=%s bs=2048 count=1' % dev)
+	run('dd if=/dev/zero of=%s bs=2048 count=1' % cfg['dev'])
 	run('partprobe')
 
-	dev_boot = '%s1' % dev
+	dev_boot = '%s1' % cfg['dev']
 	if args['--swap']:
-		dev_swap = '%s2' % dev
-		dev_root = '%s3' % dev
+		dev_swap = '%s2' % cfg['dev']
+		dev_root = '%s3' % cfg['dev']
 		#run('parted --script -a optimal %s -- mklabel msdos mkpart primary fat32 0%% 100MB mkpart primary linux-swap 100MB 1000MB mkpart primary ext2 100MB 100%%' % dev)
-		run('parted --script -a optimal %s -- mklabel %s mkpart primary fat32 0%% 256MB mkpart primary linux-swap 256MB 1.256GB mkpart primary btrfs 1.256GB 100%% set 1 boot on' % (dev, lbl))
+		run('parted --script -a optimal %s -- mklabel %s mkpart primary fat32 0%% 256MB mkpart primary linux-swap 256MB 1.256GB mkpart primary btrfs 1.256GB 100%% set 1 boot on' % (cfg['dev'], cfg['lbl']))
 	else:
 		dev_swap = None
-		dev_root = '%s2' % dev
+		dev_root = '%s2' % cfg['dev']
 		#run('parted --script -a optimal %s -- mklabel msdos mkpart primary fat32 0%% 100MB mkpart primary ext2 100MB 100%%' % dev)
-		run('parted --script -a optimal %s -- mklabel %s mkpart primary fat32 0%% 256MB mkpart primary btrfs 256MB 100%% set 1 boot on' % (dev, lbl))
+		run('parted --script -a optimal %s -- mklabel %s mkpart primary fat32 0%% 256MB mkpart primary btrfs 256MB 100%% set 1 boot on' % (cfg['dev'], cfg['lbl']))
 	run('partprobe')
 
 	if dev_boot:
 		assert(os.path.exists(dev_boot))
-		run('mkfs.vfat -n %s_BOOT %s' % (hostname.upper(), dev_boot))
+		run('mkfs.vfat -n %s_BOOT %s' % (cfg['hostname'].upper(), dev_boot))
 	if dev_swap:
 		assert(os.path.exists(dev_swap))
 		run('mkswap -L SWAP %s' % dev_swap)
 
 	run('rm -rf /tmp/borg_restore')
 	run('mkdir -p /tmp/borg_restore')
-	if fs == 'btrfs':
-		run('mkfs.btrfs -f -L %s_ROOT %s' % (hostname.upper(), dev_root))
+	if cfg['fs'] == 'btrfs':
+		run('mkfs.btrfs -f -L %s_ROOT %s' % (cfg['hostname'].upper(), dev_root))
 		run('mount %s -o compress=lzo /tmp/borg_restore' % dev_root)
-	elif fs == 'ext4':
-		run('mkfs.ext4 -L %s_ROOT %s' % (hostname.upper(), dev_root))
+	elif cfg['fs'] == 'ext4':
+		run('mkfs.ext4 -L %s_ROOT %s' % (cfg['hostname'].upper(), dev_root))
 		run('mount %s /tmp/borg_restore' % dev_root)
 	else:
 		raise('what?')
 
 	run('mkdir /tmp/borg_restore/boot')
-	run('mount %s1 /tmp/borg_restore/boot' % dev)
+	run('mount %s1 /tmp/borg_restore/boot' % cfg['dev'])
 
 	cwd = os.getcwd()
 	os.chdir('/tmp/borg_restore')
@@ -102,11 +110,14 @@ def main():
 	run('borg extract %s::%s' % (repo, archive))
 	#run('echo "/usr/bin/extlinux --install /boot" | arch-chroot .')
 
+	run('echo "%s" > /tmp/borg_restore/etc/hostname' % cfg['hostname'])
+
 	os.chdir(cwd)
 
 	run('umount -R /tmp/borg_restore')
-	if not args['--gpt']:
-		run('dd if=/usr/lib/syslinux/bios/mbr.bin of=%s' % dev)
+	if not cfg['gpt']:
+		run('dd if=/usr/lib/syslinux/bios/mbr.bin of=%s' % cfg['dev'])
+
 	run('sync')
 	return 0
 
