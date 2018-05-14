@@ -18,6 +18,7 @@ import docopt
 import subprocess
 import os
 import time
+import sys
 
 
 def run(cmd):
@@ -102,8 +103,9 @@ def main():
 	run('umount -R /tmp/borg_restore')
 	run('dd if=/usr/lib/syslinux/bios/mbr.bin of=%s' % dev)
 	run('sync')
+	return 0
 
 
 if __name__ == '__main__':
-	main()
+	sys.exit(main())
 
