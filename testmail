@@ -1,0 +1,54 @@
+#!/usr/bin/python3
+# ugly as fuck - written under pressure
+
+import smtplib
+from email.mime.text import MIMEText
+import imaplib
+import uuid
+import sys
+import time
+
+domain, user, passwd = sys.argv[1:]
+
+id_ = str(uuid.uuid4())
+print(id_)
+
+S = smtplib.SMTP('smtp.%s' % domain)
+S.login(user, passwd)
+msg = MIMEText('if you\'re seeing this for more than a few seconds, something is probably broken', 'plain')
+msg['From'] = 'testmail'
+msg['To'] = '%s@%s' % (user, domain)
+msg['Subject'] = 'testmail %s' % id_
+S.send_message(msg)
+S.close()
+
+deleted = 0
+M = imaplib.IMAP4('imap.%s' % domain)
+M.login(user, passwd)
+retries = 0
+while retries < 10:
+	for folder in 'INBOX', 'spam':
+		M.select(folder)
+		typ, data = M.search(None, 'FROM', 'testmail')
+		for num in data[0].split():
+			typ, data = M.fetch(num, '(RFC822)')
+			dat = data[0][1].decode()
+			#print('Message %s\n%s\n' % (num, dat))
+			if id_ in dat:
+				print('joooo')
+				M.store(num, '+FLAGS', '\\Deleted')
+				deleted = 1
+				break
+			else:
+				print('neeee')
+	if deleted:
+		break
+	else:
+		print('retry %s' % retries)
+		retries += 1
+		time.sleep(10)
+M.close()
+M.logout()
+
+res = 0 if deleted else 1
+sys.exit(res)
