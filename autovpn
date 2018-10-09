@@ -15,7 +15,7 @@
 
 (defn start-stop-openvpn [vpn action]
   (println action)
-  (sh/sh "sudo" "systemctl" action (format "openvpn-client@%s.service" vpn)))
+  (sh/sh "systemctl" action (format "openvpn-client@%s.service" vpn)))
 
 (defn cut-iface [line]
   (str/trim (second (str/split line #":"))))
