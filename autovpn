@@ -2,8 +2,7 @@
 
 (ns autovpn.core
   (:require [clojure.string :as str]
-            [clojure.java.shell :as sh])
-  (:gen-class))
+            [clojure.java.shell :as sh]))
 
 
 (def IFACE "wlp2s0")
