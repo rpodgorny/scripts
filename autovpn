@@ -1,60 +1,75 @@
-#!/usr/bin/hy
+#!/usr/bin/clj
 
-(import logging)
-(import sh)
-(import time)
-(import ipaddress)
+(ns autovpn.core
+  (:require [clojure.string :as str]
+            [clojure.java.shell :as sh])
+  (:gen-class))
 
-(setv IFACE "wlp2s0")
-(setv VPN "asterix")
-(setv SLEEP 10)
+
+(def IFACE "wlp2s0")
+(def VPN "asterix")
+(def SLEEP 10)
 
 (defn openvpn-active? [vpn]
-  (let [cmd (sh.systemctl "is-active" (% "openvpn-client@%s.service" vpn) :_ok_code [0 3])]
-    (= cmd.exit_code 0)))
+  (let [cmd (sh/sh "systemctl" "is-active" (format "openvpn-client@%s.service" vpn))]
+    (= (:exit cmd) 0)))
 
 (defn start-stop-openvpn [vpn action]
-  ;;(logging.info action)
-  (print action)
-  (sh.systemctl action (% "openvpn-client@%s.service" vpn)))
+  (println action)
+  (sh/sh "sudo" "systemctl" action (format "openvpn-client@%s.service" vpn)))
+
+(defn cut-iface [line]
+  (str/trim (second (str/split line #":"))))
+
+(defn cut-addr [line]
+  (second (str/split (str/trim line) #" ")))
+
+(defn is-line-with-addr [line cur-iface]
+  (and cur-iface (str/includes? line "inet6")))
+
+(defn is-line-with-iface [line]
+  (str/includes? line "mtu"))
 
 (defn get-ipv6-addrs []
-  (let [cmd (sh.ip "addr")
-        out (.decode cmd.stdout)
-        ret {}
-        cur None]
-    (for [line (.split out "\n")]
-      (if (in "mtu" line)
-        (let [iface (.strip (get (.split line ":") 1))]
-          (assoc ret iface [])
-          (nonlocal cur)
-          (setv cur iface))
-        (if (and cur (in "inet6" line))
-          (let [addr (get (.split line) 1)]
-            (.append (get ret cur) addr)))))
-    ret))
+  (let [cmd (sh/sh "ip" "addr")
+        lines (str/split (:out cmd) #"\n")]
+    (defn parse [lines cur-iface res]
+      (if (empty? lines)
+        res
+        (if (is-line-with-iface (first lines))
+          (let [iface (cut-iface (first lines))
+                res (assoc res iface #{})]
+            (parse (rest lines) iface res))
+          (let [res (if (is-line-with-addr (first lines) cur-iface)
+                      (update-in res [cur-iface] conj (cut-addr (first lines)))
+                      res)]
+            (parse (rest lines) cur-iface res)))))
+    (parse lines nil {})))
 
 (defn public-addr? [addr]
-  (. (ipaddress.ip_address (get (.split addr "/") 0)) is_global))
+  (let [host (first (str/split addr #"/"))]
+    (not (.isLinkLocalAddress (java.net.Inet6Address/getByName host)))))
+
+(defn public-addr-old? [addr]
+  (str/starts-with? addr "20"))
 
 (defn tick [iface vpn]
   (let [addrs (get-ipv6-addrs)
-        has-public-addr (any (map public-addr? (get addrs iface)))
+        has-public-addr (some public-addr? (get addrs iface))
         openvpn-active (openvpn-active? vpn)]
+    ;;(println ["tick" addrs has-public-addr openvpn-active])
     (cond
-     [(and has-public-addr openvpn-active) (start-stop-openvpn vpn "stop")]
-     [(and (not has-public-addr) (not openvpn-active)) (start-stop-openvpn vpn "start")])))
+      (and has-public-addr openvpn-active) (start-stop-openvpn vpn "stop")
+      (and (not has-public-addr) (not openvpn-active)) (start-stop-openvpn vpn "start"))))
 
-(defn main [&rest args]
-  ;;(logging.basicConfig :level "INFO")
-  (print "starting autovpn")
-  (try
-   (while 1
-     (tick IFACE VPN)
-     (time.sleep SLEEP))
-   (except [KeyboardInterrupt]))
-  (print "exit"))
+(defn sleep [s]
+  (Thread/sleep (* s 1000)))
 
+(defn -main [& args]
+  (println "starting autovpn")
+  (while 1
+    (tick IFACE VPN)
+    (sleep SLEEP))
+  (println "exit"))
 
-(defmain [&rest args]
-  (main args))
+(-main)
