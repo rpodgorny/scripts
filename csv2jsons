@@ -1,0 +1,46 @@
+#!/usr/bin/python3
+
+import csv
+import json
+import sys
+
+
+def retype_item(k, v):
+	if '__list' in k:
+		k = k.replace('__list', '')
+		v = v.replace(',', ' ').replace(';', ' ').split()
+	if '__int' in k:
+		k = k.replace('__int', '')
+		v = [int(i) for i in v] if isinstance(v, list) else int(v)
+	if '__float' in k:
+		k = k.replace('__float', '')
+		v = [float(i) for i in v] if isinstance(v, list) else float(v)
+	return k, v
+
+
+def retype_dict(d):
+	ret = {}
+	for k, v in d.items():
+		k_, v_ = retype_item(k, v)
+		ret[k_] = v_
+	return ret
+
+
+def csv_to_jsons(f):
+	reader = csv.DictReader(f)
+	lst = [i for i in reader]
+	lst = filter(lambda x: x.get('id', '') != '', lst)
+	lst = [{k: v for k, v in i.items() if v != ''} for i in lst]
+	lst = [retype_dict(i) for i in lst]
+	return lst
+
+
+def main():
+	lst = csv_to_jsons(sys.stdin)
+	for i in lst:
+		print(json.dumps(i))
+	return 0
+
+
+if __name__ == '__main__':
+	sys.exit(main())

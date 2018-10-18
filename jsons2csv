@@ -1,0 +1,31 @@
+#!/usr/bin/python3
+
+import csv
+import json
+import sys
+
+
+def jsons_to_csv(lst, f):
+	keys = set()
+	for i in lst:
+		keys |= i.keys()
+	keys = sorted(list(keys))
+	w = csv.DictWriter(f, keys)
+	w.writeheader()
+	w.writerows(lst)
+
+
+def main():
+	ll = [json.loads(i) for i in sys.stdin]
+	#lll = []
+	#for i in ll:
+	#	if 'tags' in i:
+	#		i['tags'] = ' '.join(i['tags'])
+	#	lll.append(i)
+	#ll = lll
+	jsons_to_csv(ll, sys.stdout)
+	return 0
+
+
+if __name__ == '__main__':
+	sys.exit(main())
