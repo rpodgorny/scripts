@@ -3,9 +3,10 @@ set -e -x
 
 HOST=$1
 FN=$2
-PWD=atx438w
+PWD=$3
 test ! -z "$HOST"
 test ! -z "$FN"
+test ! -z "$PWD"
 
 vncsnapshot -password $PWD -quality 80 $HOST $FN
 exit 0
