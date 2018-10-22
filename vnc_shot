@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e -x
+
+HOST=$1
+FN=$2
+PWD=atx438w
+test ! -z "$HOST"
+test ! -z "$FN"
+
+vncsnapshot -password $PWD -quality 80 $HOST $FN
+exit 0
+
+socat tcp-listen:5900,reuseaddr,fork tcp-connect:$HOST:5900 &
+sleep 3
+vncsnapshot -password $PWD -quality 80 127.0.0.1:0 $FN
+killall socat
