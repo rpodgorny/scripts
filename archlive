@@ -50,7 +50,8 @@ uptimed
 vim
 zramswap
 zstd
-' >> $DIR/packages.both
+' >> $DIR/packages.x86_64
+#' >> $DIR/packages.both
 
 echo '
 cpuminer-git
