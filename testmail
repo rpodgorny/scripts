@@ -8,28 +8,29 @@ import uuid
 import sys
 import time
 
-domain, user, passwd = sys.argv[1:]
+to_, stmp_, imap_, user, passwd = sys.argv[1:]
 
 id_ = str(uuid.uuid4())
 print(id_)
 
-S = smtplib.SMTP('smtp.%s' % domain)
+S = smtplib.SMTP(stmp_)
 S.login(user, passwd)
 msg = MIMEText('if you\'re seeing this for more than a few seconds, something is probably broken', 'plain')
-msg['From'] = 'testmail'
-msg['To'] = '%s@%s' % (user, domain)
+msg['From'] = to_
+msg['To'] = to_
 msg['Subject'] = 'testmail %s' % id_
 S.send_message(msg)
 S.close()
 
 deleted = 0
-M = imaplib.IMAP4('imap.%s' % domain)
+M = imaplib.IMAP4(imap_)
 M.login(user, passwd)
 retries = 0
 while retries < 10:
 	for folder in 'INBOX', 'spam':
 		M.select(folder)
-		typ, data = M.search(None, 'FROM', 'testmail')
+		#typ, data = M.search(None, 'FROM', to_)
+		typ, data = M.search(None, 'SUBJECT', 'testmail')
 		for num in data[0].split():
 			typ, data = M.fetch(num, '(RFC822)')
 			dat = data[0][1].decode()
