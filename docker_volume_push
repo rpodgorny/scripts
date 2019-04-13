@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e -x
+SRC_VOL=$1
+DST_HOST=$2
+DST_VOL=$3
+test "${SRC_VOL}"
+test "${DST_HOST}"
+test "${DST_VOL}"
+exec docker run --rm -v ${SRC_VOL}:/from alpine ash -c "cd /from ; tar -cf - . " | ssh ${DST_HOST} "docker run --rm -i -v ${DST_VOL}:/to alpine ash -c 'cd /to ; tar -xpvf - ' "
