@@ -292,7 +292,7 @@ def fix_postfix_ipv6():
 def fix_postfix_generic():
 	fn = '/etc/postfix/generic.pcre'
 	if not os.path.isfile(fn):
-		print('%s not found')
+		print('%s not found' % fn)
 		return
 
 
