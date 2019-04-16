@@ -295,10 +295,10 @@ def fix_postfix_generic():
 		return
 	if ask('%s not found. fix?' % fn):
 		call('echo "/([a-z]+)@([^.]+)\.localdomain/  \$1+\$2@podgorny.cz" >%s' % fn, silent=True)
-	if call('grep "^smtp_generic_maps = pcre:/etc/postfix/generic.pcre$" /etc/postfix/main.cf', silent=True) == 0:
+	if call('grep "^smtp_generic_maps = %s$" /etc/postfix/main.cf' % fn, silent=True) == 0:
 		return
 	if ask('%s not set up. fix?' % fn):
-		call('echo "smtp_generic_maps = pcre:/etc/postfix/generic.pcre" >>/etc/postfix/main.cf')
+		call('echo "smtp_generic_maps = pcre:%s" >>/etc/postfix/main.cf' % fn)
 
 
 def fix_watchdog():
