@@ -294,7 +294,7 @@ def fix_postfix_generic():
 	if os.path.isfile(fn):
 		return
 	if ask('%s not found. fix?' % fn):
-		call('echo "/([a-z]+)@([^.]+)\.localdomain/  $1+$2@podgorny.cz" >%s' % fn, silent=True)
+		call('echo "/([a-z]+)@([^.]+)\.localdomain/  \$1+\$2@podgorny.cz" >%s' % fn, silent=True)
 	if call('grep "^smtp_generic_maps = pcre:/etc/postfix/generic.pcre$" /etc/postfix/main.cf', silent=True) == 0:
 		return
 	if ask('%s not set up. fix?' % fn):
