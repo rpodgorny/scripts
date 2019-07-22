@@ -84,6 +84,7 @@ def fix_radek():
 	if not os.path.exists(fn):
 		if ask('add .forward to radek@podgorny.cz for radek?'):
 			call('echo "radek@podgorny.cz" > %s' % fn)
+			call('chown radek:radek %s' % fn)
 
 
 def fix_root():
