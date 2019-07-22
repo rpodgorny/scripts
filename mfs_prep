@@ -1,0 +1,40 @@
+#!/usr/bin/python3
+
+import sys
+import subprocess
+import random
+
+
+def run(cmd):
+	print('+ %s' % cmd)
+	return subprocess.call(cmd, shell=True)
+
+
+def main():
+	dev = sys.argv[1]
+	#name = sys.argv[2]
+	name = 'mfs_%08x' % random.randint(0, 2**32)
+
+	assert(dev)
+	assert(name)
+
+	run('test -b %s' % dev)
+	run('test ! -b %s1' % dev)
+
+	run('dd if=/dev/zero of=%s bs=10M count=1' % dev)
+
+	run('parted --script -a optimal %s -- mklabel gpt mkpart primary btrfs 0%% 100%%' % dev)
+
+	#run('mkfs.vfat -n %s_BOOT %s1' % (name.upper(), dev))
+	#run('mkswap -L SWAP %s2' % dev)
+	run('mkfs.btrfs -f -L %s %s1' % (name.upper(), dev))
+
+	#run('mount -o relatime,compress=zstd %s3 /mnt' % dev)
+	#run('mkdir /mnt/boot')
+	#run('mount %s1 /mnt/boot' % dev)
+
+	return 0
+
+
+if __name__ == '__main__':
+	sys.exit(main())
