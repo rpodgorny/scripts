@@ -66,13 +66,21 @@ def fix_mkinitcpio():
 	call('mkinitcpio -p linux')
 
 
+def fix_sudo():
+	fn = '/etc/sudoers'
+	if call('grep "^# %%wheel ALL=(ALL) NOPASSWD: ALL" %s' % fn, silent=True) != 0:
+		return
+	if not ask('fix /etc/sudoers? (wheel NOPASSWD)'):
+		return
+	call('sed -e "s/^# %%wheel ALL=(ALL) NOPASSWD: ALL/%%wheel ALL=(ALL) NOPASSWD: ALL/g" -i %s' % fn)
+
+
 def fix_radek():
 	if call('grep "^radek:" /etc/passwd', silent=True) != 0:
 		if not ask('add user radek?'):
 			return
 		call('useradd -m radek')
 		call('passwd radek')
-		call('pacman -Sy --noconfirm --needed sudo')
 		call('usermod -aG wheel radek')
 
 	if call('grep "^radek:" /etc/passwd | grep /usr/bin/fish', silent=True) != 0:
@@ -95,7 +103,7 @@ def fix_root():
 
 
 def fix_packages():
-	for p in ['git', 'haveged', ('openssh', 'openssh-hpn', 'openssh-hpn-git'), 'postfix', 'systemd-check-failed', 'uptimed', ]:
+	for p in ['git', 'haveged', ('openssh', 'openssh-hpn', 'openssh-hpn-git'), 'postfix', 'systemd-check-failed', 'sudo', 'uptimed', ]:
 		installed = any(map(is_package_installed, p)) if isinstance(p, tuple) else is_package_installed(p)
 		if installed:
 			continue
@@ -345,6 +353,7 @@ def main():
 	fix_fstrim()
 	fix_backup()
 	fix_root()
+	fix_sudo()
 	fix_radek()
 	fix_x()
 	fix_ntp_sync()
