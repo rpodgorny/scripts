@@ -1,0 +1,23 @@
+#!/usr/bin/python3
+
+import os
+import sys
+import subprocess
+
+
+def run(cmd):
+	print('+ %s' % cmd)
+	return subprocess.call(cmd, shell=True).decode()
+
+
+def main():
+	vols = os.listdir('/mnt')
+	vols = list(filter(lambda x: x.startswith('mfs_'), vols))
+	vols_opt = ''
+	for i, vol in enumerate(vols):
+		vols_opt += ' -v /mnt/%s:/mnt/mfshdd%s' % (vol, i)
+	return run('docker run --rm -it --net=host %s rpodgorny/moosefs ./mfschunkserver.sh' % vols_opt)
+
+
+if __name__ == '__main__':
+	sys.exit(main())
