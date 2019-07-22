@@ -35,18 +35,6 @@ def is_package_installed(package):
 		return False
 
 
-def fix_mkinitcpio():
-	fn = '/etc/mkinitcpio.conf'
-	if not os.path.isfile(fn):
-		return
-	if call('grep "^HOOKS=.*autodetect.*" %s' % fn, silent=True) != 0:
-		return
-	if not ask('fix mkinitcpio (remove autodetect hook)?'):
-		return
-	call('sed -e "/^HOOKS=/s/autodetect //g" -i %s' % fn)
-	call('mkinitcpio -p linux')
-
-
 def fix_locale_gen():
 	fn = '/etc/locale.gen'
 	if call('grep "^#en_US.UTF-8" %s' % fn, silent=True) != 0:
@@ -64,6 +52,18 @@ def fix_locale():
 	if not ask('fix locale.conf? (en_US.UTF-8)'):
 		return
 	call('echo "LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8\n" > %s' % fn)
+
+
+def fix_mkinitcpio():
+	fn = '/etc/mkinitcpio.conf'
+	if not os.path.isfile(fn):
+		return
+	if call('grep "^HOOKS=.*autodetect.*" %s' % fn, silent=True) != 0:
+		return
+	if not ask('fix mkinitcpio (remove autodetect hook)?'):
+		return
+	call('sed -e "/^HOOKS=/s/autodetect //g" -i %s' % fn)
+	call('mkinitcpio -p linux')
 
 
 def fix_radek():
@@ -324,11 +324,11 @@ def check_ucode():
 
 
 def main():
-	fix_mkinitcpio()
 	fix_hostname()
 	fix_timezone()
 	fix_locale_gen()
 	fix_locale()
+	fix_mkinitcpio()
 	fix_pacman_sources()
 	fix_packages()
 	fix_services()
