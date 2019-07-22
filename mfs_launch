@@ -7,7 +7,7 @@ import subprocess
 
 def run(cmd):
 	print('+ %s' % cmd)
-	return subprocess.call(cmd, shell=True).decode()
+	return subprocess.call(cmd, shell=True)
 
 
 def main():
