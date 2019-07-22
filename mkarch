@@ -63,7 +63,7 @@ DHCP=both'''
 	run('arch-chroot /mnt systemctl enable systemd-timesyncd')
 	run('arch-chroot /mnt systemctl enable sshd')
 
-	run('cp /home/radek/scripts/fix_system /mnt/')
+	run('cp ~/scripts/fix_system /mnt/')
 	#run('arch-chroot /mnt pacman -Syu --noconfirm python')
 	run('pacstrap /mnt python')
 	run('arch-chroot /mnt /fix_system')
