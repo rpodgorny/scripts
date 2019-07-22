@@ -28,12 +28,11 @@ def main():
 	run('mkswap -L SWAP %s2' % dev)
 	run('mkfs.btrfs -f -L %s_ROOT %s3' % (name.upper(), dev))
 
-	run('mount %s3 /mnt' % dev)
+	run('mount -o relatime,compress=zstd %s3 /mnt' % dev)
 	run('mkdir /mnt/boot')
 	run('mount %s1 /mnt/boot' % dev)
 
 	run('pacstrap /mnt base openssh intel-ucode')
-	run('arch-chroot /mnt pacman -Scc --noconfirm')
 
 	run('arch-chroot /mnt bootctl install')
 
@@ -46,6 +45,9 @@ options root=/dev/disk/by-label/%s_ROOT rw''' % name.upper()
 	with open('/mnt/boot/loader/entries/arch.conf', 'w') as f:
 		f.write(s)
 
+	with open('/mnt/etc/hostname', 'w') as f:
+		f.write(name)
+
 	s = '''[Match]
 Name=en*
 
@@ -54,11 +56,20 @@ DHCP=both'''
 	with open('/mnt/etc/systemd/network/80-dhcp.network', 'w') as f:
 		f.write(s)
 
+	run('arch-chroot /mnt timedatectl set-timezone Europe/Prague')
+
 	run('arch-chroot /mnt systemctl enable systemd-networkd')
 	run('arch-chroot /mnt systemctl enable systemd-resolved')
 	run('arch-chroot /mnt systemctl enable systemd-timesyncd')
 	run('arch-chroot /mnt systemctl enable sshd')
 
+	run('cp /home/radek/scripts/fix_system /mnt/')
+	#run('arch-chroot /mnt pacman -Syu --noconfirm python')
+	run('pacstrap /mnt python')
+	run('arch-chroot /mnt /fix_system')
+	run('rm /mnt/fix_system')
+
+	run('arch-chroot /mnt pacman -Scc --noconfirm')
 	run('umount -R /mnt')
 	return 0
 
