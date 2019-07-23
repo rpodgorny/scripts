@@ -12,7 +12,7 @@ def run(cmd):
 
 
 def main():
-	run('umount /mnt/mfs_????????')
+	run('umount /mnt/mfs_???????? || true')
 	run('rmdir /mnt/mfs_????????')
 	drvs = os.listdir('/dev/disk/by-label')
 	drvs = list(filter(lambda x: x.startswith('MFS_'), drvs))
