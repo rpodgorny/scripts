@@ -11,7 +11,7 @@ def run(cmd):
 
 
 def main():
-	return run('docker run --rm -it --net=host -v mfsmaster_data:/var/lib/mfs --name mfsmaster rpodgorny/moosefs ./mfsmaster.sh')
+	return run('docker run --rm -it --net=host --name mfscgiserv rpodgorny/moosefs ./mfscgiserv.sh')
 
 
 if __name__ == '__main__':
