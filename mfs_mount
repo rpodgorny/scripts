@@ -24,7 +24,8 @@ def main():
 		mountpoint = '/mnt/%s' % drv.lower()
 		if not os.path.isdir(mountpoint):
 			os.mkdir(mountpoint)
-		run('mount -o relatime,compress=zstd /dev/disk/by-label/%s %s' % (drv, mountpoint))
+		#run('mount -o relatime,compress=zstd /dev/disk/by-label/%s %s' % (drv, mountpoint))
+		run('mount /dev/disk/by-label/%s %s' % (drv, mountpoint))
 	return 0
 
 

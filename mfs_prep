@@ -22,16 +22,10 @@ def main():
 	run('test ! -b %s1' % dev)
 
 	run('dd if=/dev/zero of=%s bs=10M count=1' % dev)
-
-	run('parted --script -a optimal %s -- mklabel gpt mkpart primary btrfs 0%% 100%%' % dev)
-
-	#run('mkfs.vfat -n %s_BOOT %s1' % (name.upper(), dev))
-	#run('mkswap -L SWAP %s2' % dev)
-	run('mkfs.btrfs -f -L %s %s1' % (name.upper(), dev))
-
-	#run('mount -o relatime,compress=zstd %s3 /mnt' % dev)
-	#run('mkdir /mnt/boot')
-	#run('mount %s1 /mnt/boot' % dev)
+	#run('parted --script -a optimal %s -- mklabel gpt mkpart primary btrfs 0%% 100%%' % dev)
+	#run('mkfs.btrfs -f -L %s %s1' % (name.upper(), dev))
+	run('parted --script -a optimal %s -- mklabel gpt mkpart primary xfs 0%% 100%%' % dev)
+	run('mkfs.xfs -f -L %s %s1' % (name.upper(), dev))
 
 	return 0
 
