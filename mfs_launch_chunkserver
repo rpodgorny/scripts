@@ -14,8 +14,8 @@ def main():
 	vols = os.listdir('/mnt')
 	vols = sorted(list(filter(lambda x: x.startswith('mfs_'), vols)))
 	vols_opt = ''
-	for i, vol in enumerate(vols):
-		vols_opt += ' -v /mnt/%s:/mnt/mfshdd%s' % (vol, i)
+	for vol in vols:
+		vols_opt += ' -v /mnt/%s:/mnt/%s' % (vol, i)
 	return run('docker run --rm -it --net=host %s --name mfschunkserver rpodgorny/moosefs ./mfschunkserver.sh' % vols_opt)
 
 
