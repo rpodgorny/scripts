@@ -37,6 +37,7 @@ htop
 git
 lm_sensors
 mercurial
+moosefs
 ncdu
 networkmanager
 openssh
