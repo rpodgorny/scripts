@@ -11,6 +11,7 @@ Options:
   --fs=<fs>         Filesystem to use.
   --swap            Create swap.
   --archive=<name>  Manually specify archive.
+  --remote=<name>   Manually specify backup host and path (possibly just path).
 '''
 
 __version__ = '0.0'
@@ -35,7 +36,10 @@ def main():
 	args = docopt.docopt(__doc__, version=__version__)
 
 	cfg = {}
-	cfg['remote'] = 'backup@milhouse.podgorny.cz'
+	if args['--remote']:
+		cfg['remote'] = args['--remote']
+	else:
+		cfg['remote'] = 'backup@milhouse.podgorny.cz'
 	cfg['dev'] = args['<device>']
 	cfg['repo_hostname'] = args['<hostname>']
 	cfg['hostname'] = args['<new_hostname>'] if args['<new_hostname>'] else cfg['repo_hostname']
