@@ -44,7 +44,7 @@ def main():
 	cfg['lbl'] = 'gpt' if cfg['gpt'] else 'msdos'
 	cfg['fs'] = args['--fs']
 
-	while not cfg['fs'] in ['btrfs', 'ext4']:
+	while not cfg['fs'] in ['btrfs', 'ext4', 'xfs']:
 		cfg['fs'] = input('fs: ')
 
 	pprint.pprint(cfg)
@@ -94,9 +94,12 @@ def main():
 	run('mkdir -p /tmp/borg_restore')
 	if cfg['fs'] == 'btrfs':
 		run('mkfs.btrfs -f -L %s_ROOT %s' % (cfg['hostname'].upper(), dev_root))
-		run('mount %s -o compress=lzo /tmp/borg_restore' % dev_root)
+		run('mount %s -o compress=zstd /tmp/borg_restore' % dev_root)
 	elif cfg['fs'] == 'ext4':
 		run('mkfs.ext4 -L %s_ROOT %s' % (cfg['hostname'].upper(), dev_root))
+		run('mount %s /tmp/borg_restore' % dev_root)
+	elif cfg['fs'] == 'xfs':
+		run('mkfs.xfs -L %s_ROOT %s' % (cfg['hostname'].upper(), dev_root))
 		run('mount %s /tmp/borg_restore' % dev_root)
 	else:
 		raise('what?')
