@@ -69,15 +69,16 @@ def main():
 	run('dd if=/dev/zero of=%s bs=2048 count=1' % cfg['dev'])
 	run('partprobe')
 
-	dev_boot = '%s1' % cfg['dev']
+	p_or_not = 'p' if 'nvme' in cfg['dev'] else ''
+	dev_boot = '%s%s1' % (cfg['dev'], p_or_not)
 	if args['--swap']:
-		dev_swap = '%s2' % cfg['dev']
-		dev_root = '%s3' % cfg['dev']
+		dev_swap = '%s%s2' % (cfg['dev'], p_or_not)
+		dev_root = '%s%s3' % (cfg['dev'], p_or_not)
 		#run('parted --script -a optimal %s -- mklabel msdos mkpart primary fat32 0%% 100MB mkpart primary linux-swap 100MB 1000MB mkpart primary ext2 100MB 100%%' % dev)
 		run('parted --script -a optimal %s -- mklabel %s mkpart primary fat32 0%% 256MB mkpart primary linux-swap 256MB 1.256GB mkpart primary btrfs 1.256GB 100%% set 1 boot on' % (cfg['dev'], cfg['lbl']))
 	else:
 		dev_swap = None
-		dev_root = '%s2' % cfg['dev']
+		dev_root = '%s%s2' % (cfg['dev'], p_or_not)
 		#run('parted --script -a optimal %s -- mklabel msdos mkpart primary fat32 0%% 100MB mkpart primary ext2 100MB 100%%' % dev)
 		run('parted --script -a optimal %s -- mklabel %s mkpart primary fat32 0%% 256MB mkpart primary btrfs 256MB 100%% set 1 boot on' % (cfg['dev'], cfg['lbl']))
 	run('partprobe')
@@ -101,7 +102,7 @@ def main():
 		raise('what?')
 
 	run('mkdir /tmp/borg_restore/boot')
-	run('mount %s1 /tmp/borg_restore/boot' % cfg['dev'])
+	run('mount %s /tmp/borg_restore/boot' % dev_boot)
 
 	cwd = os.getcwd()
 	os.chdir('/tmp/borg_restore')
