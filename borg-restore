@@ -11,7 +11,7 @@ Options:
   --fs=<fs>         Filesystem to use.
   --swap            Create swap.
   --archive=<name>  Manually specify archive.
-  --remote=<name>   Manually specify backup host and path (possibly just path).
+  --repo=<name>     Manually specify backup host and path (possibly just path).
 '''
 
 __version__ = '0.0'
@@ -36,10 +36,10 @@ def main():
 	args = docopt.docopt(__doc__, version=__version__)
 
 	cfg = {}
-	if args['--remote']:
-		cfg['remote'] = args['--remote']
+	if args['--repo']:
+		cfg['repo'] = args['--repo']
 	else:
-		cfg['remote'] = 'backup@milhouse.podgorny.cz'
+		cfg['repo'] = 'backup@milhouse.podgorny.cz:borg'
 	cfg['dev'] = args['<device>']
 	cfg['repo_hostname'] = args['<hostname>']
 	cfg['hostname'] = args['<new_hostname>'] if args['<new_hostname>'] else cfg['repo_hostname']
@@ -54,7 +54,7 @@ def main():
 	pprint.pprint(cfg)
 	input('press enter to continue')
 
-	repo = '%s:borg/%s' % (cfg['remote'], cfg['repo_hostname'])
+	repo = '%s/%s' % (cfg['repo'], cfg['repo_hostname'])
 
 	archives_raw = run('borg list %s' % repo)
 	archives = [i.strip().split()[0] for i in archives_raw.split('\n') if i]
@@ -116,7 +116,10 @@ def main():
 
 	run('mkdir dev proc run sys tmp')
 	run('borg extract %s::%s' % (repo, archive))
-	#run('echo "/usr/bin/extlinux --install /boot" | arch-chroot .')
+	if not cfg['gpt']:
+		run('echo "/usr/bin/extlinux --install /boot" | arch-chroot .')
+	else:
+		run('echo "bootctl install" | arch-chroot .')
 
 	run('echo "%s" > /tmp/borg_restore/etc/hostname' % cfg['hostname'])
 
