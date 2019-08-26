@@ -103,7 +103,7 @@ def main():
 		run('mkfs.ext4 -L %s_ROOT %s' % (cfg['hostname'].upper(), dev_root))
 		run('mount %s /tmp/borg_restore' % dev_root)
 	elif cfg['fs'] == 'xfs':
-		run('mkfs.xfs -L %s_ROOT %s' % (cfg['hostname'].upper(), dev_root))
+		run('mkfs.xfs -f -L %s_ROOT %s' % (cfg['hostname'].upper(), dev_root))
 		run('mount %s /tmp/borg_restore' % dev_root)
 	else:
 		raise('what?')
