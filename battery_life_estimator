@@ -1,0 +1,37 @@
+#!/usr/bin/python3
+
+import sys
+import time
+
+
+def format_time(secs):
+	if secs < 0:
+		neg, h, m, s = '-', -secs // 3600, (-secs - (-secs // 3600 * 3600)) // 60, -secs % 60
+	else:
+		neg, h, m, s = '', secs // 3600, (secs - (secs // 3600 * 3600)) // 60, secs % 60
+	return '%s%d:%02d:%02d' % (neg, h, m, s)
+
+
+def main():
+	fn_full = '/sys/bus/acpi/drivers/battery/PNP0C0A:03/power_supply/BAT0/energy_full'
+	with open(fn_full, 'r') as f:
+		v_full = int(f.read())
+	sleep = 20
+	fn = '/sys/bus/acpi/drivers/battery/PNP0C0A:03/power_supply/BAT0/energy_now'
+	t_last, v_last = None, None
+	while 1:
+		t = time.monotonic()
+		with open(fn, 'r') as f:
+			v = int(f.read())
+		dt = t - t_last if t_last else None
+		dv = v - v_last if v_last else None
+		t_last, v_last = t, v
+		ratio = dv / dt if dt else None
+		time_to_zero = format_time(v / -ratio) if ratio else None
+		time_total = format_time(v_full / -ratio) if ratio else None
+		print(t, v, ratio, time_to_zero, time_total)
+		time.sleep(sleep)
+	return 0
+
+if __name__ == '__main__':
+	sys.exit(main())
