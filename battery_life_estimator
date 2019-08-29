@@ -1,0 +1,44 @@
+#!/usr/bin/python3
+
+import sys
+import time
+import os
+
+
+def format_time(secs):
+	if secs < 0:
+		neg, h, m, s = '-', -secs // 3600, (-secs - (-secs // 3600 * 3600)) // 60, -secs % 60
+	else:
+		neg, h, m, s = '', secs // 3600, (secs - (secs // 3600 * 3600)) // 60, secs % 60
+	return '%s%d:%02d:%02d' % (neg, h, m, s)
+
+
+def main():
+	prefix = '/sys/bus/acpi/drivers/battery'
+	dev = [i for i in os.listdir(prefix) if i.startswith('PNP')][0]
+	energy_charge = 'energy' if os.path.exists('%s/%s/power_supply/BAT0/energy_full' % (prefix, dev)) else 'charge'
+	fn_full = '%s/%s/power_supply/BAT0/%s_full' % (prefix, dev, energy_charge)
+	with open(fn_full, 'r') as f:
+		v_full = int(f.read())
+	sleep = 20
+	fn = '%s/%s/power_supply/BAT0/%s_now' % (prefix, dev, energy_charge)
+	t_first, t_last, v_last = None, None, None
+	while 1:
+		t = time.monotonic()
+		with open(fn, 'r') as f:
+			v = int(f.read())
+		dt = t - t_last if t_last else None
+		dv = v - v_last if v_last else None
+		t_last, v_last = t, v
+		if t_first is None:
+			t_first = t
+		ratio = dv / dt if dt else None
+		time_to_zero = format_time(v / -ratio) if ratio else None
+		time_total = format_time(v_full / -ratio) if ratio else None
+		time_since_start = format_time(t - t_first)
+		print(time_since_start, v, ratio, time_to_zero, time_total)
+		time.sleep(sleep)
+	return 0
+
+if __name__ == '__main__':
+	sys.exit(main())

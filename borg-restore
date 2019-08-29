@@ -11,6 +11,7 @@ Options:
   --fs=<fs>         Filesystem to use.
   --swap            Create swap.
   --archive=<name>  Manually specify archive.
+  --repo=<name>     Manually specify backup host and path (possibly just path).
 '''
 
 __version__ = '0.0'
@@ -35,7 +36,10 @@ def main():
 	args = docopt.docopt(__doc__, version=__version__)
 
 	cfg = {}
-	cfg['remote'] = 'backup@milhouse.podgorny.cz'
+	if args['--repo']:
+		cfg['repo'] = args['--repo']
+	else:
+		cfg['repo'] = 'backup@milhouse.podgorny.cz:borg'
 	cfg['dev'] = args['<device>']
 	cfg['repo_hostname'] = args['<hostname>']
 	cfg['hostname'] = args['<new_hostname>'] if args['<new_hostname>'] else cfg['repo_hostname']
@@ -44,13 +48,13 @@ def main():
 	cfg['lbl'] = 'gpt' if cfg['gpt'] else 'msdos'
 	cfg['fs'] = args['--fs']
 
-	while not cfg['fs'] in ['btrfs', 'ext4']:
+	while not cfg['fs'] in ['btrfs', 'ext4', 'xfs']:
 		cfg['fs'] = input('fs: ')
 
 	pprint.pprint(cfg)
 	input('press enter to continue')
 
-	repo = '%s:borg/%s' % (cfg['remote'], cfg['repo_hostname'])
+	repo = '%s/%s' % (cfg['repo'], cfg['repo_hostname'])
 
 	archives_raw = run('borg list %s' % repo)
 	archives = [i.strip().split()[0] for i in archives_raw.split('\n') if i]
@@ -69,15 +73,16 @@ def main():
 	run('dd if=/dev/zero of=%s bs=2048 count=1' % cfg['dev'])
 	run('partprobe')
 
-	dev_boot = '%s1' % cfg['dev']
+	p_or_not = 'p' if 'nvme' in cfg['dev'] else ''
+	dev_boot = '%s%s1' % (cfg['dev'], p_or_not)
 	if args['--swap']:
-		dev_swap = '%s2' % cfg['dev']
-		dev_root = '%s3' % cfg['dev']
+		dev_swap = '%s%s2' % (cfg['dev'], p_or_not)
+		dev_root = '%s%s3' % (cfg['dev'], p_or_not)
 		#run('parted --script -a optimal %s -- mklabel msdos mkpart primary fat32 0%% 100MB mkpart primary linux-swap 100MB 1000MB mkpart primary ext2 100MB 100%%' % dev)
 		run('parted --script -a optimal %s -- mklabel %s mkpart primary fat32 0%% 256MB mkpart primary linux-swap 256MB 1.256GB mkpart primary btrfs 1.256GB 100%% set 1 boot on' % (cfg['dev'], cfg['lbl']))
 	else:
 		dev_swap = None
-		dev_root = '%s2' % cfg['dev']
+		dev_root = '%s%s2' % (cfg['dev'], p_or_not)
 		#run('parted --script -a optimal %s -- mklabel msdos mkpart primary fat32 0%% 100MB mkpart primary ext2 100MB 100%%' % dev)
 		run('parted --script -a optimal %s -- mklabel %s mkpart primary fat32 0%% 256MB mkpart primary btrfs 256MB 100%% set 1 boot on' % (cfg['dev'], cfg['lbl']))
 	run('partprobe')
@@ -93,22 +98,38 @@ def main():
 	run('mkdir -p /tmp/borg_restore')
 	if cfg['fs'] == 'btrfs':
 		run('mkfs.btrfs -f -L %s_ROOT %s' % (cfg['hostname'].upper(), dev_root))
-		run('mount %s -o compress=lzo /tmp/borg_restore' % dev_root)
+		run('mount %s -o compress=zstd /tmp/borg_restore' % dev_root)
 	elif cfg['fs'] == 'ext4':
 		run('mkfs.ext4 -L %s_ROOT %s' % (cfg['hostname'].upper(), dev_root))
+		run('mount %s /tmp/borg_restore' % dev_root)
+	elif cfg['fs'] == 'xfs':
+		run('mkfs.xfs -f -L %s_ROOT %s' % (cfg['hostname'].upper(), dev_root))
 		run('mount %s /tmp/borg_restore' % dev_root)
 	else:
 		raise('what?')
 
 	run('mkdir /tmp/borg_restore/boot')
-	run('mount %s1 /tmp/borg_restore/boot' % cfg['dev'])
+	run('mount %s /tmp/borg_restore/boot' % dev_boot)
 
 	cwd = os.getcwd()
 	os.chdir('/tmp/borg_restore')
 
 	run('mkdir dev proc run sys tmp')
 	run('borg extract %s::%s' % (repo, archive))
-	#run('echo "/usr/bin/extlinux --install /boot" | arch-chroot .')
+	if not cfg['gpt']:
+		run('echo "/usr/bin/extlinux --install /boot" | arch-chroot .')
+	else:
+		run('''echo "title Arch Linux
+linux /vmlinuz-linux
+initrd /intel-ucode.img
+initrd /initramfs-linux.img
+options root=/dev/disk/by-label/%s_ROOT rw ___acpi_osi=" > /tmp/borg_restore/boot/loader/entries/arch.conf''' % cfg['hostname'].upper())
+		run('''echo "title Arch Linux LTS
+linux /vmlinuz-linux-lts
+initrd /intel-ucode.img
+initrd /initramfs-linux-lts.img
+options root=/dev/disk/by-label/%s_ROOT rw" > /tmp/borg_restore/boot/loader/entries/arch-lts.conf''' % cfg['hostname'].upper())
+		run('echo "bootctl install" | arch-chroot .')
 
 	run('echo "%s" > /tmp/borg_restore/etc/hostname' % cfg['hostname'])
 
