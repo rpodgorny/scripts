@@ -2,6 +2,7 @@
 
 import sys
 import time
+import os
 
 
 def format_time(secs):
@@ -13,11 +14,14 @@ def format_time(secs):
 
 
 def main():
-	fn_full = '/sys/bus/acpi/drivers/battery/PNP0C0A:03/power_supply/BAT0/energy_full'
+	prefix = '/sys/bus/acpi/drivers/battery'
+	dev = [i for i in os.listdir(prefix) if i.startswith('PNP')][0]
+	energy_charge = 'energy' if os.path.exists('%s/%s/power_supply/BAT0/energy_full' % (prefix, dev)) else 'charge'
+	fn_full = '%s/%s/power_supply/BAT0/%s_full' % (prefix, dev, energy_charge)
 	with open(fn_full, 'r') as f:
 		v_full = int(f.read())
 	sleep = 20
-	fn = '/sys/bus/acpi/drivers/battery/PNP0C0A:03/power_supply/BAT0/energy_now'
+	fn = '%s/%s/power_supply/BAT0/%s_now' % (prefix, dev, energy_charge)
 	t_last, v_last = None, None
 	while 1:
 		t = time.monotonic()
