@@ -1,0 +1,3 @@
+#!/bin/sh
+set -e -x
+exec socat tcp6-listen:8888,reuseaddr,fork tcp-connect:localhost:9425
