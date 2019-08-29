@@ -22,7 +22,7 @@ def main():
 		v_full = int(f.read())
 	sleep = 20
 	fn = '%s/%s/power_supply/BAT0/%s_now' % (prefix, dev, energy_charge)
-	t_last, v_last = None, None
+	t_first, t_last, v_last = None, None, None
 	while 1:
 		t = time.monotonic()
 		with open(fn, 'r') as f:
@@ -30,10 +30,13 @@ def main():
 		dt = t - t_last if t_last else None
 		dv = v - v_last if v_last else None
 		t_last, v_last = t, v
+		if t_first is None:
+			t_first = t
 		ratio = dv / dt if dt else None
 		time_to_zero = format_time(v / -ratio) if ratio else None
 		time_total = format_time(v_full / -ratio) if ratio else None
-		print(t, v, ratio, time_to_zero, time_total)
+		time_since_start = format_time(t - t_first)
+		print(time_since_start, v, ratio, time_to_zero, time_total)
 		time.sleep(sleep)
 	return 0
 
