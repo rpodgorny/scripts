@@ -20,7 +20,7 @@ def main():
 	fn_full = '%s/%s/power_supply/BAT0/%s_full' % (prefix, dev, energy_charge)
 	with open(fn_full, 'r') as f:
 		v_full = int(f.read())
-	sleep = 20
+	sleep = 60
 	fn = '%s/%s/power_supply/BAT0/%s_now' % (prefix, dev, energy_charge)
 	t_first, t_last, v_last = None, None, None
 	while 1:
