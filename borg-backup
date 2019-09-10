@@ -24,8 +24,8 @@ fi
 
 (/home/radek/scripts/get-metered | grep yes) && exit 44
 
-systemctl stop boot.automount
-systemctl start boot.mount
+systemctl stop boot.automount || true
+systemctl start boot.mount || true
 
 #--progress \
 borg create \
@@ -46,8 +46,8 @@ $REPO::$ARCHIVE \
 --exclude '/home/*/.thumbnails/*' \
 --exclude '/root/.cache/*'
 
-systemctl stop boot.mount
-systemctl start boot.automount
+systemctl stop boot.mount || true
+systemctl start boot.automount || true
 
 borg prune \
 --verbose --stats \
