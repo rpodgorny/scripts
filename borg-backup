@@ -2,7 +2,7 @@
 set -e -x
 
 HOSTNAME=`hostname`
-REMOTE=backup@milhouse.podgorny.cz
+REMOTE=backup@backup.podgorny.cz
 REPO=$REMOTE:borg/$HOSTNAME
 ARCHIVE=`date +%Y%m%dT%H%M%S`
 
@@ -22,6 +22,11 @@ else
 	INCOMING=""
 fi
 
+(/home/radek/scripts/get-metered | grep yes) && exit 44
+
+systemctl stop boot.automount
+systemctl start boot.mount
+
 #--progress \
 borg create \
 --compression zlib,6 \
@@ -40,6 +45,9 @@ $REPO::$ARCHIVE \
 --exclude '/home/*/.cache/*' \
 --exclude '/home/*/.thumbnails/*' \
 --exclude '/root/.cache/*'
+
+systemctl stop boot.mount
+systemctl start boot.automount
 
 borg prune \
 --verbose --stats \
