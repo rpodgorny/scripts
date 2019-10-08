@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e -x
+
+CON=`nmcli -t -f GENERAL.CONNECTION --mode tabular device show $DEVICE | head -n1`
+#echo $CON
+exec nmcli -f connection.metered connection show "$CON" | cut -f2 -d: | xargs
+
+#exec nmcli -t -f GENERAL.DEVICE,GENERAL.METERED dev show

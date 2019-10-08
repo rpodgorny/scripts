@@ -39,7 +39,7 @@ def main():
 	if args['--repo']:
 		cfg['repo'] = args['--repo']
 	else:
-		cfg['repo'] = 'backup@milhouse.podgorny.cz:borg'
+		cfg['repo'] = 'backup@backup.podgorny.cz:borg'
 	cfg['dev'] = args['<device>']
 	cfg['repo_hostname'] = args['<hostname>']
 	cfg['hostname'] = args['<new_hostname>'] if args['<new_hostname>'] else cfg['repo_hostname']
