@@ -1,0 +1,52 @@
+#!/usr/bin/python3
+
+import sys
+import subprocess
+import time
+import os
+
+
+def c(cmd):
+	return subprocess.check_output(cmd, shell=True).decode()
+
+
+def get_vms():
+	ret = {}
+	for line in c('vagrant global-status').split('\n'):
+		if 'virtualbox' not in line:
+			continue
+		id_, _, _, state, dir_ = line.split()
+		mtime = os.stat('%s/Vagrantfile' % dir_).st_mtime if os.path.isfile('%s/Vagrantfile' % dir_) else None
+		#ret[dir_] = state
+		ret[dir_] = int(mtime)
+	return ret
+
+
+def main():
+	state = {}
+	while 1:
+		t = int(time.time())
+		vms = get_vms()
+		#print(t, vms)
+		for k, v in vms.items():
+			print(k, t - v)
+			if t - v > 3600:
+				print('KILL', k)
+				c('cd %s; vagrant destroy --force' % k)
+			'''
+			if k not in state:
+				state[k] = {'t': t, 'last_state': None}
+			if v != state[k]['last_state']:
+				state[k] = {'t': t, 'last_state': v}
+			elif t - state[k]['t'] > 3600:
+				print(k)
+				c('cd %s; vagrant destroy --force' % k)
+		for k in state.copy():
+			if k not in vms:
+				del state[k]'''
+		time.sleep(60)
+	return 0
+
+
+if __name__ == '__main__':
+	sys.exit(main())

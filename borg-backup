@@ -2,9 +2,12 @@
 set -e -x
 
 HOSTNAME=`hostname`
-REMOTE=backup@backup.podgorny.cz
-REPO=$REMOTE:borg/$HOSTNAME
+REMOTE=backup@backup.podgorny.cz:2222
+REPO=ssh://$REMOTE/~/borg/$HOSTNAME
 ARCHIVE=`date +%Y%m%dT%H%M%S`
+
+export BORG_RSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+export BORG_RELOCATED_REPO_ACCESS_IS_OK=yes
 
 if [ "$1" = "--init" ]; then
 	ssh-copy-id $REMOTE
