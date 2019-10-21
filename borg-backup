@@ -13,6 +13,9 @@ if [ "$1" = "--init" ]; then
 elif [ "$1" = "--break-lock" ]; then
 	borg break-lock $REPO
 	exit
+elif [ "$1" = "--repair" ]; then
+	borg check --repair $REPO
+	exit
 fi
 
 # TODO: isn't this handled by the --exclude below?
