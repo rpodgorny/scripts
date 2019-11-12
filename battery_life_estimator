@@ -22,21 +22,29 @@ def main():
 		v_full = int(f.read())
 	sleep = 60
 	fn = '%s/%s/power_supply/BAT0/%s_now' % (prefix, dev, energy_charge)
-	t_first, t_last, v_last = None, None, None
+	t_first, t_last, v_first, v_last = None, None, None, None
 	while 1:
 		t = time.monotonic()
-		with open(fn, 'r') as f:
-			v = int(f.read())
-		dt = t - t_last if t_last else None
-		dv = v - v_last if v_last else None
-		t_last, v_last = t, v
 		if t_first is None:
 			t_first = t
+		with open(fn, 'r') as f:
+			v = int(f.read())
+		if v_first is None:
+			v_first = v
+		dt = t - t_last if t_last else None
+		dv = v - v_last if v_last else None
+		if dv is not None and dv > 0:  # charging
+			t_first, v_first = t, v
+		dt_tot, dv_tot = t - t_first, v - v_first
+		t_last, v_last = t, v
 		ratio = dv / dt if dt else None
+		ratio_tot = dv_tot / dt_tot if dt_tot else None
 		time_to_zero = format_time(v / -ratio) if ratio else None
+		time_to_zero_tot = format_time(v / -ratio_tot) if ratio_tot else None
 		time_total = format_time(v_full / -ratio) if ratio else None
+		time_total_tot = format_time(v_full / -ratio_tot) if ratio_tot else None
 		time_since_start = format_time(t - t_first)
-		print(time_since_start, v, ratio, time_to_zero, time_total)
+		print(time_since_start, v, ratio, time_to_zero, time_total, time_to_zero_tot, time_total_tot)
 		time.sleep(sleep)
 	return 0
 
