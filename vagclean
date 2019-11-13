@@ -16,9 +16,9 @@ def get_vms():
 		if 'virtualbox' not in line:
 			continue
 		id_, _, _, state, dir_ = line.split()
-		mtime = os.stat('%s/Vagrantfile' % dir_).st_mtime if os.path.isfile('%s/Vagrantfile' % dir_) else None
+		mtime = int(os.stat('%s/Vagrantfile' % dir_).st_mtime) if os.path.isfile('%s/Vagrantfile' % dir_) else None
 		#ret[dir_] = state
-		ret[dir_] = int(mtime)
+		ret[dir_] = mtime
 	return ret
 
 
@@ -29,21 +29,24 @@ def main():
 		vms = get_vms()
 		#print(t, vms)
 		for k, v in vms.items():
-			print(k, t - v)
-			if t - v > 3600:
-				print('KILL', k)
-				c('cd %s; vagrant destroy --force' % k)
-			'''
-			if k not in state:
-				state[k] = {'t': t, 'last_state': None}
-			if v != state[k]['last_state']:
-				state[k] = {'t': t, 'last_state': v}
-			elif t - state[k]['t'] > 3600:
-				print(k)
-				c('cd %s; vagrant destroy --force' % k)
-		for k in state.copy():
-			if k not in vms:
-				del state[k]'''
+			if v is None:
+				print('fucked up %s' % k)
+			else:
+				print(k, t - v)
+				if t - v > 3600:
+					print('KILL', k)
+					c('cd %s; vagrant destroy --force' % k)
+				'''
+				if k not in state:
+					state[k] = {'t': t, 'last_state': None}
+				if v != state[k]['last_state']:
+					state[k] = {'t': t, 'last_state': v}
+				elif t - state[k]['t'] > 3600:
+					print(k)
+					c('cd %s; vagrant destroy --force' % k)
+			for k in state.copy():
+				if k not in vms:
+					del state[k]'''
 		time.sleep(60)
 	return 0
 
