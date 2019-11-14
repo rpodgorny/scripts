@@ -33,7 +33,7 @@ def main():
 			v_first = v
 		dt = t - t_last if t_last else None
 		dv = v - v_last if v_last else None
-		if dv is not None and dv > 0:  # charging
+		if dv is not None and dv >= 0:  # charging (or charged)
 			t_first, v_first = t, v
 		dt_tot, dv_tot = t - t_first, v - v_first
 		t_last, v_last = t, v
