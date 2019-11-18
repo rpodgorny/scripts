@@ -22,13 +22,16 @@ def main():
 	run('dd if=/dev/zero of=%s bs=10M count=1' % dev)
 
 	#parted --script -a optimal $DEV -- mklabel msdos mkpart primary fat32 0% 256MB mkpart primary linux-swap 256MB 1.256GB mkpart primary btrfs 1.256GB 100% set 1 boot on
-	run('parted --script -a optimal %s -- mklabel gpt mkpart primary fat32 0%% 256MB mkpart primary linux-swap 256MB 1.256GB mkpart primary btrfs 1.256GB 100%% set 1 boot on' % dev)
+	#run('parted --script -a optimal %s -- mklabel gpt mkpart primary fat32 0%% 256MB mkpart primary linux-swap 256MB 1.256GB mkpart primary btrfs 1.256GB 100%% set 1 boot on' % dev)
+	run('parted --script -a optimal %s -- mklabel gpt mkpart primary fat32 0%% 256MB mkpart primary linux-swap 256MB 1.256GB mkpart primary xfs 1.256GB 100%% set 1 boot on' % dev)
 
 	run('mkfs.vfat -n %s_BOOT %s1' % (name.upper(), dev))
 	run('mkswap -L SWAP %s2' % dev)
-	run('mkfs.btrfs -f -L %s_ROOT %s3' % (name.upper(), dev))
+	#run('mkfs.btrfs -f -L %s_ROOT %s3' % (name.upper(), dev))
+	run('mkfs.xfs -f -L %s_ROOT %s3' % (name.upper(), dev))
 
-	run('mount -o relatime,compress=zstd %s3 /mnt' % dev)
+	#run('mount -o relatime,compress=zstd %s3 /mnt' % dev)
+	run('mount %s3 /mnt' % dev)
 	run('mkdir /mnt/boot')
 	run('mount %s1 /mnt/boot' % dev)
 
