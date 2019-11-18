@@ -35,7 +35,7 @@ def main():
 	run('mkdir /mnt/boot')
 	run('mount %s1 /mnt/boot' % dev)
 
-	run('pacstrap /mnt base openssh intel-ucode')
+	run('pacstrap /mnt base linux openssh intel-ucode')
 
 	run('arch-chroot /mnt bootctl install')
 
