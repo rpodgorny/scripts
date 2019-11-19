@@ -6,6 +6,9 @@ import time
 import os
 
 
+TIMEOUT = 3 * 3600
+
+
 def c(cmd):
 	return subprocess.check_output(cmd, shell=True).decode()
 
@@ -33,7 +36,7 @@ def main():
 				print('fucked up %s' % k)
 			else:
 				print(k, t - v)
-				if t - v > 3600:
+				if t - v > TIMEOUT:
 					print('KILL', k)
 					c('cd %s; vagrant destroy --force' % k)
 				'''
@@ -47,7 +50,7 @@ def main():
 			for k in state.copy():
 				if k not in vms:
 					del state[k]'''
-		time.sleep(60)
+		time.sleep(60)  # TODO: hard-coded shit
 	return 0
 
 
