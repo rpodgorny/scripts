@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e -x
-mfsmount -H 192.168.31.236 -m /home/radek/mnt/mfsmeta
+mkdir -p /home/radek/mnt/mfsmeta
+mfsmount -H 192.168.11.11 -m /home/radek/mnt/mfsmeta
 find /home/radek/mnt/mfsmeta/trash -type f -print -delete
 umount /home/radek/mnt/mfsmeta
