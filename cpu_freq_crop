@@ -1,0 +1,60 @@
+#!/usr/bin/python3
+
+import sys
+import subprocess
+import time
+
+
+def try_read(fn):
+	try:
+		with open(fn, 'r') as f:
+			return f.read()
+	except:
+		return None
+
+
+def try_int(v):
+	try:
+		return int(v)
+	except:
+		return None
+
+
+def main():
+	fn = '/tmp/cpu_freq_crop'
+	if len(sys.argv) >= 2 and sys.argv[1] == 'toggle':
+		try:
+			with open(fn, 'r') as f:
+				targ = f.read()
+		except:
+			targ = None
+		if targ == 'min':
+			targ = 'mid'
+		elif targ == 'mid':
+			targ = 'max'
+		else:
+			targ = 'min'
+		with open(fn, 'w') as f:
+			f.write(targ)
+		return 0
+	fn_hw = '/sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq'
+	freq_min = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_min_freq'))
+	freq_max = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_max_freq'))
+	freq_map = {'min': freq_min, 'mid': 2000000, 'max': freq_max}
+	while 1:
+		targ = try_read(fn)
+		freq = freq_map.get(targ)
+		if not freq:
+			print('nil')
+		else:
+			freq_cur = try_int(try_read(fn_hw))
+			if freq_cur and freq_cur != freq:
+				cmd = '/usr/bin/sudo /usr/bin/cpupower frequency-set --max %s' % freq
+				print('+ %s' % cmd)
+				subprocess.call(cmd.split())
+		time.sleep(2)  # TODO: hard-coded shit
+	return 0
+
+
+if __name__ == '__main__':
+	sys.exit(main())
