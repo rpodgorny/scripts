@@ -1,0 +1,8 @@
+#!/usr/bin/python3
+
+import subprocess
+
+
+for i in range(10):
+	cmd = 'iwctl station wlan%d get-networks rssi-dbms' % i
+	subprocess.call(cmd, shell=True)
