@@ -1,0 +1,13 @@
+#!/usr/bin/python3
+
+import subprocess
+
+device_list = subprocess.check_output('iwctl device list', shell=True, universal_newlines=True)
+
+for i in range(10):
+	iface = 'wlan%d' % i
+	if iface not in device_list:
+		continue
+	print(iface)
+	cmd = 'iwctl station %s get-networks rssi-dbms' % iface
+	subprocess.call(cmd, shell=True)
