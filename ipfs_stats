@@ -1,0 +1,6 @@
+#!/bin/sh
+ipfs --api /ip4/127.0.0.1/tcp/5001 stats repo
+echo '----'
+ipfs --api /ip4/127.0.0.1/tcp/5001 stats bw
+echo '----'
+ipfs --api /ip4/127.0.0.1/tcp/5001 stats bitswap
