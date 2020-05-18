@@ -1,0 +1,22 @@
+#!/usr/bin/python3
+
+import sys
+import subprocess
+
+device_list = subprocess.check_output('iwctl device list', shell=True, universal_newlines=True)
+
+wlans = []
+for i in range(10):
+    iface = 'wlan%d' % i
+    if iface in device_list:
+        wlans.append(iface)
+
+iface_ap = wlans[0]
+iface_inet = wlans[-1]
+print('ap: %s inet: %s' % (iface_ap, iface_inet))
+
+if iface_ap != iface_inet:
+    subprocess.call('iwctl station %s disconnect' % iface_ap, shell=True)
+
+cmd = 'sudo create_ap -c 1 %s %s radiatorrr hovnokleslo' % (iface_ap, iface_inet)
+subprocess.call(cmd, shell=True)
