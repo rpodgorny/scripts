@@ -1,0 +1,34 @@
+#!/bin/sh
+set -e -x
+
+DEV=/dev/mmcblk0
+
+##wget http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-2-latest.tar.gz
+wget http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-3-latest.tar.gz
+
+dd if=/dev/zero of=$DEV bs=10M count=1
+echo 'n
+p
+1
+
++100M
+t
+c
+n
+p
+2
+
+
+w
+' | fdisk ${DEV}
+mkfs.vfat ${DEV}p1
+mkfs.ext4 ${DEV}p2
+rm -rf boot root
+mkdir boot root
+mount ${DEV}p1 boot
+mount ${DEV}p2 root
+#bsdtar -xpf ArchLinuxARM-rpi-2-latest.tar.gz -C root
+bsdtar -xpf ArchLinuxARM-rpi-3-latest.tar.gz -C root
+sync
+mv root/boot/* boot
+umount boot root
