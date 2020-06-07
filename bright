@@ -1,0 +1,29 @@
+#!/usr/bin/python3
+
+import sys
+import subprocess
+
+
+LEVELS = [1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 25, 30, 40, 50, 60, 80, 100]  # TODO: maybe go full exponential?
+
+
+def call(cmd):
+	return subprocess.check_output(cmd, shell=True, universal_newlines=True).split('\n')
+
+
+def main():
+	down = 'down' in sys.argv
+	cur = int(float(call('light -G')[0]))
+	# find (kinda) nearest - that's why i don't use list.index()
+	for i, v in enumerate(LEVELS):
+		if v >= cur:
+			break
+	i = (i - 1) if down else (i + 1)
+	new = LEVELS[i] if 0 <= i < len(LEVELS) else cur
+	print('%s -> %s' % (cur, new))
+	call('light -S %s' % new)
+	call('notify-send %s -t 1000 -h int:value:%s -h string:synchronous:brightness -i notification-display-brightness' % (new, new))
+
+
+if __name__ == '__main__':
+	main()
