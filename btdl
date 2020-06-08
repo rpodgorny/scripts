@@ -1,2 +1,4 @@
 #!/bin/sh
-exec transmission-cli -w . "$@"
+set -e -x
+PORT=`echo 'import random; print(random.randint(10000, 11000))'|python`
+exec transmission-cli -p ${PORT} -w . "$@"
