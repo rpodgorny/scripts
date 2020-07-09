@@ -1,0 +1,3 @@
+#!/bin/sh
+#exec du -sh /var/lib/docker/volumes/*
+exec sudo sh -c 'du -sh /var/lib/docker/volumes/*'
