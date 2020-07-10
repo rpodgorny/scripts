@@ -323,6 +323,12 @@ def fix_watchdog():
 		print('watchdog does not seem to enabled')
 
 
+def check_audit():
+	if call('grep "audit=0" /proc/cmdline', silent=True) == 0:
+		return
+	print('audit=0 not found in /proc/cmdline')
+
+
 def check_kernel():
 	ver = subprocess.check_output('uname -r', shell=True).decode().strip()
 	if os.path.isdir('/lib/modules/%s' % ver):
@@ -366,6 +372,7 @@ def main():
 	fix_watchdog()
 	fix_mcelog()
 	fix_systemd_check_failed()
+	check_audit()
 	check_kernel()
 	check_ucode()
 
