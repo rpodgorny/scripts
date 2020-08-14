@@ -2,7 +2,6 @@
 set -e -x
 
 rm -f *.pkg.*
-makepkg $@
-rsync -avP ./*.pkg.* archlinux.podgorny.cz:archlinux/rpodgorny/
-ssh archlinux.podgorny.cz "cd archlinux/rpodgorny; ./update"
-
+makepkg "$@"
+rsync -avP ./*.pkg.* archlinux.podgorny.cz:rpodgorny/
+ssh archlinux.podgorny.cz "./update rpodgorny"
