@@ -13,7 +13,7 @@ def call(cmd):
 
 def main():
 	down = 'down' in sys.argv
-	cur = int(float(call('light -G')[0]))
+	cur = int(round(float(call('light -G')[0])))
 	# find (kinda) nearest - that's why i don't use list.index()
 	for i, v in enumerate(LEVELS):
 		if v >= cur:
