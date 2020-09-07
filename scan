@@ -1,7 +1,7 @@
 #!/bin/sh
-set -e
-set -x
+set -e -x
 
+DEV="hpaio:/usb/Photosmart_B010_series?serial=CN08L2K1Y105K9"
 RES=600
 fn=scan_$(date +"%Y%m%d_%H%M%S")
 
@@ -11,7 +11,7 @@ fn=scan_$(date +"%Y%m%d_%H%M%S")
 #&& convert /tmp/${fn}.pnm ${fn}.jpg \
 #&& rm /tmp/${fn}.pnm
 
-scanimage --mode Color --resolution $RES --progress >${fn}.pnm_
-mv ${fn}.pnm_ ${fn}.pnm
+scanimage --mode Color -d "$DEV" --resolution $RES --progress --format jpeg >${fn}.jpg_
+mv ${fn}.jpg_ ${fn}.jpg
 
-identify ${fn}.pnm
+identify ${fn}.jpg
