@@ -40,7 +40,7 @@ def main():
 	fn_hw = '/sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq'
 	freq_min = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_min_freq'))
 	freq_max = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_max_freq'))
-	freq_map = {'min': freq_min, 'mid': 2000000, 'max': freq_max}
+	freq_map = {'min': freq_min, 'mid': 1800000, 'max': freq_max}
 	while 1:
 		targ = try_read(fn)
 		freq = freq_map.get(targ)
