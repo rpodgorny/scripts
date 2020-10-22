@@ -323,6 +323,45 @@ def fix_watchdog():
 		print('watchdog does not seem to enabled')
 
 
+def fix_docker_daemon_json():
+	if not os.path.isfile('/usr/bin/docker'):
+		return
+	fn = '/etc/docker/daemon.json'
+	if os.path.isfile(fn):
+		return
+	if ask('%s not found. fix?' % fn):
+		call('''echo '{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "10"
+  }
+}' >%s''' % fn, silent=True)
+		return
+
+
+def check_docker_daemon_json():
+	if not os.path.isfile('/usr/bin/docker'):
+		return
+	fn = '/etc/docker/daemon.json'
+	if not os.path.isfile(fn):
+		print('%s not found' % fn)
+		return
+	wanted_content = '''{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "10"
+  }
+}
+'''
+	content = open(fn, 'r').read()
+	if content != wanted_content:
+		print('%s different content %s %s' % (fn, len(content), len(wanted_content)))
+		return
+
+
+
 def check_audit():
 	if call('grep "audit=0" /proc/cmdline', silent=True) == 0:
 		return
@@ -372,6 +411,8 @@ def main():
 	fix_watchdog()
 	fix_mcelog()
 	fix_systemd_check_failed()
+	fix_docker_daemon_json()
+	check_docker_daemon_json()
 	check_audit()
 	check_kernel()
 	check_ucode()
