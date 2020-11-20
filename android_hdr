@@ -4,7 +4,7 @@
 android_hdr.
 
 Usage:
-  android_hdr <path_on_device>
+  android_hdr <path_on_device> <archive_path_on_computer>
 
 """
 
@@ -43,6 +43,7 @@ def check():
 def main():
 	check()
 	pth = sys.argv[1]
+	pth_archive = sys.argv[2]
 	fns = subprocess.check_output("adb shell 'ls %s'" % pth, shell=True).decode().split("\n")
 	grps = {}
 	for fn in fns:
@@ -56,7 +57,7 @@ def main():
 	if not grps:
 		print("no suitable files found")
 		return 1
-	run("mkdir -p archive")
+	run("mkdir -p %s" % pth_archive)
 	for i, (grp, fns) in enumerate(grps.items()):
 		print("%s of %s -> %0.2f" % (i + 1, len(grps), (i + 1) / len(grps) * 100))
 		with tempfile.TemporaryDirectory() as tmpdir:
@@ -87,9 +88,9 @@ def main():
 			sha_r = sha1sum_remote("%s/%s" % (pth, fn_new))
 			assert sha == sha_r
 			for fn in fns:
-				run("mv %s/%s archive/%s" % (tmpdir, fn, fn))
-				run("sync archive/%s" % fn)
-				sha = sha1sum("archive/%s" % fn)
+				run("mv %s/%s %s/%s" % (tmpdir, fn, pth_archive, fn))
+				run("sync %s/%s" % (pth_archive, fn))
+				sha = sha1sum("%s/%s" % (pth_archive, fn))
 				sha_r = sha1sum_remote("%s/%s" % (pth, fn))
 				assert sha == sha_r
 				run("adb shell 'rm %s/%s'" % (pth, fn))
