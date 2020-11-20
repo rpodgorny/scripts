@@ -1,0 +1,100 @@
+#!/usr/bin/python3
+
+"""
+android_hdr.
+
+Usage:
+  android_hdr <path_on_device>
+
+"""
+
+import subprocess
+import os
+import sys
+import tempfile
+
+
+def run(cmd):
+	print("+ %s" % cmd)
+	return subprocess.check_call(cmd, shell=True)
+
+
+def sha1sum(fn):
+	return subprocess.check_output("sha1sum %s" % fn, shell=True).decode().split()[0]
+
+
+def sha1sum_remote(fn):
+	try:
+		return subprocess.check_output("adb shell 'sha1sum %s'" % fn, shell=True).decode().split()[0]
+	except:
+		pass
+	return None
+
+
+def check():
+	subprocess.check_output("adb --version", shell=True)
+	subprocess.check_output("convert -version", shell=True)
+	subprocess.check_output("align_image_stack -h", shell=True)
+	subprocess.check_output("enfuse --version", shell=True)
+	subprocess.check_output("sha1sum --version", shell=True)
+	subprocess.check_output("adb shell 'sha1sum --version'", shell=True)
+
+
+def main():
+	check()
+	pth = sys.argv[1]
+	fns = subprocess.check_output("adb shell 'ls %s'" % pth, shell=True).decode().split("\n")
+	grps = {}
+	for fn in fns:
+		if not fn.lower().endswith(".jpg"):
+			continue
+		fn_ = fn[:-4]
+		if not fn_.endswith(('_0', '_1', '_2')):
+			continue
+		grp = fn_[:-2]
+		grps[grp] = grps.get(grp, set()) | set([fn])
+	if not grps:
+		print("no suitable files found")
+		return 1
+	run("mkdir -p archive")
+	for i, (grp, fns) in enumerate(grps.items()):
+		print("%s of %s -> %0.2f" % (i + 1, len(grps), (i + 1) / len(grps) * 100))
+		with tempfile.TemporaryDirectory() as tmpdir:
+			run("mkdir %s/rot" % tmpdir)
+			err = 0
+			for fn in fns:
+				run("adb pull %s/%s %s/%s" % (pth, fn, tmpdir, fn))
+				try:
+					run("convert -auto-orient %s/%s %s/rot/%s" % (tmpdir, fn, tmpdir, fn))
+				except:
+					print("rotation error")
+					err = 1
+					break
+			if err:
+				continue
+			fns_ = " ".join(["%s/rot/%s" % (tmpdir, i) for i in sorted(list(fns))])
+			try:
+				run("align_image_stack -a %s/xxx %s" % (tmpdir, fns_))
+			except:
+				print("align error")
+				continue
+			run("enfuse -o %s/xxx.tif %s/xxx0*.tif" % (tmpdir, tmpdir))
+			fn_new = "%s_MYHDR.jpg" % grp
+			run("convert %s/xxx.tif -normalize -gamma 0.75 %s/%s" % (tmpdir, tmpdir, fn_new))
+			run("rm %s/xxx*.tif" % tmpdir)
+			run("adb push %s/%s %s" % (tmpdir, fn_new, pth))
+			sha = sha1sum("%s/%s" % (tmpdir, fn_new))
+			sha_r = sha1sum_remote("%s/%s" % (pth, fn_new))
+			assert sha == sha_r
+			for fn in fns:
+				run("mv %s/%s archive/%s" % (tmpdir, fn, fn))
+				run("sync archive/%s" % fn)
+				sha = sha1sum("archive/%s" % fn)
+				sha_r = sha1sum_remote("%s/%s" % (pth, fn))
+				assert sha == sha_r
+				run("adb shell 'rm %s/%s'" % (pth, fn))
+	return 0
+
+
+if __name__ == "__main__":
+	sys.exit(main())
