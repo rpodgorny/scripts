@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e -x
+
+PID=$1
+SECS=30
+BROWSER=firefox
+
+#sudo pyflame -s $SECS -p $PID | flamegraph.pl >/tmp/flame_$PID.svg
+sudo py-spy record -d ${SECS} -o /tmp/flame_${PID}.svg --pid ${PID}; ${BROWSER} "file:///tmp/flame_${PID}.svg"
+#sudo py-spy record -d ${SECS} -o /tmp/speedscope_${PID}.json -f speedscope --pid ${PID}; speedscope /tmp/speedscope_${PID}.json
