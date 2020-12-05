@@ -1,6 +1,5 @@
 #!/bin/sh
-set -e
-set -x
+set -e -x
 
 RES=600
 fn=scan_$(date +"%Y%m%d_%H%M%S")
@@ -11,7 +10,6 @@ fn=scan_$(date +"%Y%m%d_%H%M%S")
 #&& convert /tmp/${fn}.pnm ${fn}.jpg \
 #&& rm /tmp/${fn}.pnm
 
-scanimage --mode Color --resolution $RES --progress >${fn}.pnm_
-mv ${fn}.pnm_ ${fn}.pnm
+scanimage --mode Color --resolution $RES --format jpeg --progress >${fn}.jpg
 
-identify ${fn}.pnm
+identify ${fn}.jpg
