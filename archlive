@@ -126,7 +126,8 @@ tools@orion.asterix.cz: /tools fuse.sshfs x-systemd.automount,_netdev 0 0
 ' >> $DIR/airootfs/etc/fstab
 
 cd $DIR
-./build.sh -v -L ARCHISO_ATX
+###./build.sh -v -L ARCHISO_ATX
+mkarchiso -v -L ARCHISO_ATX /usr/share/archiso/configs/releng/
 cd -
 
 #dd_rescue $DIR/out/*iso $DEV
@@ -147,12 +148,12 @@ partprobe
 
 mount ${DEV}1 $MNT
 
-cp ${MNT}/loader/entries/archiso-x86_64.conf ${MNT}/loader/entries/archiso-x86_64_copytoram.conf
-sed -i 's/\(title.*\)/\1 in RAM/g' ${MNT}/loader/entries/archiso-x86_64_copytoram.conf
-sed -i 's/\(options.*\)/\1 copytoram/g' ${MNT}/loader/entries/archiso-x86_64_copytoram.conf
+cp ${MNT}/loader/entries/archiso-x86_64-linux.conf ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
+sed -i 's/\(title.*\)/\1 in RAM/g' ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
+sed -i 's/\(options.*\)/\1 copytoram/g' ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
 
 sed -i 's/timeout.*/timeout 20/g' ${MNT}/loader/loader.conf
-sed -i 's/default archiso-x86_64/default archiso-x86_64_copytoram/g' ${MNT}/loader/loader.conf
+sed -i 's/default archiso-x86_64/default archiso-x86_64-linux_copytoram/g' ${MNT}/loader/loader.conf
 
 cp /home/radek/scripts/archlive_freedos.img ${MNT}/arch/boot/freedos.img
 echo '
