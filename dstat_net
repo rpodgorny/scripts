@@ -1,3 +1,2 @@
 #!/bin/sh
-
-dstat -c -n -N total,`ls /sys/class/net|grep -v lo|grep -v veth|sort|tr '\n' ','|sed 's/,$//'` $*
+exec dstat -c -n -N total,`ls /sys/class/net|grep -v lo|grep -v veth|sort|tr '\n' ','|sed 's/,$//'` "$@"
