@@ -112,6 +112,10 @@ def fix_radek():
 					call('echo "cd /home/radek/%s; git remote set-url origin https://github.com/rpodgorny/%s" | su - radek' % (repo, repo))
 					call('echo "cd /home/radek/%s; git remote set-url --push origin ssh://github.com/rpodgorny/%s" | su - radek' % (repo, repo))
 
+	if not is_package_installed('encfs'):
+		if ask('install encfs?'):
+			call('pacman -Sy --noconfirm --needed encfs')
+
 
 def fix_root():
 	fn = '/root/.forward'
