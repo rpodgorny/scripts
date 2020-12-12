@@ -24,11 +24,11 @@ def ask(question):
 
 # TODO: this is probably unused
 def is_virtual_machine():
-	return call('systemd-detect-virt -q') == 0
+	return call('systemd-detect-virt -q', silent=True) == 0
 
 
 def is_raspi():
-	return call('cat /proc/cpuinfo | grep Raspberry')
+	return call('cat /proc/cpuinfo | grep Raspberry', silent=True)
 
 
 def is_package_installed(package):
@@ -99,6 +99,20 @@ def fix_radek():
 		if ask('add .forward to radek@podgorny.cz for radek?'):
 			call('echo "radek@podgorny.cz" > %s' % fn)
 			call('chown radek:radek %s' % fn)
+
+	if not os.path.isdir('/home/radek/dotfiles'):
+		if ask('clone dotfiles for radek?'):
+			# TODO: execute as user with su...?
+			call('cd /home/radek; git clone https://github.com/rpodgorny/dotfiles')
+			call('set -e "s|https://github.com/|ssh://github.com/|g" /home/radek/dotfiles/.git/config')
+			call('chown -R radek:radek /home/radek/dotfiles')
+
+	if not os.path.isdir('/home/radek/scripts'):
+		if ask('clone scripts for radek?'):
+			# TODO: execute as user with su...?
+			call('cd /home/radek; git clone https://github.com/rpodgorny/scripts')
+			call('set -e "s|https://github.com/|ssh://github.com/|g" /home/radek/scripts/.git/config')
+			call('chown -R radek:radek /home/radek/scripts')
 
 
 def fix_root():
