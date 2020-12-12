@@ -39,7 +39,7 @@ def is_package_installed(package):
 		return False
 
 
-def fix_locale_gen():
+def locale_gen():
 	fn = '/etc/locale.gen'
 	if call('grep "^#en_US.UTF-8" %s' % fn, silent=True) != 0:
 		return
@@ -49,7 +49,7 @@ def fix_locale_gen():
 	call('locale-gen')
 
 
-def fix_locale():
+def locale():
 	fn = '/etc/locale.conf'
 	if os.path.isfile(fn):
 		return
@@ -101,19 +101,16 @@ def fix_radek():
 			call('echo "radek@podgorny.cz" > %s' % fn)
 			call('chown radek:radek %s' % fn)
 
-	if not os.path.isdir('/home/radek/dotfiles'):
-		if ask('clone dotfiles for radek?'):
-			# TODO: execute as user with su...?
-			call('cd /home/radek; git clone https://github.com/rpodgorny/dotfiles')
-			call('set -e "s|https://github.com/|ssh://github.com/|g" /home/radek/dotfiles/.git/config')
-			call('chown -R radek:radek /home/radek/dotfiles')
-
-	if not os.path.isdir('/home/radek/scripts'):
-		if ask('clone scripts for radek?'):
-			# TODO: execute as user with su...?
-			call('cd /home/radek; git clone https://github.com/rpodgorny/scripts')
-			call('set -e "s|https://github.com/|ssh://github.com/|g" /home/radek/scripts/.git/config')
-			call('chown -R radek:radek /home/radek/scripts')
+	for repo in ['dotfiles', 'scripts']:
+		if not os.path.isdir('/home/radek/dotfiles'):
+			if ask('clone %s for radek?' % repo):
+				call('echo "cd /home/radek; git clone https://github.com/rpodgorny/%s" | su - radek' % repo)
+		if os.path.isdir('/home/radek/%s' % repo):
+			if call('echo "cd /home/radek/%s; git remote -v|grep origin|grep fetch|grep https://" | su - radek' % repo, silent=True) != 0 \
+			or call('echo "cd /home/radek/%s; git remote -v|grep origin|grep push|grep ssh://" | su - radek' % repo, silent=True) != 0:
+				if ask('weird fetch/push urls found in /home/radek/%s. fix?' % repo):
+					call('echo "cd /home/radek/%s; git remote set-url origin https://github.com/rpodgorny/%s" | su - radek' % (repo, repo))
+					call('echo "cd /home/radek/%s; git remote set-url --push origin ssh://github.com/rpodgorny/%s" | su - radek' % (repo, repo))
 
 
 def fix_root():
@@ -211,7 +208,7 @@ def fix_timezone():
 	call('ln -sf /usr/share/zoneinfo/Europe/Prague %s' % fn)
 
 
-def fix_hostname():
+def hostname():
 	fn = '/etc/hostname'
 	if os.path.isfile(fn):
 		return
@@ -371,7 +368,10 @@ def fix_journald_storage():
 	call('sed -e "s/^Storagee=auto/Storage=volatile/g" -i %s' % fn)
 
 
-def fix_audit():
+def audit():
+	if call('grep "audit=0" /proc/cmdline', silent=True) == 0:
+		print('audit=0 found in /proc/cmdline')
+
 	fn = '/etc/systemd/journald.conf'
 	if call('grep "Audit=" %s' % fn, silent=True) != 0:
 		print('no Audit= line found in %s, doing nothing' % fn)
@@ -384,35 +384,13 @@ def fix_audit():
 	call('sed -e "s/^Audit=yes/Audit=no/g" -i %s' % fn)
 
 
-def check_audit():
-	if call('grep "audit=0" /proc/cmdline', silent=True) == 0:
-		print('audit=0 found in /proc/cmdline')
-
-
-def fix_docker_daemon_json():
-	if not os.path.isfile('/usr/bin/docker'):
-		return
-	fn = '/etc/docker/daemon.json'
-	if os.path.isfile(fn):
-		return
-	if ask('%s not found. fix?' % fn):
-		call('''echo '{
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "10m",
-    "max-file": "10"
-  }
-}' >%s''' % fn, silent=True)
-		return
-
-
-def check_docker_daemon_json():
+def docker_daemon_json():
 	if not os.path.isfile('/usr/bin/docker'):
 		return
 	fn = '/etc/docker/daemon.json'
 	if not os.path.isfile(fn):
-		print('%s not found' % fn)
-		return
+		if not ask('%s not found. fix?' % fn):
+			return
 	wanted_content = '''{
   "log-driver": "json-file",
   "log-opts": {
@@ -423,11 +401,18 @@ def check_docker_daemon_json():
 '''
 	content = open(fn, 'r').read()
 	if content != wanted_content:
-		print('%s different content %s %s' % (fn, len(content), len(wanted_content)))
-		return
+		if not ask('%s different content %s %s. fix?' % (fn, len(content), len(wanted_content))):
+			return
+	call('''echo '{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "10"
+  }
+}' >%s''' % fn, silent=True)
 
 
-def check_kernel():
+def running_kernel():
 	ver = subprocess.check_output('uname -r', shell=True).decode().strip()
 	if os.path.isdir('/lib/modules/%s' % ver):
 		return
@@ -436,17 +421,17 @@ def check_kernel():
 		call('shutdown -r')
 
 
-def check_ucode():
+def ucode():
 	for fn in glob.glob('/boot/loader/entries/*.conf'):
 		if call('grep ucode %s' % fn, silent=True) != 0:
 			print('ucode does not seem to enabled for %s' % fn)
 
 
 def main():
-	fix_hostname()
+	hostname()
 	fix_timezone()
-	fix_locale_gen()
-	fix_locale()
+	locale_gen()
+	locale()
 	fix_mkinitcpio()
 	fix_pacman_sources()
 	fix_packages()
@@ -470,13 +455,11 @@ def main():
 	fix_watchdog()
 	fix_mcelog()
 	fix_systemd_check_failed()
-	fix_docker_daemon_json()
-	check_docker_daemon_json()
-	fix_audit()
+	docker_daemon_json()
+	audit()
 	fix_journald_storage()
-	check_audit()
-	check_kernel()
-	check_ucode()
+	running_kernel()
+	ucode()
 
 
 if __name__ == '__main__':
