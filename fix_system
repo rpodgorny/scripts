@@ -67,7 +67,8 @@ def fix_mkinitcpio():
 	if not ask('fix mkinitcpio (remove autodetect hook)?'):
 		return
 	call('sed -e "/^HOOKS=/s/autodetect //g" -i %s' % fn)
-	call('mkinitcpio -p linux')
+	preset = 'linux-raspberrypi' if os.path.isfile('/etc/mkinitcpio.d/linux-raspberrypi.preset') else 'linux'
+	call('mkinitcpio -p %s' % preset)
 
 
 def fix_sudo():
@@ -359,7 +360,7 @@ def fix_audit():
 	fn = '/etc/systemd/journald.conf'
 	if call('grep "^Audit=no" %s' % fn, silent=True) == 0:
 		return
-	if not ask('fix Audit= in %s? (en_US.UTF-8)' % fn):
+	if not ask('set Audit=no in %s?' % fn):
 		return
 	call('sed -e "s/^#Audit=/Audit=/g" -i %s' % fn)
 	call('sed -e "s/^Audit=yes/Audit=no/g" -i %s' % fn)
