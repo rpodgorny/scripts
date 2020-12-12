@@ -16,8 +16,8 @@ def call(cmd, silent=False):
 
 
 def ask(question):
-	res = input(question)
-	if res == 'y':
+	res = input('%s [Y/n]' % question)
+	if res.lower() == 'y' or res == '':
 		return True
 	return False
 
@@ -25,6 +25,10 @@ def ask(question):
 # TODO: this is probably unused
 def is_virtual_machine():
 	return call('systemd-detect-virt -q') == 0
+
+
+def is_raspi():
+	return call('cat /proc/cpuinfo | grep Raspberry')
 
 
 def is_package_installed(package):
@@ -68,6 +72,8 @@ def fix_mkinitcpio():
 
 def fix_sudo():
 	fn = '/etc/sudoers'
+	if not os.path.isfile(fn):
+		return
 	if call('grep "^# %%wheel ALL=(ALL) NOPASSWD: ALL" %s' % fn, silent=True) != 0:
 		return
 	if not ask('fix /etc/sudoers? (wheel NOPASSWD)'):
@@ -89,7 +95,7 @@ def fix_radek():
 			call('usermod -s /usr/bin/fish radek')
 
 	fn = '/home/radek/.forward'
-	if not os.path.exists(fn):
+	if not os.path.isfile(fn):
 		if ask('add .forward to radek@podgorny.cz for radek?'):
 			call('echo "radek@podgorny.cz" > %s' % fn)
 			call('chown radek:radek %s' % fn)
@@ -97,7 +103,7 @@ def fix_radek():
 
 def fix_root():
 	fn = '/root/.forward'
-	if not os.path.exists(fn):
+	if not os.path.isfile(fn):
 		if ask('add .forward to radek@podgorny.cz for root?'):
 			call('echo "radek@podgorny.cz" > %s' % fn)
 
@@ -118,11 +124,15 @@ def fix_services():
 	for s in ['sshd', 'postfix', 'systemd-check-failed', 'systemd-networkd', 'systemd-resolved', 'uptimed']:
 		if os.path.islink('/etc/systemd/system/multi-user.target.wants/%s.service' % s):
 			continue
+		if not os.path.islink('/usr/lib/systemd/system/%s.service' % s):
+			continue
 		if not ask('enable and start %s?' % s):
 			continue
 		call('systemctl enable --now %s.service' % s)
 	for s in ['haveged']:
 		if os.path.islink('/etc/systemd/system/sysinit.target.wants/%s.service' % s):
+			continue
+		if not os.path.islink('/usr/lib/systemd/system/%s.service' % s):
 			continue
 		if not ask('enable and start %s?' % s):
 			continue
@@ -198,6 +208,7 @@ def fix_hostname():
 	call('echo "%s" > %s' % (hostname, fn))
 
 
+# TODO: check for wayland, too?
 def fix_x():
 	# TODO: find a better way to test for X
 	if not os.path.isfile('/usr/bin/X'):
@@ -210,6 +221,10 @@ def fix_x():
 
 
 def fix_fstrim():
+	if is_raspi():
+		return
+	if is_virtual_machine():
+		return
 	if os.path.islink('/etc/systemd/system/timers.target.wants/fstrim.timer'):
 		return
 	if not ask('enable and start fstrim timer?'):
@@ -295,13 +310,16 @@ def fix_ssh_root_authorized_keys():
 
 
 def fix_postfix_ipv6():
-	if call('grep "^inet_protocols = ipv4,ipv6$" /etc/postfix/main.cf', silent=True) == 0:
+	fn = '/etc/postfix/main.cf'
+	if not os.path.isfile(fn):
 		return
-	if call('grep "^inet_protocols = ipv4$" /etc/postfix/main.cf', silent=True) != 0:
-		print('"^inet_protocols = ipv4$" not found in /etc/postfix/main.cf, this is weird')
+	if call('grep "^inet_protocols = ipv4,ipv6$" %s' % fn, silent=True) == 0:
+		return
+	if call('grep "^inet_protocols = ipv4$" %s' % fn, silent=True) != 0:
+		print('"^inet_protocols = ipv4$" not found in %s, this is weird' % fn)
 		return
 	if ask('ipv6 not set for postfix. fix?'):
-		call('sed -i "s/^inet_protocols = ipv4$/inet_protocols = ipv4,ipv6/g" /etc/postfix/main.cf')
+		call('sed -i "s/^inet_protocols = ipv4$/inet_protocols = ipv4,ipv6/g" %s' % fn)
 
 
 def fix_postfix_generic():
