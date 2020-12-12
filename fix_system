@@ -28,7 +28,7 @@ def is_virtual_machine():
 
 
 def is_raspi():
-	return call('cat /proc/cpuinfo | grep Raspberry', silent=True)
+	return call('cat /proc/cpuinfo | grep Raspberry', silent=True) == 0
 
 
 def is_package_installed(package):
@@ -356,6 +356,21 @@ def fix_watchdog():
 		print('watchdog does not seem to enabled')
 
 
+def fix_journald_storage():
+	if not is_raspi():
+		return
+	fn = '/etc/systemd/journald.conf'
+	if call('grep "Storage=" %s' % fn, silent=True) != 0:
+		print('no Storage= line found in %s, doing nothing' % fn)
+		return
+	if call('grep "^Storage=volatile" %s' % fn, silent=True) == 0:
+		return
+	if not ask('set Storage=volatile in %s?' % fn):
+		return
+	call('sed -e "s/^#Storage=/Storage=/g" -i %s' % fn)
+	call('sed -e "s/^Storagee=auto/Storage=volatile/g" -i %s' % fn)
+
+
 def fix_audit():
 	fn = '/etc/systemd/journald.conf'
 	if call('grep "Audit=" %s' % fn, silent=True) != 0:
@@ -458,6 +473,7 @@ def main():
 	fix_docker_daemon_json()
 	check_docker_daemon_json()
 	fix_audit()
+	fix_journald_storage()
 	check_audit()
 	check_kernel()
 	check_ucode()
