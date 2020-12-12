@@ -358,6 +358,9 @@ def fix_watchdog():
 
 def fix_audit():
 	fn = '/etc/systemd/journald.conf'
+	if call('grep "Audit=" %s' % fn, silent=True) != 0:
+		print('no Audit= line found in %s, doing nothing' % fn)
+		return
 	if call('grep "^Audit=no" %s' % fn, silent=True) == 0:
 		return
 	if not ask('set Audit=no in %s?' % fn):
