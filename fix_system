@@ -233,7 +233,7 @@ def fix_x():
 		return
 	if not ask('install terminus font?'):
 		return
-	call('pacman -Sy terminus-font')
+	call('pacman -Sy --noconfirm --needed terminus-font')
 
 
 def fix_fstrim():
@@ -431,6 +431,17 @@ def ucode():
 			print('ucode does not seem to enabled for %s' % fn)
 
 
+def faddnsc():
+	if not is_package_installed('faddnsc'):
+		if ask("install faddnsc?"):
+			call('pacman -Sy --noconfirm --needed faddnsc')
+	fn = '/etc/faddnsc.conf'
+	if os.path.isfile(fn):
+		if call('cat %s | grep podgorny.cz' % fn, silent=True) != 0 \
+		and call('cat %s | grep asterix.cz' % fn, silent=True) != 0:
+			print('%s not set for neither podgorny.cz nor asterix.cz' % fn)
+
+
 def main():
 	hostname()
 	fix_timezone()
@@ -464,6 +475,7 @@ def main():
 	fix_journald_storage()
 	running_kernel()
 	ucode()
+	faddnsc()
 
 
 if __name__ == '__main__':
