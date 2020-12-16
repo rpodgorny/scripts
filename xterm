@@ -1,19 +1,28 @@
 #!/bin/sh
 
 FONT_SIZE=14
+HOSTNAME=`hostname -s`
 
-if [ `hostname` = 'kulicka' ]; then
+if [ $HOSTNAME = 'kulicka' ]; then
 	FONT_SIZE=19
-elif [ `hostname` = 'kostik' ]; then
+elif [ $HOSTNAME = 'kostik' ]; then
 	FONT_SIZE=18
-elif [ `hostname` = 'pupik' ]; then
+elif [ $HOSTNAME = 'pupik' ]; then
+	FONT_SIZE=18
+elif [ $HOSTNAME = 'pirko' ]; then
+	FONT_SIZE=18
+elif [ $HOSTNAME = 'prdell' ]; then
 	FONT_SIZE=18
 fi
 
-FONT="-*-terminus-medium-*-*-*-${FONT_SIZE}-*-*-*-*-*-*-*"
-#FONT="-*-terminus-medium-*-*-*-14-*-*-*-*-*-iso10646-1"
+#FONT="-*-terminus-medium-*-*-*-${FONT_SIZE}-*-*-*-*-*-*-*"
+FONT="-*-terminus-medium-*-*-*-${FONT_SIZE}-*-*-*-*-*-iso10646-1"
+exec /usr/bin/xterm -u8 -rv -vb +sb -fn ${FONT} -tn xterm-256color -xrm "XTerm*charClass: 0-32:1,33-126:2,127-160:3,161-255:2" $@
 
-exec /usr/bin/xterm -rv -vb +sb -fn ${FONT} -tn xterm-256color -xrm "XTerm*charClass: 0-32:1,33-126:2,127-160:3,161-255:2"
+#FONT="iosevka:size=10"
+#FONT="inconsolata:size=11"
+#FONT="hack:size=10"
+#exec /usr/bin/xterm -rv -vb +sb -fa ${FONT} -tn xterm-256color -xrm "XTerm*charClass: 0-32:1,33-126:2,127-160:3,161-255:2" $@
 
 #exec /usr/bin/st -f ${FONT}
 
