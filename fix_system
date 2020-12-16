@@ -155,6 +155,13 @@ def fix_services():
 		call('systemctl enable --now %s.service' % s)
 
 
+def fix_resolv_conf():
+	if call('readlink /etc/resolv.conf | grep /var/run/systemd/resolve/stub-resolv.conf', silent=True) == 0:
+		return
+	if ask('/etc/resolv.conf is not symlink to /var/run/systemd/resolve/stub-resolv.conf. fix?'):
+		call('ln -sf /var/run/systemd/resolve/stub-resolv.conf /etc/resolv.conf')
+
+
 def fix_mcelog():
 	if not os.path.isfile('/dev/mcelog'):
 		return
@@ -451,6 +458,7 @@ def main():
 	fix_pacman_sources()
 	fix_packages()
 	fix_services()
+	fix_resolv_conf()
 	fix_getty1()
 	fix_ssh_host_keys_hostname()
 	fix_ssh_user_keys_hostname()
