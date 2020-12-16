@@ -9,5 +9,7 @@ for i in range(10):
 	if iface not in device_list:
 		continue
 	print(iface)
+	cmd = 'iwctl station %s scan' % iface
+	subprocess.call(cmd, shell=True)
 	cmd = 'iwctl station %s get-networks rssi-dbms' % iface
 	subprocess.call(cmd, shell=True)
