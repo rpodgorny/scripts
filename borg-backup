@@ -9,8 +9,10 @@ ARCHIVE=`date +%Y%m%dT%H%M%S`
 export BORG_RSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 export BORG_RELOCATED_REPO_ACCESS_IS_OK=yes
 
-if [ "$1" = "--init" ]; then
+if [ "$1" = "--copy-keys" ]; then
 	ssh-copy-id $REMOTE
+	exit
+elif [ "$1" = "--init" ]; then
 	borg init --encryption=none --progress $REPO
 	exit
 elif [ "$1" = "--break-lock" ]; then
