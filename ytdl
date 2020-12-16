@@ -1,2 +1,2 @@
 #!/bin/sh
-exec youtube-dl "$@"
+exec youtube-dl -f "bestvideo[height<=?1080]+bestaudio/best" "$@"
