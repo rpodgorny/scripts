@@ -156,10 +156,10 @@ def fix_services():
 
 
 def fix_resolv_conf():
-	if call('readlink /etc/resolv.conf | grep /var/run/systemd/resolve/stub-resolv.conf', silent=True) == 0:
+	if call('readlink /etc/resolv.conf | grep "^/run/systemd/resolve/stub-resolv.conf"', silent=True) == 0:
 		return
-	if ask('/etc/resolv.conf is not symlink to /var/run/systemd/resolve/stub-resolv.conf. fix?'):
-		call('ln -sf /var/run/systemd/resolve/stub-resolv.conf /etc/resolv.conf')
+	if ask('/etc/resolv.conf is not symlink to /run/systemd/resolve/stub-resolv.conf. fix?'):
+		call('ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf')
 
 
 def fix_mcelog():
