@@ -1,11 +1,18 @@
-#!/usr/bin/clj
+#!/bin/sh
+#_(
+  DEPS=''
+  _OPTS='-J-Xms128m -J-Xmx128m -J-client'
+  OPTS='-J-XX:NativeMemoryTracking=summary'
+  exec clojure $OPTS -Sdeps "$DEPS" "$0" "$@"
+)
 
 (ns autovpn.core
   (:require [clojure.string :as str]
             [clojure.java.shell :as sh]))
 
 
-(def IFACE "wlp2s0")
+(def IFACE "wlan0")
+(def WG-IFACE "wg0")
 (def VPN "asterix")
 (def SLEEP 10)
 
@@ -13,9 +20,17 @@
   (let [cmd (sh/sh "systemctl" "is-active" (format "openvpn-client@%s.service" vpn))]
     (= (:exit cmd) 0)))
 
+(defn wireguard-active? [wg-iface]
+  (let [cmd (sh/sh "systemctl" "is-active" (format "wg-quick@%s.service" wg-iface))]
+    (= (:exit cmd) 0)))
+
 (defn start-stop-openvpn [vpn action]
-  (println action)
+  (println "openvpn" action)
   (sh/sh "systemctl" action (format "openvpn-client@%s.service" vpn)))
+
+(defn start-stop-wireguard [wg-iface action]
+  (println "wireguard" action)
+  (sh/sh "systemctl" action (format "wg-quick@%s.service" wg-iface)))
 
 (defn cut-iface [line]
   (str/trim (second (str/split line #":"))))
@@ -45,21 +60,27 @@
             (parse (rest lines) cur-iface res)))))
     (parse lines nil {})))
 
-(defn public-addr? [addr]
+(defn public-addr-new? [addr]
   (let [host (first (str/split addr #"/"))]
-    (not (.isLinkLocalAddress (java.net.Inet6Address/getByName host)))))
+    (not (or (.isLinkLocalAddress (java.net.Inet6Address/getByName host))
+	         (str/starts-with? host "fd")
+	         (str/starts-with? host "fe")))))
 
-(defn public-addr-old? [addr]
-  (str/starts-with? addr "20"))
+(defn public-addr? [addr]
+  (str/starts-with? addr "2"))
 
-(defn tick [iface vpn]
+(defn tick [iface vpn wg-iface]
   (let [addrs (get-ipv6-addrs)
         has-public-addr (some public-addr? (get addrs iface))
-        openvpn-active (openvpn-active? vpn)]
+        ;;vpn-active (openvpn-active? vpn)]
+        vpn-active (wireguard-active? wg-iface)]
     ;;(println ["tick" addrs has-public-addr openvpn-active])
+    ;(cond
+    ;  (and has-public-addr vpn-active) (start-stop-openvpn vpn "stop")
+    ;  (and (not has-public-addr) (not vpn-active)) (start-stop-openvpn vpn "start"))))
     (cond
-      (and has-public-addr openvpn-active) (start-stop-openvpn vpn "stop")
-      (and (not has-public-addr) (not openvpn-active)) (start-stop-openvpn vpn "start"))))
+      (and has-public-addr vpn-active) (start-stop-wireguard wg-iface "stop")
+      (and (not has-public-addr) (not vpn-active)) (start-stop-wireguard wg-iface "start"))))
 
 (defn sleep [s]
   (Thread/sleep (* s 1000)))
@@ -67,7 +88,7 @@
 (defn -main [& args]
   (println "starting autovpn")
   (while 1
-    (tick IFACE VPN)
+    (tick IFACE VPN WG-IFACE)
     (sleep SLEEP))
   (println "exit"))
 
