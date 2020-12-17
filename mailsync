@@ -1,0 +1,14 @@
+#!/bin/sh
+set -x
+#afew --move --all -v
+#notmuch search --output=files 'folder:seznam/INBOX and (not tag:inbox)' | xargs mv -v -t /home/radek/.mail/seznam/trash/new
+mbsync -a
+notmuch new
+notmuch tag +inbox -- folder:seznam/INBOX
+notmuch tag -inbox -- not folder:seznam/INBOX
+notmuch tag +trash -- folder:seznam/trash
+notmuch tag -trash -- not folder:seznam/trash
+notmuch tag +spam -- folder:seznam/spam
+notmuch tag -spam -- not folder:seznam/spam
+#afew --tag --new -v
+#afew --tag --all -v
