@@ -1,0 +1,11 @@
+#!/usr/bin/clj
+
+(defn genpass [len]
+  (clojure.string/join
+    (let [chars (concat (range (int \a) (inc (int \z)))
+                        (range (int \A) (inc (int \Z)))
+                        (range (int \0) (inc (int \9))))]
+      (for [i (range len)]
+        (char (rand-nth chars))))))
+
+(println (genpass 10))
