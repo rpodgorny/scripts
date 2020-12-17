@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e -x
+mkdir -p /home/radek/mnt/smball
+exec sudo mount -t cifs -o username=rpodgorny,password=atx,uid=radek //pupik.podgorny.cz/all /home/radek/mnt/smball
