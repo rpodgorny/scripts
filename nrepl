@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e -x
+exec clj -Sdeps '{:deps {org.clojure/tools.nrepl {:mvn/version "0.2.12"}}}' -m clojure.tools.nrepl.cmdline --port 5556 --interactive "$@"
+#clj -Sdeps '{:deps {cider/cider-nrepl {:mvn/version "0.19.0"} }}' -e '(require (quote cider-nrepl.main)) (cider-nrepl.main/init ["cider.nrepl/cider-middleware"])'
