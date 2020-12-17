@@ -1,0 +1,2 @@
+#!/bin/sh
+exec redshift -l $(curl ipinfo.io | jq -j .loc | tr ',' ':')
