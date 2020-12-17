@@ -1,0 +1,2 @@
+swaymsg input type:keyboard xkb_layout cz
+swaymsg input type:keyboard xkb_layout us
