@@ -5,6 +5,10 @@ import subprocess
 import time
 
 
+# first item is default
+TARGS = ['max', 'fix', 'min', 'mid']
+
+
 def try_read(fn):
 	try:
 		with open(fn, 'r') as f:
@@ -21,19 +25,15 @@ def try_int(v):
 
 
 def toggle(fn):
-	try:
-		with open(fn, 'r') as f:
-			targ = f.read()
-	except:
-		targ = None
-	if targ == 'max':
-		targ = 'min'
-	elif targ == 'mid':
-		targ = 'max'
+	targ = try_read(fn)
+	if not targ or targ not in TARGS:
+		targ = TARGS[0]
 	else:
-		targ = 'mid'
+		idx = TARGS.index(targ)
+		targ = TARGS[(idx + 1) % len(TARGS)]
 	with open(fn, 'w') as f:
 		f.write(targ)
+	return targ
 
 
 def main():
@@ -41,25 +41,25 @@ def main():
 	if len(sys.argv) >= 2 and sys.argv[1] == 'toggle':
 		toggle(fn)
 		return 0
-	if not try_read(fn):
-		print('no file found, creating one')
-		toggle(fn)
-	fn_hw = '/sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq'
 	freq_min = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_min_freq'))
 	freq_max = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_max_freq'))
-	freq_map = {'min': freq_min, 'mid': 1800000, 'max': freq_max}
+	freq_map = {
+		'max': (freq_min, freq_max),
+		'fix': (1800000, 1800000),
+		'min': (freq_min, freq_min),
+		'mid': (freq_min, 1800000),
+	}
 	while 1:
+		cur_min = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq'))
+		cur_max = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq'))
 		targ = try_read(fn)
-		freq = freq_map.get(targ)
-		if not freq:
-			#print('nil')
-			pass
-		else:
-			freq_cur = try_int(try_read(fn_hw))
-			if freq_cur and freq_cur != freq:
-				cmd = '/usr/bin/sudo /usr/bin/cpupower frequency-set --max %s' % freq
-				print('+ %s' % cmd)
-				subprocess.call(cmd.split())
+		if not targ:
+			targ = toggle(fn)
+		targ_min, targ_max = freq_map.get(targ)
+		if cur_min != targ_min or cur_max != targ_max:
+			cmd = '/usr/bin/sudo /usr/bin/cpupower frequency-set --min %s --max %s' % (targ_min, targ_max)
+			print('+ %s' % cmd)
+			subprocess.call(cmd.split())
 		time.sleep(2)  # TODO: hard-coded shit
 	return 0
 
