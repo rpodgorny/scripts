@@ -1,7 +1,8 @@
 #!/bin/sh
 set -e -x
 
-ZCASH_ADDR="t1M5mT6hZdcxTkHUPb64KyRBtstcFmrRKFz"
+ZCASH_ADDR="t1M5mT6hZdcxTkHUPb64KyRBtstcFmrRKFz"  # some old? software? wallet?
+ZCASH_ADDR="t1gKGovvTGSToprLsMkjgdwLa3TrGiLjt3o"  # trezor wallet
 
 # only a single pool is supported :-(
 POOL_URL="eu1-zcash.flypool.org:3333"
