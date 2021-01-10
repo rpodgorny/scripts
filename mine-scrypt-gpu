@@ -2,7 +2,7 @@
 
 set -x
 
-HOSTNAME=`hostname`
+HOSTNAME=`uname -n`
 
 for i in '0' '1'; do
 	echo ${i}

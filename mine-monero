@@ -4,5 +4,5 @@ echo "NOTICE: this runs much faster when run under root"
 #POOL=stratum+tcp://mine.moneropool.com:3333
 POOL=stratum+tcp://pool.supportxmr.com:3333
 XMR_ADDR="48HdeM79tB3bMcGUrRH8NB1Hfh1sAYiep91zcpkUbyZwRhYNgaXbxb9Cqenn748H8cEnRNzCH1yjSN49vbSU4tr48AnNLcm"
-HOSTNAME=`hostname`
+HOSTNAME=`uname -n`
 exec /usr/bin/nice /usr/bin/xmrig -o ${POOL} --donate-level=1 -u ${XMR_ADDR} -p ${HOSTNAME} "$@"

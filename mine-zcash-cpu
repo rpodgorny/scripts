@@ -7,7 +7,7 @@ ZCASH_ADDR="t1gKGovvTGSToprLsMkjgdwLa3TrGiLjt3o"  # trezor wallet
 # only a single pool is supported :-(
 POOL_URL="eu1-zcash.flypool.org:3333"
 
-HOSTNAME=`hostname`
+HOSTNAME=`uname -n`
 THREADS=`cat /proc/cpuinfo |grep 'processor'|wc -l`
 
 exec nice nheqminer_cpu -l ${POOL_URL} -u ${ZCASH_ADDR}.${HOSTNAME} -t ${THREADS} $@
