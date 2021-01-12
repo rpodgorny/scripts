@@ -13,8 +13,8 @@ def main():
 	dev = sys.argv[1]
 	name = sys.argv[2]
 
-	assert(dev)
-	assert(name)
+	assert dev
+	assert name
 
 	run('test -b %s' % dev)
 	run('test ! -b %s1' % dev)
@@ -35,7 +35,7 @@ def main():
 	run('mkdir /mnt/boot')
 	run('mount %s1 /mnt/boot' % dev)
 
-	run('pacstrap /mnt base linux openssh intel-ucode xfsprogs')
+	run('pacstrap /mnt base linux linux-firmware openssh intel-ucode xfsprogs')
 
 	run('arch-chroot /mnt bootctl install')
 
