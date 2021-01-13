@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e -x
 
+test -x /usr/bin/makepkg
+test -x /usr/bin/rsync
+test -x /usr/bin/ssh
+
 rm -f *.pkg.*
 makepkg "$@"
 rsync -avP ./*.pkg.* archlinux.podgorny.cz:rpodgorny/
