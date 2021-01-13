@@ -58,6 +58,7 @@ echo '
 cpuminer-git
 mprime
 rowhammer-test-git
+xmrig-donateless
 ' >> $DIR/packages.x86_64
 
 echo '
@@ -127,7 +128,8 @@ tools@orion.asterix.cz: /tools fuse.sshfs x-systemd.automount,_netdev 0 0
 
 cd $DIR
 ###./build.sh -v -L ARCHISO_ATX
-mkarchiso -v -L ARCHISO_ATX /usr/share/archiso/configs/releng/
+###mkarchiso -v -L ARCHISO_ATX /usr/share/archiso/configs/releng/
+mkarchiso -v -L ARCHISO_ATX .
 cd -
 
 #dd_rescue $DIR/out/*iso $DEV
@@ -139,7 +141,7 @@ mkfs.vfat -n ARCHISO_ATX ${DEV}1
 mount ${DEV}1 ${MNT}
 #bsdtar -x --exclude=isolinux/ --exclude=EFI/archiso/ --exclude=arch/boot/syslinux/ -f ${DIR}/out/*iso -C ${MNT}
 bsdtar -x --exclude=isolinux/ -f ${DIR}/out/*iso -C ${MNT}
-extlinux -i ${MNT}/arch/boot/syslinux
+extlinux -i ${MNT}/syslinux
 umount ${MNT}
 dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=${DEV}
 
@@ -152,8 +154,19 @@ cp ${MNT}/loader/entries/archiso-x86_64-linux.conf ${MNT}/loader/entries/archiso
 sed -i 's/\(title.*\)/\1 in RAM/g' ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
 sed -i 's/\(options.*\)/\1 copytoram/g' ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
 
-sed -i 's/timeout.*/timeout 20/g' ${MNT}/loader/loader.conf
-sed -i 's/default archiso-x86_64/default archiso-x86_64-linux_copytoram/g' ${MNT}/loader/loader.conf
+#sed -i 's/timeout.*/timeout 20/g' ${MNT}/loader/loader.conf
+#sed -i 's/default archiso-x86_64/default archiso-x86_64-linux_copytoram/g' ${MNT}/loader/loader.conf
+echo '
+console-mode 0
+timeout 20
+default archiso-x86_64-linux_copytoram
+editor no
+' >>${MNT}/loader/loader.conf
+
+cp /home/radek/scripts/archlive_memtest86.efi ${MNT}/EFI/memtest86.efi
+echo 'title Memtest86
+linux EFI/memtest86.efi
+' > ${MNT}/loader/entries/memtest86.conf
 
 cp /home/radek/scripts/archlive_freedos.img ${MNT}/arch/boot/freedos.img
 echo '
@@ -161,14 +174,9 @@ LABEL freedos
 MENU LABEL FreeDOS
 LINUX boot/syslinux/memdisk
 APPEND initrd=boot/freedos.img floppy
-' > ${MNT}/arch/boot/syslinux/archiso_tail.cfg_
-cat ${MNT}/arch/boot/syslinux/archiso_tail.cfg >> ${MNT}/arch/boot/syslinux/archiso_tail.cfg_
-mv ${MNT}/arch/boot/syslinux/archiso_tail.cfg_ ${MNT}/arch/boot/syslinux/archiso_tail.cfg
-
-cp /home/radek/scripts/archlive_memtest86.efi $MNT/EFI/memtest86.efi
-echo 'title Memtest86
-linux EFI/memtest86.efi
-' > $MNT/loader/entries/memtest86.conf
+' > ${MNT}/syslinux/archiso_tail.cfg_
+cat ${MNT}/syslinux/archiso_tail.cfg >> ${MNT}/syslinux/archiso_tail.cfg_
+mv ${MNT}/syslinux/archiso_tail.cfg_ ${MNT}/syslinux/archiso_tail.cfg
 
 umount $MNT
 
