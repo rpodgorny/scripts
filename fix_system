@@ -481,9 +481,9 @@ def main():
 	docker_daemon_json()
 	audit()
 	fix_journald_storage()
-	running_kernel()
 	ucode()
 	faddnsc()
+	running_kernel()  # this should be last (because of possible reboot)
 
 
 if __name__ == '__main__':
