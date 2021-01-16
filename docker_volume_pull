@@ -6,4 +6,4 @@ DST_VOL=$3
 test "${SRC_HOST}"
 test "${SRC_VOL}"
 test "${DST_VOL}"
-exec ssh ${SRC_HOST} "docker run --rm -v ${SRC_VOL}:/from alpine ash -c 'cd /from ; tar -cf - . ' " | docker run --rm -i -v ${DST_VOL}:/to alpine ash -c "cd /to ; tar -xpvf - "
+exec ssh ${SRC_HOST} "docker run --rm -v ${SRC_VOL}:/from alpine ash -c 'cd /from ; tar -cf - . ' " | docker run --rm -i -v ${DST_VOL}:/to alpine:3.13 ash -c "cd /to ; tar -xpvf - "
