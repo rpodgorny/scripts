@@ -12,20 +12,19 @@ def run(cmd):
 def main():
 	dev = sys.argv[1]
 	name = sys.argv[2]
-
 	assert dev
 	assert name
 
-	part_boot = '%s%s1' % (dev, 'p' if 'nvme' in dev else '' )
-	part_swap = '%s%s2' % (dev, 'p' if 'nvme' in dev else '' )
-	part_root = '%s%s3' % (dev, 'p' if 'nvme' in dev else '' )
-
-	run('test -b %s' % dev)
-	run('test ! -b %s' % part_boot)
-	run('test ! -b %s' % part_swap)
-	run('test ! -b %s' % part_root)
+	part_boot = '%s%s1' % (dev, 'p' if 'nvme' in dev else '')
+	part_swap = '%s%s2' % (dev, 'p' if 'nvme' in dev else '')
+	part_root = '%s%s3' % (dev, 'p' if 'nvme' in dev else '')
+	#assert run('test -b %s' % dev) == 0
+	#for part in [part_boot, part_swap, part_root]:
+	#	assert run('test ! -b %s' % part) != 0
 
 	run('dd if=/dev/zero of=%s bs=10M count=1' % dev)
+
+	run('partprobe')
 
 	swap_size_gb = 1
 
