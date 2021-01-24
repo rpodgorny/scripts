@@ -1,13 +1,20 @@
 #!/bin/sh
 set -e -x
 
-DEV=/dev/mmcblk0
+DEV=$1
 
-##wget http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-2-latest.tar.gz
-wget http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-3-latest.tar.gz
-#wget http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz
+test -b ${DEV}
 
-dd if=/dev/zero of=$DEV bs=10M count=1
+BOOT=${DEV}1
+ROOT=${DEV}2
+TMP=/var/tmp/archlivearm
+
+#FN=ArchLinuxARM-rpi-latest.tar.gz
+#FN=ArchLinuxARM-rpi-2-latest.tar.gz
+FN=ArchLinuxARM-rpi-aarch64-latest.tar.gz
+wget -c http://os.archlinuxarm.org/os/${FN} -O /var/tmp/${FN}
+
+dd if=/dev/zero of=${DEV} bs=10M count=1
 echo 'n
 p
 1
@@ -22,15 +29,15 @@ p
 
 w
 ' | fdisk ${DEV}
-mkfs.vfat ${DEV}p1
-mkfs.ext4 ${DEV}p2
-rm -rf boot root
-mkdir boot root
-mount ${DEV}p1 boot
-mount ${DEV}p2 root
-#bsdtar -xpf ArchLinuxARM-rpi-2-latest.tar.gz -C root
-bsdtar -xpf ArchLinuxARM-rpi-3-latest.tar.gz -C root
-#bsdtar -xpf ArchLinuxARM-rpi-aarch64-latest.tar.gz -C root
-sync
-mv root/boot/* boot
-umount boot root
+partprobe
+mkfs.vfat ${BOOT}
+mkfs.ext4 -F ${ROOT}
+rm -rf ${TMP}
+mkdir -p ${TMP}/boot ${TMP}/root
+mount ${BOOT} ${TMP}/boot
+mount ${ROOT} ${TMP}/root
+bsdtar -xpf /var/tmp/${FN} -C ${TMP}/root
+mv ${TMP}/root/boot/* ${TMP}/boot
+rm ${TMP}/root/etc/hostname
+cp /home/radek/scripts/mkarcharm_init.sh ${TMP}/root/root/init.sh
+umount ${TMP}/boot ${TMP}/root

@@ -5,5 +5,6 @@ echo "NOTICE: this runs much faster when run under root"
 POOL=stratum+tcp://pool.supportxmr.com:3333
 XMR_ADDR="48HdeM79tB3bMcGUrRH8NB1Hfh1sAYiep91zcpkUbyZwRhYNgaXbxb9Cqenn748H8cEnRNzCH1yjSN49vbSU4tr48AnNLcm"
 HOSTNAME=`uname -n`
-THREADS=`cat /proc/cpuinfo |grep 'processor'|wc -l`
-exec /usr/bin/xmrig -o ${POOL} --keepalive --cpu-priority=0 --donate-level=1 -u ${XMR_ADDR} -p ${HOSTNAME} -t ${THREADS} "$@"
+#THREADS=`cat /proc/cpuinfo |grep 'processor'|wc -l`
+#exec /usr/bin/xmrig -o ${POOL} --keepalive --cpu-priority=0 --donate-level=1 -u ${XMR_ADDR} -p ${HOSTNAME} -t ${THREADS} "$@"
+exec /usr/bin/xmrig -o ${POOL} --keepalive --cpu-priority=0 --donate-level=1 -u ${XMR_ADDR} -p ${HOSTNAME} "$@"
