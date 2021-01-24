@@ -44,7 +44,7 @@ def main():
 		time_total = format_time(v_full / -ratio) if ratio else None
 		time_total_tot = format_time(v_full / -ratio_tot) if ratio_tot else None
 		time_since_start = format_time(t - t_first)
-		print(time_since_start, v, ratio, time_to_zero, time_total, time_to_zero_tot, time_total_tot)
+		print("cur:", time_since_start, v, "last_%ds:" % sleep, ratio, time_to_zero, time_total, "since_unplug:", ratio_tot, time_to_zero_tot, time_total_tot)
 		time.sleep(sleep)
 	return 0
 
