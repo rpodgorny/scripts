@@ -9,9 +9,9 @@ elif [ $HOSTNAME = 'kostik' ]; then
 	FONT_SIZE=18
 elif [ $HOSTNAME = 'pupik' ]; then
 	FONT_SIZE=18
-elif [ $HOSTNAME = 'pirko' ]; then
-	FONT_SIZE=18
 elif [ $HOSTNAME = 'prdell' ]; then
+	FONT_SIZE=18
+elif [ $HOSTNAME = 'ruprt' ]; then
 	FONT_SIZE=18
 fi
 
