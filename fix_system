@@ -402,14 +402,7 @@ def docker_daemon_json():
 	if not os.path.isfile(fn):
 		if not ask('%s not found. fix?' % fn):
 			return
-	wanted_content = '''{
-  "ipv6": true,
-  "fixed-cidr-v6": "fd00:dead:beef::/48",
-  "experimental": true,
-  "ip6tables": true,
-  "log-driver": "local"
-}
-'''
+	wanted_content = '{"log-driver": "local"}'
 	content = open(fn, 'r').read()
 	if content != wanted_content:
 		if not ask('%s different content %s %s. fix?' % (fn, len(content), len(wanted_content))):
