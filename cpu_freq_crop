@@ -12,7 +12,7 @@ TARGS = ['max', 'fix', 'min', 'mid']
 def try_read(fn):
 	try:
 		with open(fn, 'r') as f:
-			return f.read()
+			return f.read().strip()
 	except:
 		return None
 
@@ -36,6 +36,11 @@ def toggle(fn):
 	return targ
 
 
+def call(cmd):
+	print('+ %s' % cmd)
+	subprocess.call(cmd.split())
+
+
 def main():
 	fn = '/tmp/cpu_freq_crop'
 	if len(sys.argv) >= 2 and sys.argv[1] == 'toggle':
@@ -51,8 +56,10 @@ def main():
 		'min': (freq_min, freq_min),
 		'mid': (freq_min, freq_base),
 	}
-	subprocess.call('/usr/bin/sudo /usr/bin/cpupower frequency-set --governor powersave'.split())
 	while 1:
+		cur_gov = try_read('/sys/devices/system/cpu/cpufreq/policy0/scaling_governor')
+		if cur_gov != "powersave":
+			call('/usr/bin/sudo /usr/bin/cpupower frequency-set --governor powersave')
 		cur_min = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq'))
 		cur_max = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq'))
 		targ = try_read(fn)
@@ -60,9 +67,7 @@ def main():
 			targ = toggle(fn)
 		targ_min, targ_max = freq_map.get(targ)
 		if cur_min != targ_min or cur_max != targ_max:
-			cmd = '/usr/bin/sudo /usr/bin/cpupower frequency-set --min %s --max %s' % (targ_min, targ_max)
-			print('+ %s' % cmd)
-			subprocess.call(cmd.split())
+			call('/usr/bin/sudo /usr/bin/cpupower frequency-set --min %s --max %s' % (targ_min, targ_max))
 		time.sleep(2)  # TODO: hard-coded shit
 	return 0
 
