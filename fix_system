@@ -67,7 +67,11 @@ def fix_mkinitcpio():
 	if not ask('fix mkinitcpio (remove autodetect hook)?'):
 		return
 	call('sed -e "/^HOOKS=/s/autodetect //g" -i %s' % fn)
-	preset = 'linux-raspberrypi' if os.path.isfile('/etc/mkinitcpio.d/linux-raspberrypi.preset') else 'linux'
+	preset = "linux"
+	if os.path.isfile('/etc/mkinitcpio.d/linux-raspberrypi.preset'):
+		preset = "linux-raspberrypi"
+	elif os.path.isfile('/etc/mkinitcpio.d/linux-aarch64.preset'):
+		preset = "linux-aarch64"
 	call('mkinitcpio -p %s' % preset)
 
 
