@@ -28,7 +28,8 @@ def is_virtual_machine():
 
 
 def is_raspi():
-	return call('cat /proc/cpuinfo | grep Raspberry', silent=True) == 0
+	# TODO: the aarch64 way is hacky but it's needed for 64bit raspis
+	return call('cat /proc/cpuinfo | grep Raspberry', silent=True) == 0 or call('uname -m | grep aarch64', silent=True) == 0
 
 
 def is_package_installed(package):
