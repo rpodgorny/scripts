@@ -62,8 +62,7 @@
 
 (defn public-addr-new? [addr]
   (let [host (first (str/split addr #"/"))]
-    (not (or (.isLinkLocalAddress (java.net.Inet6Address/getByName host))
-	         (str/starts-with? host "fd")
+    (not (or (str/starts-with? host "fd")
 	         (str/starts-with? host "fe")))))
 
 (defn public-addr? [addr]
@@ -74,7 +73,7 @@
         has-public-addr (some public-addr? (get addrs iface))
         ;;vpn-active (openvpn-active? vpn)]
         vpn-active (wireguard-active? wg-iface)]
-    ;;(println ["tick" addrs has-public-addr openvpn-active])
+    ;;;(println ["tick" addrs has-public-addr vpn-active])
     ;(cond
     ;  (and has-public-addr vpn-active) (start-stop-openvpn vpn "stop")
     ;  (and (not has-public-addr) (not vpn-active)) (start-stop-openvpn vpn "start"))))

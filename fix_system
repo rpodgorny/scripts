@@ -28,7 +28,8 @@ def is_virtual_machine():
 
 
 def is_raspi():
-	return call('cat /proc/cpuinfo | grep Raspberry', silent=True) == 0
+	# TODO: the aarch64 way is hacky but it's needed for 64bit raspis
+	return call('cat /proc/cpuinfo | grep Raspberry', silent=True) == 0 or call('uname -m | grep aarch64', silent=True) == 0
 
 
 def is_package_installed(package):
@@ -67,7 +68,11 @@ def fix_mkinitcpio():
 	if not ask('fix mkinitcpio (remove autodetect hook)?'):
 		return
 	call('sed -e "/^HOOKS=/s/autodetect //g" -i %s' % fn)
-	preset = 'linux-raspberrypi' if os.path.isfile('/etc/mkinitcpio.d/linux-raspberrypi.preset') else 'linux'
+	preset = "linux"
+	if os.path.isfile('/etc/mkinitcpio.d/linux-raspberrypi.preset'):
+		preset = "linux-raspberrypi"
+	elif os.path.isfile('/etc/mkinitcpio.d/linux-aarch64.preset'):
+		preset = "linux-aarch64"
 	call('mkinitcpio -p %s' % preset)
 
 
