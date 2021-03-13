@@ -1,0 +1,2 @@
+#!/bin/sh
+exec docker run --rm --name speedtest -p 8888:80 e7db/speedtest "$@"
