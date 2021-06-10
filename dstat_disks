@@ -1,2 +1,2 @@
 #!/bin/sh
-exec dstat -c -n -d -D total,sda,sdb,sdc,sdd,sde,sdf,sdg,sdh,sdi,sdj,mmcblk0p1,mmcblk0p2,mmcblk0p3,mmcblk0p4,mmcblk0p5 "$@"
+exec dstat -c -n -d -D total,sda,sdb,sdc,sdd,sde,sdf,sdg,sdh,sdi,sdj,mmcblk0,mmcblk1,nvme0n1,nvme1n1 "$@"
