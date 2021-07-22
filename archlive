@@ -8,7 +8,8 @@ MNT=/tmp/archlive_mnt
 test "$DEV"
 test -b $DEV
 grep 1 /sys/block/`basename $DEV`/removable
-umount /var/tmp/archlive/work/efiboot || true
+###umount /var/tmp/archlive/work/efiboot || true
+umount ${DIR}/work/efiboot || true
 
 rm -rf $DIR
 mkdir -p $DIR
@@ -29,6 +30,8 @@ beep
 borg
 cpupower
 dd_rescue
+docker
+docker-compose
 dosfstools
 dstat
 faddnsc-git
@@ -150,23 +153,26 @@ partprobe
 
 mount ${DEV}1 $MNT
 
-cp ${MNT}/loader/entries/archiso-x86_64-linux.conf ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
-sed -i 's/\(title.*\)/\1 in RAM/g' ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
-sed -i 's/\(options.*\)/\1 copytoram/g' ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
+#cp ${MNT}/loader/entries/archiso-x86_64-linux.conf ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
+#sed -i 's/\(title.*\)/\1 in RAM/g' ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
+#sed -i 's/\(options.*\)/\1 copytoram/g' ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
 
-#sed -i 's/timeout.*/timeout 20/g' ${MNT}/loader/loader.conf
-#sed -i 's/default archiso-x86_64/default archiso-x86_64-linux_copytoram/g' ${MNT}/loader/loader.conf
-echo '
-console-mode 0
-timeout 20
-default archiso-x86_64-linux_copytoram
-editor no
-' >>${MNT}/loader/loader.conf
+sed -i 's/\(options.*\)/\1 cow_spacesize=2G/g' ${MNT}/loader/entries/01-archiso-x86_64-linux.conf
+sed -i 's/\(options.*\)/\1 cow_spacesize=2G/g' ${MNT}/loader/entries/03-archiso-x86_64-ram-linux.conf
+
+sed -i 's/timeout.*/timeout 20/g' ${MNT}/loader/loader.conf
+sed -i 's/default 01-archiso-x86_64-linux/default 03-archiso-x86_64-ram-linux/g' ${MNT}/loader/loader.conf
+###echo '
+###console-mode 0
+###timeout 20
+###default archiso-x86_64-linux_copytoram
+###editor no
+###' >>${MNT}/loader/loader.conf
 
 cp /home/radek/scripts/archlive_memtest86.efi ${MNT}/EFI/memtest86.efi
 echo 'title Memtest86
 linux EFI/memtest86.efi
-' > ${MNT}/loader/entries/memtest86.conf
+' > ${MNT}/loader/entries/99-memtest86.conf
 
 cp /home/radek/scripts/archlive_freedos.img ${MNT}/arch/boot/freedos.img
 echo '
