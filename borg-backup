@@ -1,25 +1,27 @@
 #!/bin/sh
 set -e -x
 
-HOSTNAME=`hostname`
-REMOTE=backup@backup.podgorny.cz:2222
-REPO=ssh://$REMOTE/~/borg/$HOSTNAME
+HOSTNAME=`uname -n`
+PORT=2233
+HOST=backup.podgorny.cz
+USER=backup
+REPO=ssh://${USER}@${HOST}:${PORT}/~/borg/${HOSTNAME}
 ARCHIVE=`date +%Y%m%dT%H%M%S`
 
 export BORG_RSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 export BORG_RELOCATED_REPO_ACCESS_IS_OK=yes
 
 if [ "$1" = "--copy-keys" ]; then
-	ssh-copy-id $REMOTE
+	ssh-copy-id -p ${PORT} ${USER}@${HOST}
 	exit
 elif [ "$1" = "--init" ]; then
-	borg init --encryption=none --progress $REPO
+	borg init --encryption=none --progress ${REPO}
 	exit
 elif [ "$1" = "--break-lock" ]; then
-	borg break-lock $REPO
+	borg break-lock ${REPO}
 	exit
 elif [ "$1" = "--repair" ]; then
-	borg check --repair $REPO
+	borg check --repair ${REPO}
 	exit
 fi
 
@@ -40,7 +42,7 @@ borg create \
 --compression zlib,6 \
 --one-file-system \
 --verbose --stats \
-$REPO::$ARCHIVE \
+${REPO}::${ARCHIVE} \
 / /boot ${INCOMING} \
 --exclude-caches \
 --exclude '/tmp/*' \
@@ -63,5 +65,5 @@ borg prune \
 --keep-daily 30 \
 --keep-monthly 12 \
 --keep-yearly 10 \
-$REPO
+${REPO}
 

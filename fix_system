@@ -351,6 +351,9 @@ def fix_postfix_ipv6():
 
 
 def fix_postfix_generic():
+	if not is_package_installed('postfix-pcre'):
+		if ask("install postfix-pcre?"):
+			call('pacman -Sy --noconfirm --needed postfix-pcre')
 	fn = '/etc/postfix/generic.pcre'
 	if os.path.isfile(fn):
 		return
