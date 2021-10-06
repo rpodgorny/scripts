@@ -29,14 +29,25 @@ __version__ = '0.0'
 
 
 def humanize_dt(dt):
-	h, m, s = 0, 0, dt
+	d, h, m, s = 0, 0, 0, dt
 	while s >= 60:
 		m += 1
 		s -= 60
 	while m >= 60:
 		h += 1
 		m -= 60
-	return '{:d}:{:02d}:{:02d}'.format(h, m, s)
+	while h >= 24:
+		d += 1
+		h -= 24
+	ret = ""
+	if d:
+		ret += "%sd" % d
+	if h or d:
+		ret += "%sh" % h
+	if m or h or d:
+		ret += "%sm" % m
+	ret += "%ss" % s
+	return ret
 
 
 def run(cmd):
@@ -52,7 +63,9 @@ def parse_borg_list(s):
 
 
 def parse_name(s):
-	return arrow.get(s, 'YYYYMMDDTHHmmss').replace(tzinfo='local').timestamp
+	if s.endswith('.checkpoint'):
+		return None
+	return arrow.get(s, 'YYYYMMDDTHHmmss').replace(tzinfo='local').int_timestamp
 
 
 def check_repo(path, repo):
@@ -70,7 +83,7 @@ def process_repo(path, repo, t_now, check, verbose):
 	cmd = 'env BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=yes borg list %s' % repo_path
 	archives = list(parse_borg_list(subprocess.check_output(cmd, shell=True).decode()))
 	archives = [i for i in archives if 'snapshot' not in i]
-	t_max = max(map(parse_name, archives))
+	t_max = max([parse_name(i) for i in archives if parse_name(i) is not None])  # TODO: the parse_name is called twice here :-(
 	check_status = check_repo(path, repo) if check else None
 	d = {
 		'repo': repo,
@@ -108,7 +121,7 @@ def main():
 	filter_age = parse_filter_age(args['--filter-age'])
 	check = args['--check']
 	verbose = args['--verbose']
-	t_now = arrow.now().timestamp
+	t_now = arrow.now().int_timestamp
 	repos = os.listdir(path)
 	repos = [i for i in repos if not i.endswith('_')]
 	res = {repo: try_call(process_repo, path, repo, t_now, check, verbose) for repo in repos}
