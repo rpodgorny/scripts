@@ -1,5 +1,5 @@
 #!/bin/sh
 set -e -x
-IMG="ipfs/go-ipfs:v0.9.1"
+IMG="ipfs/go-ipfs:v0.10.0"
 #docker run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config Routing.Type dhtclient
 exec docker run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} daemon --enable-pubsub-experiment --enable-namesys-pubsub --routing=dhtclient "$@"
