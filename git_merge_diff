@@ -1,0 +1,16 @@
+#!/bin/sh
+#
+#       E - F (topic)
+#      /
+# A - B - C - D (master)
+#
+# "git_merge_diff topic master" shows B->F diff
+
+TOPIC=$1
+BASE=$2
+
+if [ -z "${BASE}" ]; then
+  BASE="master"
+fi
+
+exec git diff $(git merge-base ${TOPIC} ${BASE})..${TOPIC}

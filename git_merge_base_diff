@@ -1,9 +1,0 @@
-#!/bin/sh
-#
-#       E - F - topic
-#      /
-# A - B - C - D - master
-#
-# "git_merge_base_diff master topic" shows B->topic diff
-
-exec git diff $(git merge-base $1 $2)..$2
