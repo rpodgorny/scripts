@@ -1,0 +1,18 @@
+#!/usr/bin/python3
+
+import sys
+import subprocess
+
+
+def main():
+	dev = sys.argv[1]
+	cmd = '/usr/bin/dd if=/dev/zero of=%s bs=10M count=1' % dev
+	subprocess.call(cmd, shell=True)
+
+	subprocess.call('wget -c http://archlinuxarm.org/os/ArchLinuxARM-armv7-latest.tar.gz')
+#enddef
+
+
+if __name__ == '__main__':
+	sys.exit(main())
+#endif
