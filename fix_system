@@ -403,11 +403,12 @@ def audit():
 def docker_daemon_json():
 	if not os.path.isfile('/usr/bin/docker'):
 		return
+	wanted_content = '{"log-driver": "local"}'
 	fn = '/etc/docker/daemon.json'
 	if not os.path.isfile(fn):
-		if not ask('%s not found. fix?' % fn):
-			return
-	wanted_content = '{"log-driver": "local"}'
+		if ask('%s not found. fix?' % fn):
+			call('''echo '%s' >%s''' % (wanted_content, fn), silent=True)
+		return
 	content = open(fn, 'r').read()
 	if content != wanted_content:
 		if not ask('%s different content %s %s. fix?' % (fn, len(content), len(wanted_content))):
