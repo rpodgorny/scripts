@@ -1,6 +1,10 @@
 #!/bin/sh
-ipfs --api /ip4/127.0.0.1/tcp/5001 stats repo
+
+#CMD_PRE="ipfs --api /ip4/127.0.0.1/tcp/5001"
+CMD_PRE="docker exec ipfs ipfs"
+
+${CMD_PRE} stats repo
 echo '----'
-ipfs --api /ip4/127.0.0.1/tcp/5001 stats bw
+${CMD_PRE} stats bw
 echo '----'
-ipfs --api /ip4/127.0.0.1/tcp/5001 stats bitswap
+${CMD_PRE} stats bitswap
