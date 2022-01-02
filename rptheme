@@ -1,0 +1,24 @@
+#!/usr/bin/python3
+
+import sys
+import subprocess
+
+
+def main():
+    th = sys.argv[1] if len(sys.argv) > 1 else None
+    if th is None:
+        p = subprocess.run("gsettings get org.gnome.desktop.interface gtk-theme | grep Inverse", shell=True, stdout=subprocess.DEVNULL)
+        th = "light" if p.returncode == 0 else "dark"  # this also does the inversion
+    print(th)
+
+    theme_name = "HighContrast" if th == "light" else "HighContrastInverse"
+    subprocess.run("gsettings set org.gnome.desktop.interface gtk-theme %s" % theme_name, shell=True)
+
+    ln = "foot-selenized-white" if th == "light" else "foot-selenized-black"
+    subprocess.run("ln -sf %s foot-theme" % ln, shell=True, cwd="/home/radek/dotfiles")
+
+    subprocess.run("swaymsg reload", shell=True)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
