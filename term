@@ -15,7 +15,7 @@ elif [ $HOSTNAME = 'ruprt' ]; then
 	FONT_SIZE=18
 fi
 
-exec foot
+exec foot "$@"
 
 #FONT="-*-terminus-medium-*-*-*-${FONT_SIZE}-*-*-*-*-*-*-*"
 FONT="-*-terminus-medium-*-*-*-${FONT_SIZE}-*-*-*-*-*-iso10646-1"
