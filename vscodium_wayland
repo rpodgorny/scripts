@@ -1,0 +1,2 @@
+#!/bin/sh
+exec vscodium --enable-features=UseOzonePlatform --ozone-platform=wayland "$@"
