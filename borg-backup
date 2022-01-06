@@ -54,6 +54,7 @@ ${REPO}::${ARCHIVE} \
 --exclude '/home/*/tmp/*' \
 --exclude '/home/*/.cache/*' \
 --exclude '/home/*/.thumbnails/*' \
+--exclude '/home/*/dotfiles/decrypted' \
 --exclude '/root/.cache/*'
 
 systemctl stop boot.mount || true
