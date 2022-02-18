@@ -1,0 +1,58 @@
+#!/bin/sh
+set -x
+
+# https://blog.pagefault-limited.co.uk/remove-snapd-from-ubuntu-kubuntu-20-04-and-restore-chromium-apt-deb-package
+
+#snap list | grep -v "^Name" | awk {'print "sudo snap remove " $1'}
+
+sudo snap remove snap-store
+sudo snap remove chromium
+sudo snap remove gtk-common-themes
+sudo snap remove gnome-3-28-1804
+sudo snap remove core18
+sudo snap remove snapd
+snap list
+
+sudo umount /run/snap/ns
+
+sudo systemctl disable snapd.service
+sudo systemctl disable snapd.socket
+sudo systemctl disable snapd.seeded.service
+sudo systemctl disable snapd.autoimport.service
+sudo systemctl disable snapd.apparmor.service
+
+sudo rm -rf /etc/apparmor.d/usr.lib.snapd.snap-confine.real
+
+sudo systemctl start apparmor.service
+
+#df | grep snap | awk {'print "sudo umount " $6'}
+sudo umount /snap/chromium/1424
+sudo umount /snap/gtk-common-themes/1514
+sudo umount /snap/gnome-3-28-1804/145
+sudo umount /snap/core18/1944
+sudo umount /snap/snapd/10492
+sudo umount /var/snap
+
+sudo apt purge snapd
+
+rm -rf ~/snap
+sudo rm -rf /snap
+sudo rm -rf /var/snap
+sudo rm -rf /var/lib/snapd
+
+cat <<EOF | sudo tee /etc/apt/preferences.d/snapd
+Package: snapd
+Pin: origin *
+Pin-Priority: -1
+EOF
+
+#cat <<EOF | sudo tee /etc/apt/preferences.d/pin-xalt7x-chromium-deb-vaapi
+#Package: *
+#Pin: release o=LP-PPA-xalt7x-chromium-deb-vaapi
+#Pin-Priority: 1337
+#EOF
+
+#sudo add-apt-repository ppa:xalt7x/chromium-deb-vaapi
+
+#sudo apt update
+#sudo apt-get install chromium-browser
