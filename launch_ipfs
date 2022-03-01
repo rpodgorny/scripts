@@ -1,9 +1,9 @@
 #!/bin/sh
 set -e -x
-IMG="ipfs/go-ipfs:v0.11.0"
-#docker run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config Routing.Type dhtclient
-#docker run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config Swarm.ConnMgr.HighWater 900
-#docker run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config Swarm.ConnMgr.LowWater 600
-docker run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config --json Swarm.ConnMgr.HighWater 50
-docker run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config --json Swarm.ConnMgr.LowWater 10
-exec docker run --rm --name=ipfs --net=host -v ipfs_data:/data/ipfs ${IMG} daemon --enable-pubsub-experiment --enable-namesys-pubsub --routing=dhtclient "$@"
+IMG="docker.io/ipfs/go-ipfs:v0.12.0"
+#podman run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config Routing.Type dhtclient
+#podman run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config Swarm.ConnMgr.HighWater 900
+#podman run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config Swarm.ConnMgr.LowWater 600
+podman run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config --json Swarm.ConnMgr.HighWater 50
+podman run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config --json Swarm.ConnMgr.LowWater 10
+exec podman run --rm --name=ipfs --net=host -v ipfs_data:/data/ipfs ${IMG} daemon --enable-pubsub-experiment --enable-namesys-pubsub --routing=dhtclient "$@"
