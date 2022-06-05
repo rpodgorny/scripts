@@ -120,9 +120,11 @@ def fix_radek():
 			call('chown radek:radek %s' % fn)
 
 	for repo in ['dotfiles', 'scripts']:
-		if not os.path.isdir('/home/radek/dotfiles'):
+		if not os.path.isdir('/home/radek/%s' % repo):
 			if ask('clone %s for radek?' % repo):
 				call('echo "cd /home/radek; git clone https://github.com/rpodgorny/%s" | su - radek' % repo)
+				if repo == "dotfiles" and ask("install dotfiles?"):
+					call('echo "cd /home/radek/%s; ./install" | su - radek' % repo)
 		if os.path.isdir('/home/radek/%s' % repo):
 			if call('echo "cd /home/radek/%s; git remote -v|grep origin|grep fetch|grep https://" | su - radek' % repo, silent=True) != 0 \
 			or call('echo "cd /home/radek/%s; git remote -v|grep origin|grep push|grep ssh://" | su - radek' % repo, silent=True) != 0:
