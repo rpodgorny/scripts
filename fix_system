@@ -80,11 +80,26 @@ def fix_sudo():
 	fn = '/etc/sudoers'
 	if not os.path.isfile(fn):
 		return
-	if call('grep "^# %%wheel ALL=(ALL) NOPASSWD: ALL" %s' % fn, silent=True) != 0:
+	# TODO: ubuntu has different group
+	"""if call('grep "^# %%wheel ALL=(ALL) NOPASSWD: ALL" %s' % fn, silent=True) != 0:
 		return
 	if not ask('fix /etc/sudoers? (wheel NOPASSWD)'):
 		return
-	call('sed -e "s/^# %%wheel ALL=(ALL) NOPASSWD: ALL/%%wheel ALL=(ALL) NOPASSWD: ALL/g" -i %s' % fn)
+	call('sed -e "s/^# %%wheel ALL=(ALL) NOPASSWD: ALL/%%wheel ALL=(ALL) NOPASSWD: ALL/g" -i %s' % fn)"""
+	wanted_content = """root ALL=(ALL) ALL
+%wheel ALL=(ALL) NOPASSWD: ALL
+#includedir /etc/sudoers.d"""
+	if not os.path.isfile(fn):
+		if ask('%s not found. fix?' % fn):
+			call('''echo '%s' >%s''' % (wanted_content, fn), silent=True)
+		return
+	content = open(fn, 'r').read()
+	if content != wanted_content:
+		if not ask('%s different content %s %s. fix?' % (fn, len(content), len(wanted_content))):
+			return
+	#call('''echo '%s' >%s''' % (wanted_content, fn), silent=True)
+	with open(fn, "w") as f:
+		f.write(wanted_content)
 
 
 def fix_radek():
@@ -93,7 +108,7 @@ def fix_radek():
 			return
 		call('useradd -m radek')
 		call('passwd radek')
-		call('usermod -aG wheel radek')
+		call('usermod -aG wheel radek')  # TODO: ubuntu has different group
 
 	if call('grep "^radek:" /etc/passwd | grep /usr/bin/fish', silent=True) != 0:
 		if ask('set fish as default shell for radek?'):
@@ -416,7 +431,9 @@ def docker_daemon_json():
 	if content != wanted_content:
 		if not ask('%s different content %s %s. fix?' % (fn, len(content), len(wanted_content))):
 			return
-	call('''echo '%s' >%s''' % (wanted_content, fn), silent=True)
+	#call('''echo '%s' >%s''' % (wanted_content, fn), silent=True)
+	with open(fn, "w") as f:
+		f.write(wanted_content)
 
 
 def running_kernel():
