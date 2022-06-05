@@ -91,15 +91,13 @@ def fix_sudo():
 #includedir /etc/sudoers.d"""
 	if not os.path.isfile(fn):
 		if ask('%s not found. fix?' % fn):
-			call('''echo '%s' >%s''' % (wanted_content, fn), silent=True)
+			open(fn, "w").write(wanted_content)
 		return
 	content = open(fn, 'r').read()
 	if content != wanted_content:
 		if not ask('%s different content %s %s. fix?' % (fn, len(content), len(wanted_content))):
 			return
-	#call('''echo '%s' >%s''' % (wanted_content, fn), silent=True)
-	with open(fn, "w") as f:
-		f.write(wanted_content)
+	open(fn, "w").write(wanted_content)
 
 
 def fix_radek():
@@ -425,15 +423,13 @@ def docker_daemon_json():
 	fn = '/etc/docker/daemon.json'
 	if not os.path.isfile(fn):
 		if ask('%s not found. fix?' % fn):
-			call('''echo '%s' >%s''' % (wanted_content, fn), silent=True)
+			open(fn, "w").write(wanted_content)
 		return
 	content = open(fn, 'r').read()
 	if content != wanted_content:
 		if not ask('%s different content %s %s. fix?' % (fn, len(content), len(wanted_content))):
 			return
-	#call('''echo '%s' >%s''' % (wanted_content, fn), silent=True)
-	with open(fn, "w") as f:
-		f.write(wanted_content)
+	open(fn, "w").write(wanted_content)
 
 
 def running_kernel():
