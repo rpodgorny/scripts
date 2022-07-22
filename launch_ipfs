@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e -x
-IMG="docker.io/ipfs/go-ipfs:v0.13.0"
+IMG="docker.io/ipfs/go-ipfs:v0.14.0"
 #podman run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config Routing.Type dhtclient
 #podman run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config Swarm.ConnMgr.HighWater 900
 #podman run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config Swarm.ConnMgr.LowWater 600
