@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e -x
+SRC_VOL=$1
+DST_VOL=$2
+test "${SRC_VOL}"
+test "${DST_VOL}"
+docker volume create --name ${DST_VOL}
+docker run --rm -it -v ${SRC_VOL}:/from -v ${DST_VOL}:/to alpine ash -c "cd /from ; cp -av . /to"
+docker volume rm ${SRC_VOL}
