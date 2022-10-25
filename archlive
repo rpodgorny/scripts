@@ -4,6 +4,7 @@ set -e -x
 DEV=$1
 DIR=/var/tmp/archlive
 MNT=/tmp/archlive_mnt
+HOSTNAME="arch-`date +%s`"
 
 test "$DEV"
 test -b $DEV
@@ -17,6 +18,8 @@ rmdir $MNT || true
 mkdir -p $MNT
 
 cp -r /usr/share/archiso/configs/releng/* $DIR
+
+#sed -i 's/\uefi-x64.grub/uefi-x64.systemd-boot/g' ${DIR}/profiledef.sh
 
 echo '
 [rpodgorny]
@@ -40,11 +43,13 @@ htop
 git
 lm_sensors
 mercurial
+mfs_utils
 moosefs
 ncdu
 networkmanager
 openssh
 pmount
+podman
 rsync
 smartmontools
 sshfs
@@ -66,8 +71,8 @@ xmrig-donateless
 
 echo '
 systemctl enable NetworkManager
-systemctl enable systemd-timesyncd
 systemctl enable sshd
+systemctl enable systemd-timesyncd
 systemctl enable zramswap
 
 cd /root
@@ -81,7 +86,13 @@ cd -
 echo "root:aaa" | chpasswd
 
 chsh -s /usr/bin/fish
+
+chmod go-rwx /root/.ssh/id_rsa*
 ' >> $DIR/airootfs/root/customize_airootfs.sh
+
+echo ${HOSTNAME} >$DIR/airootfs/etc/hostname
+
+echo "192.168.11.11 mfsmaster" >$DIR/airootfs/etc/hosts
 
 mkdir $DIR/airootfs/root/.ssh
 
@@ -157,11 +168,12 @@ mount ${DEV}1 $MNT
 #sed -i 's/\(title.*\)/\1 in RAM/g' ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
 #sed -i 's/\(options.*\)/\1 copytoram/g' ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
 
-sed -i 's/\(options.*\)/\1 cow_spacesize=2G/g' ${MNT}/loader/entries/01-archiso-x86_64-linux.conf
-sed -i 's/\(options.*\)/\1 cow_spacesize=2G/g' ${MNT}/loader/entries/03-archiso-x86_64-ram-linux.conf
+##sed -i 's/\(options.*\)/\1 cow_spacesize=2G/g' ${MNT}/loader/entries/01-archiso-x86_64-linux.conf
+##sed -i 's/\(options.*\)/\1 cow_spacesize=2G/g' ${MNT}/loader/entries/03-archiso-x86_64-ram-linux.conf
 
-sed -i 's/timeout.*/timeout 20/g' ${MNT}/loader/loader.conf
-sed -i 's/default 01-archiso-x86_64-linux/default 03-archiso-x86_64-ram-linux/g' ${MNT}/loader/loader.conf
+##sed -i 's/timeout.*/timeout 20/g' ${MNT}/loader/loader.conf
+##sed -i 's/default 01-archiso-x86_64-linux/default 03-archiso-x86_64-ram-linux/g' ${MNT}/loader/loader.conf
+
 ###echo '
 ###console-mode 0
 ###timeout 20
@@ -170,9 +182,24 @@ sed -i 's/default 01-archiso-x86_64-linux/default 03-archiso-x86_64-ram-linux/g'
 ###' >>${MNT}/loader/loader.conf
 
 cp /home/radek/scripts/archlive_memtest86.efi ${MNT}/EFI/memtest86.efi
-echo 'title Memtest86
-linux EFI/memtest86.efi
-' > ${MNT}/loader/entries/99-memtest86.conf
+#echo 'title Memtest86
+#linux EFI/memtest86.efi
+#' > ${MNT}/loader/entries/98-memtest86.conf
+echo 'menuentry Memtest86 {
+insmod chain
+search --no-floppy --set=root --label ARCHISO_ATX
+chainloader /EFI/memtest86.efi
+}' >> ${MNT}/EFI/BOOT/grub.cfg
+
+cp /home/radek/scripts/archlive_memtest86_plus.efi ${MNT}/EFI/memtest86_plus.efi
+#echo 'title Memtest86+
+#linux EFI/memtest86_plus.efi
+#' > ${MNT}/loader/entries/99-memtest86-plus.conf
+echo 'menuentry Memtest86+ {
+insmod chain
+search --no-floppy --set=root --label ARCHISO_ATX
+chainloader /EFI/memtest86_plus.efi
+}' >> ${MNT}/EFI/BOOT/grub.cfg
 
 cp /home/radek/scripts/archlive_freedos.img ${MNT}/arch/boot/freedos.img
 echo '
