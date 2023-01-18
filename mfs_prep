@@ -12,20 +12,24 @@ def run(cmd):
 
 def main():
 	dev = sys.argv[1]
+	fstype = sys.argv[2] if len(sys.argv) >= 2 else "xfs"
 	#name = sys.argv[2]
 	name = 'mfs_%08x' % random.randint(0, 2**32)
 
-	assert(dev)
-	assert(name)
+	assert dev
+	assert name
+	assert fstype in {"btrfs", "xfs"}
 
 	run('test -b %s' % dev)
 	run('test ! -b %s1' % dev)
 
 	run('dd if=/dev/zero of=%s bs=10M count=1' % dev)
-	#run('parted --script -a optimal %s -- mklabel gpt mkpart primary btrfs 0%% 100%%' % dev)
-	#run('mkfs.btrfs -f -L %s %s1' % (name.upper(), dev))
-	run('parted --script -a optimal %s -- mklabel gpt mkpart primary xfs 0%% 100%%' % dev)
-	run('mkfs.xfs -f -L %s %s1' % (name.upper(), dev))
+	if fstype == "btrfs":
+		run('parted --script -a optimal %s -- mklabel gpt mkpart primary btrfs 0%% 100%%' % dev)
+		run('mkfs.btrfs -f -L %s %s1' % (name.upper(), dev))
+	elif fstype == "xfs":
+		run('parted --script -a optimal %s -- mklabel gpt mkpart primary xfs 0%% 100%%' % dev)
+		run('mkfs.xfs -f -L %s %s1' % (name.upper(), dev))
 
 	return 0
 

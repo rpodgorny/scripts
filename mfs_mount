@@ -3,7 +3,6 @@
 import os
 import sys
 import subprocess
-import random
 
 
 def run(cmd):
@@ -24,8 +23,12 @@ def main():
 		mountpoint = '/mnt/%s' % drv.lower()
 		if not os.path.isdir(mountpoint):
 			os.mkdir(mountpoint)
-		#run('mount -o relatime,compress=zstd /dev/disk/by-label/%s %s' % (drv, mountpoint))
-		run('mount /dev/disk/by-label/%s %s' % (drv, mountpoint))
+		blkid = run("blkid /dev/disk/by-label/%s" % drv)
+		if 'TYPE="btrfs"' in blkid:
+			opts = "-o relatime,compress=zst,autodefrag"
+		else:
+			opts = ""
+		run("mount %s /dev/disk/by-label/%s %s" % (opts, drv, mountpoint))
 	return 0
 
 
