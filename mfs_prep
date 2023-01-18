@@ -12,7 +12,7 @@ def run(cmd):
 
 def main():
 	dev = sys.argv[1]
-	fstype = sys.argv[2] if len(sys.argv) >= 2 else "xfs"
+	fstype = sys.argv[2] if len(sys.argv) >= 3 else "xfs"
 	#name = sys.argv[2]
 	name = 'mfs_%08x' % random.randint(0, 2**32)
 
