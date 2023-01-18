@@ -25,7 +25,7 @@ def main():
 			os.mkdir(mountpoint)
 		blkid = run("blkid /dev/disk/by-label/%s" % drv)
 		if 'TYPE="btrfs"' in blkid:
-			opts = "-o relatime,compress=zst,autodefrag"
+			opts = "-o relatime,compress=zstd,autodefrag"
 		else:
 			opts = ""
 		run("mount %s /dev/disk/by-label/%s %s" % (opts, drv, mountpoint))
