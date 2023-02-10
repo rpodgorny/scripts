@@ -7,5 +7,8 @@ XMR_ADDR="48HdeM79tB3bMcGUrRH8NB1Hfh1sAYiep91zcpkUbyZwRhYNgaXbxb9Cqenn748H8cEnRN
 HOSTNAME=`uname -n`
 #THREADS=`cat /proc/cpuinfo |grep 'processor'|wc -l`
 #exec /usr/bin/xmrig -o ${POOL} --keepalive --cpu-priority=0 --donate-level=1 -u ${XMR_ADDR} -p ${HOSTNAME} -t ${THREADS} "$@"
+
+#exec /usr/bin/xmrig -o ${POOL} --keepalive --cpu-priority 0 --donate-level=1 -u ${XMR_ADDR} -p ${HOSTNAME} "$@"
+
 # cpu-priority has to be specified at the end - wtf? - https://github.com/xmrig/xmrig/issues/2351#issuecomment-1092486413
 exec /usr/bin/xmrig -c /dev/null -o ${POOL} --keepalive --donate-level=1 -u ${XMR_ADDR} -p ${HOSTNAME} "$@" --cpu-priority=0
