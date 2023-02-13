@@ -1,1 +1,0 @@
-sudo journalctl -b | grep chunk | grep error | grep read_block|cut -d' ' -f9 | xargs sudo mfschunktool -r
