@@ -1,7 +1,8 @@
 #!/bin/sh
 
 #CMD_PRE="ipfs --api /ip4/127.0.0.1/tcp/5001"
-CMD_PRE="docker exec ipfs ipfs"
+#CMD_PRE="docker exec ipfs ipfs"
+CMD_PRE="podman exec ipfs ipfs"
 
 ${CMD_PRE} stats repo
 echo '----'
