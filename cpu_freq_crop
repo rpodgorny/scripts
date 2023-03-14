@@ -7,6 +7,7 @@ import time
 
 # first item is default
 TARGS = ['max', 'fix', 'min', 'mid']
+PREFIX_POLICY = "/sys/devices/system/cpu/cpufreq/policy0"
 
 
 def try_read(fn):
@@ -46,9 +47,9 @@ def main():
 	if len(sys.argv) >= 2 and sys.argv[1] == 'toggle':
 		toggle(fn)
 		return 0
-	freq_min = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_min_freq'))
-	freq_max = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_max_freq'))
-	freq_base = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/base_frequency'))
+	freq_min = try_int(try_read(f"{PREFIX_POLICY}/cpuinfo_min_freq"))
+	freq_max = try_int(try_read(f"{PREFIX_POLICY}/cpuinfo_max_freq"))
+	freq_base = try_int(try_read(f"{PREFIX_POLICY}/base_frequency"))
 	print('freqs: %s %s %s' % (freq_min, freq_base, freq_max))
 	freq_map = {
 		'max': (freq_min, freq_max),
@@ -57,11 +58,11 @@ def main():
 		'mid': (freq_min, freq_base),
 	}
 	while 1:
-		cur_gov = try_read('/sys/devices/system/cpu/cpufreq/policy0/scaling_governor')
+		cur_gov = try_read(f"{PREFIX_POLICY}/scaling_governor")
 		if cur_gov != "powersave":
 			call('/usr/bin/sudo /usr/bin/cpupower frequency-set --governor powersave')
-		cur_min = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq'))
-		cur_max = try_int(try_read('/sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq'))
+		cur_min = try_int(try_read(f"{PREFIX_POLICY}/scaling_min_freq"))
+		cur_max = try_int(try_read(f"{PREFIX_POLICY}/scaling_max_freq"))
 		targ = try_read(fn)
 		if not targ:
 			targ = toggle(fn)
