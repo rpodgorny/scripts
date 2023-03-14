@@ -1,6 +1,7 @@
 #!/bin/sh
 set -e -x
-IMG="docker.io/ipfs/kubo:v0.15.0"
+IMG="docker.io/ipfs/kubo:v0.18.1"
+podman run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} repo migrate
 #podman run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config Routing.Type dhtclient
 #podman run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config Swarm.ConnMgr.HighWater 900
 #podman run --rm --net=host -v ipfs_data:/data/ipfs ${IMG} config Swarm.ConnMgr.LowWater 600
