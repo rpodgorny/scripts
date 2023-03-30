@@ -5,6 +5,7 @@ DEV=$1
 DIR=/var/tmp/archlive
 MNT=/tmp/archlive_mnt
 HOSTNAME="arch-`date +%s`"
+DATA_PREFIX=/home/radek/scripts
 
 test "$DEV"
 test -b $DEV
@@ -29,6 +30,7 @@ Server = http://archlinux.podgorny.cz/$repo/os/$arch
 
 echo '
 acpi
+archiso
 beep
 borg
 cpupower
@@ -39,6 +41,7 @@ dosfstools
 dstat
 faddnsc-git
 fish
+fzf
 htop
 git
 lm_sensors
@@ -47,6 +50,7 @@ mfs_utils
 moosefs
 ncdu
 networkmanager
+ntfs-3g
 openssh
 pmount
 podman
@@ -155,7 +159,7 @@ mkfs.vfat -n ARCHISO_ATX ${DEV}1
 mount ${DEV}1 ${MNT}
 #bsdtar -x --exclude=isolinux/ --exclude=EFI/archiso/ --exclude=arch/boot/syslinux/ -f ${DIR}/out/*iso -C ${MNT}
 bsdtar -x --exclude=isolinux/ -f ${DIR}/out/*iso -C ${MNT}
-extlinux -i ${MNT}/syslinux
+extlinux -i ${MNT}/boot/syslinux
 umount ${MNT}
 dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=${DEV}
 
@@ -181,7 +185,7 @@ mount ${DEV}1 $MNT
 ###editor no
 ###' >>${MNT}/loader/loader.conf
 
-cp /home/radek/scripts/archlive_memtest86.efi ${MNT}/EFI/memtest86.efi
+cp ${DATA_PREFIX}/archlive_memtest86.efi ${MNT}/EFI/memtest86.efi
 #echo 'title Memtest86
 #linux EFI/memtest86.efi
 #' > ${MNT}/loader/entries/98-memtest86.conf
@@ -191,7 +195,7 @@ search --no-floppy --set=root --label ARCHISO_ATX
 chainloader /EFI/memtest86.efi
 }' >> ${MNT}/EFI/BOOT/grub.cfg
 
-cp /home/radek/scripts/archlive_memtest86_plus.efi ${MNT}/EFI/memtest86_plus.efi
+cp ${DATA_PREFIX}/archlive_memtest86_plus.efi ${MNT}/EFI/memtest86_plus.efi
 #echo 'title Memtest86+
 #linux EFI/memtest86_plus.efi
 #' > ${MNT}/loader/entries/99-memtest86-plus.conf
@@ -201,15 +205,15 @@ search --no-floppy --set=root --label ARCHISO_ATX
 chainloader /EFI/memtest86_plus.efi
 }' >> ${MNT}/EFI/BOOT/grub.cfg
 
-cp /home/radek/scripts/archlive_freedos.img ${MNT}/arch/boot/freedos.img
+cp ${DATA_PREFIX}/archlive_freedos.img ${MNT}/arch/boot/freedos.img
 echo '
 LABEL freedos
 MENU LABEL FreeDOS
 LINUX boot/syslinux/memdisk
 APPEND initrd=boot/freedos.img floppy
-' > ${MNT}/syslinux/archiso_tail.cfg_
-cat ${MNT}/syslinux/archiso_tail.cfg >> ${MNT}/syslinux/archiso_tail.cfg_
-mv ${MNT}/syslinux/archiso_tail.cfg_ ${MNT}/syslinux/archiso_tail.cfg
+' > ${MNT}/boot/syslinux/archiso_tail.cfg_
+cat ${MNT}/boot/syslinux/archiso_tail.cfg >> ${MNT}/boot/syslinux/archiso_tail.cfg_
+mv ${MNT}/boot/syslinux/archiso_tail.cfg_ ${MNT}/boot/syslinux/archiso_tail.cfg
 
 umount $MNT
 
