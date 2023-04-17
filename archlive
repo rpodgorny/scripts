@@ -1,10 +1,32 @@
 #!/bin/sh
 set -e -x
 
+which figlet >/dev/null
+which cowsay >/dev/null
+which parted >/dev/null
+which partprobe >/dev/null
+which mkarchiso >/dev/null
+which extlinux >/dev/null
+which dd >/dev/null
+
+# unfinished
+#echo "in ram? (y/n)"
+#read INRAM
+INRAM=n
+
 DEV=$1
-DIR=/var/tmp/archlive
+
+if [ "${INRAM}" = "y" ]; then
+  DIR=/tmp/archlive
+else
+  DIR=/var/tmp/archlive
+fi
+
 MNT=/tmp/archlive_mnt
-HOSTNAME="arch-`date +%s`"
+# FUCK! BE CAREFUL HERE if you want to change this - fat label can't be over 11 characters (see mkfs below)
+ID=`date +"%Y%m%d%H%M%S"`
+#ID=`date +%s`
+HOSTNAME="arch-${ID}"
 DATA_PREFIX=/home/radek/scripts
 
 test "$DEV"
@@ -28,6 +50,14 @@ SigLevel = Never
 Server = http://archlinux.podgorny.cz/$repo/os/$arch
 ' >> $DIR/pacman.conf
 
+if [ "${INRAM}" = "y" ]; then
+  echo '
+CacheDir = /tmp/pacman_cache
+  ' >> $DIR/pacman.conf
+fi
+
+# "pv" to show progress when loading image to ram - does not work!
+# fuse-overlayfs so that podman works
 echo '
 acpi
 archiso
@@ -41,9 +71,11 @@ dosfstools
 dstat
 faddnsc-git
 fish
+fuse-overlayfs
 fzf
-htop
 git
+gum
+htop
 lm_sensors
 mercurial
 mfs_utils
@@ -54,6 +86,7 @@ ntfs-3g
 openssh
 pmount
 podman
+pv
 rsync
 smartmontools
 sshfs
@@ -92,6 +125,9 @@ echo "root:aaa" | chpasswd
 chsh -s /usr/bin/fish
 
 chmod go-rwx /root/.ssh/id_rsa*
+
+sed -e "s/^#Audit=/Audit=/g" -i /etc/systemd/journald.conf
+sed -e "s/^Audit=yes/Audit=no/g" -i /etc/systemd/journald.conf
 ' >> $DIR/airootfs/root/customize_airootfs.sh
 
 echo ${HOSTNAME} >$DIR/airootfs/etc/hostname
@@ -144,6 +180,11 @@ echo '
 tools@orion.asterix.cz: /tools fuse.sshfs x-systemd.automount,_netdev 0 0
 ' >> $DIR/airootfs/etc/fstab
 
+figlet "Asterix" > ${DIR}/airootfs/etc/motd
+echo "Universal Rescue" >> ${DIR}/airootfs/etc/motd
+DATE=`date +"%Y-%m-%d %H:%M:%S"`
+echo "I was born ${DATE}. Mooooo." | cowsay >> ${DIR}/airootfs/etc/motd
+
 cd $DIR
 ###./build.sh -v -L ARCHISO_ATX
 ###mkarchiso -v -L ARCHISO_ATX /usr/share/archiso/configs/releng/
@@ -151,7 +192,6 @@ mkarchiso -v -L ARCHISO_ATX .
 cd -
 
 #dd_rescue $DIR/out/*iso $DEV
-
 
 dd if=/dev/zero of=${DEV} bs=10M count=1
 parted --script -a optimal ${DEV} -- mklabel msdos mkpart primary fat32 0% 100% set 1 boot on
@@ -185,25 +225,34 @@ mount ${DEV}1 $MNT
 ###editor no
 ###' >>${MNT}/loader/loader.conf
 
+echo "menuentry \"Arch Linux install medium (x86_64, UEFI) in RAM\" --class arch --class gnu-linux --class gnu --class os --id 'archlinux-ram' {
+    set gfxpayload=keep
+    linux /arch/boot/x86_64/vmlinuz-linux archisobasedir=arch archisodevice=UUID=\${ARCHISO_UUID} copytoram=y cow_spacesize=2G
+    initrd /arch/boot/intel-ucode.img /arch/boot/amd-ucode.img /arch/boot/x86_64/initramfs-linux.img
+}
+" >> ${MNT}/boot/grub/grub.cfg
+
 cp ${DATA_PREFIX}/archlive_memtest86.efi ${MNT}/EFI/memtest86.efi
 #echo 'title Memtest86
 #linux EFI/memtest86.efi
 #' > ${MNT}/loader/entries/98-memtest86.conf
-echo 'menuentry Memtest86 {
+echo "menuentry \"Custom Memtest86\" {
 insmod chain
 search --no-floppy --set=root --label ARCHISO_ATX
 chainloader /EFI/memtest86.efi
-}' >> ${MNT}/EFI/BOOT/grub.cfg
+}" >> ${MNT}/boot/grub/grub.cfg
 
 cp ${DATA_PREFIX}/archlive_memtest86_plus.efi ${MNT}/EFI/memtest86_plus.efi
 #echo 'title Memtest86+
 #linux EFI/memtest86_plus.efi
 #' > ${MNT}/loader/entries/99-memtest86-plus.conf
-echo 'menuentry Memtest86+ {
+echo "menuentry \"Custom Memtest86+\" {
 insmod chain
 search --no-floppy --set=root --label ARCHISO_ATX
 chainloader /EFI/memtest86_plus.efi
-}' >> ${MNT}/EFI/BOOT/grub.cfg
+}" >> ${MNT}/boot/grub/grub.cfg
+
+sed -i 's/default=archlinux/default=archlinux-ram/g' ${MNT}/boot/grub/grub.cfg
 
 cp ${DATA_PREFIX}/archlive_freedos.img ${MNT}/arch/boot/freedos.img
 echo '
