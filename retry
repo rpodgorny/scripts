@@ -23,8 +23,8 @@ def main():
 			break
 		print('returned %s after %0.1fs.' % (retcode, duration))
 		if duration < 5:  # TODO: hard-coded shit
-			print('doubling sleep interval')
 			sleep_interval = min(sleep_interval * 2, sleep_interval_max)
+			print('new sleep interval is %ss' % sleep_interval)
 		else:
 			print('resetting sleep interval')
 			sleep_interval = 1  # TODO: hard-coded shit
