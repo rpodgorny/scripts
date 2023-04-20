@@ -156,7 +156,7 @@ echo "Universal Rescue" >> ${DIR}/airootfs/etc/motd
 DATE=`date +"%Y-%m-%d %H:%M:%S"`
 echo "I was born ${DATE}. Mooooo." | cowsay >> ${DIR}/airootfs/etc/motd
 echo "
-interesting commands: lsdisks mine-scrypt-cpu showtemp ...
+interesting commands: lsdisks mine-scrypt-cpu showtemp getarchlive ...
 " >> ${DIR}/airootfs/etc/motd
 
 cd ${DIR}
@@ -171,3 +171,5 @@ cp -av ${DATA_PREFIX}/archlive_data/* ${DIR}/upload/
 rsync -avP ${DIR}/upload/* plukovnik.podgorny.cz:public_html/archlive/
 
 sudo rm -rf ${DIR}
+
+echo "finished building ${HOSTNAME}"
