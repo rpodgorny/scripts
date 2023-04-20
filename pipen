@@ -1,2 +1,9 @@
 #!/bin/sh
-exec pipenv --pypi-mirror http://127.0.0.1:3141/root/pypi/+simple/ "$@"
+set -e -x
+
+PYPI_CACHE="127.0.0.1"
+
+export PIP_INDEX_URL="http://${PYPI_CACHE}:3141/root/pypi/+simple"
+export PIP_TRUSTED_HOST=${PYPI_CACHE}
+
+exec pipenv --pypi-mirror ${PIP_INDEX_URL} "$@"
