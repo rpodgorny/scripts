@@ -1,0 +1,96 @@
+#!/bin/sh
+set -e -x
+
+which curl dd extlinux mkfs.vfat parted partprobe >/dev/null
+
+DEV=$1
+
+MNT=/tmp/archlive_mnt
+# FUCK! BE CAREFUL HERE if you want to change this - fat label can't be over 11 characters (see mkfs below)
+ID=`date +"%Y%m%d%H%M%S"`
+#ID=`date +%s`
+HOSTNAME="arch-${ID}"
+DATA_PREFIX="https://plukovnik.podgorny.cz/~radek/archlive/"
+
+test "${DEV}"
+test -b ${DEV}
+grep 1 /sys/block/`basename ${DEV}`/removable
+###umount /var/tmp/archlive/work/efiboot || true
+umount ${DIR}/work/efiboot || true
+
+rmdir ${MNT} || true
+mkdir -p ${MNT}
+
+dd if=/dev/zero of=${DEV} bs=10M count=1
+parted --script -a optimal ${DEV} -- mklabel msdos mkpart primary fat32 0% 100% set 1 boot on
+mkfs.vfat -n ARCHISO_ATX ${DEV}1
+mount ${DEV}1 ${MNT}
+curl ${DATA_PREFIX}/image.iso | bsdtar -x --exclude=isolinux/ -f - -C ${MNT}
+extlinux -i ${MNT}/boot/syslinux
+umount ${MNT}
+dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=${DEV}
+
+sync
+partprobe
+
+mount ${DEV}1 ${MNT}
+
+#cp ${MNT}/loader/entries/archiso-x86_64-linux.conf ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
+#sed -i 's/\(title.*\)/\1 in RAM/g' ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
+#sed -i 's/\(options.*\)/\1 copytoram/g' ${MNT}/loader/entries/archiso-x86_64-linux_copytoram.conf
+
+##sed -i 's/\(options.*\)/\1 cow_spacesize=2G/g' ${MNT}/loader/entries/01-archiso-x86_64-linux.conf
+##sed -i 's/\(options.*\)/\1 cow_spacesize=2G/g' ${MNT}/loader/entries/03-archiso-x86_64-ram-linux.conf
+
+##sed -i 's/timeout.*/timeout 20/g' ${MNT}/loader/loader.conf
+##sed -i 's/default 01-archiso-x86_64-linux/default 03-archiso-x86_64-ram-linux/g' ${MNT}/loader/loader.conf
+
+###echo '
+###console-mode 0
+###timeout 20
+###default archiso-x86_64-linux_copytoram
+###editor no
+###' >>${MNT}/loader/loader.conf
+
+echo "menuentry \"Arch Linux install medium (x86_64, UEFI) in RAM\" --class arch --class gnu-linux --class gnu --class os --id 'archlinux-ram' {
+    set gfxpayload=keep
+    linux /arch/boot/x86_64/vmlinuz-linux archisobasedir=arch archisodevice=UUID=\${ARCHISO_UUID} copytoram=y cow_spacesize=2G
+    initrd /arch/boot/intel-ucode.img /arch/boot/amd-ucode.img /arch/boot/x86_64/initramfs-linux.img
+}
+" >> ${MNT}/boot/grub/grub.cfg
+
+curl ${DATA_PREFIX}/archlive_memtest86.efi >${MNT}/EFI/memtest86.efi
+#echo 'title Memtest86
+#linux EFI/memtest86.efi
+#' > ${MNT}/loader/entries/98-memtest86.conf
+echo "menuentry \"Custom Memtest86\" {
+insmod chain
+search --no-floppy --set=root --label ARCHISO_ATX
+chainloader /EFI/memtest86.efi
+}" >> ${MNT}/boot/grub/grub.cfg
+
+curl ${DATA_PREFIX}/memtest86_plus.efi >${MNT}/EFI/memtest86_plus.efi
+#echo 'title Memtest86+
+#linux EFI/memtest86_plus.efi
+#' > ${MNT}/loader/entries/99-memtest86-plus.conf
+echo "menuentry \"Custom Memtest86+\" {
+insmod chain
+search --no-floppy --set=root --label ARCHISO_ATX
+chainloader /EFI/memtest86_plus.efi
+}" >> ${MNT}/boot/grub/grub.cfg
+
+sed -i 's/default=archlinux/default=archlinux-ram/g' ${MNT}/boot/grub/grub.cfg
+
+curl ${DATA_PREFIX}/freedos.img >${MNT}/arch/boot/freedos.img
+echo '
+LABEL freedos
+MENU LABEL FreeDOS
+LINUX boot/syslinux/memdisk
+APPEND initrd=boot/freedos.img floppy
+' > ${MNT}/boot/syslinux/archiso_tail.cfg_
+cat ${MNT}/boot/syslinux/archiso_tail.cfg >> ${MNT}/boot/syslinux/archiso_tail.cfg_
+mv ${MNT}/boot/syslinux/archiso_tail.cfg_ ${MNT}/boot/syslinux/archiso_tail.cfg
+
+umount ${MNT}
+
+rmdir ${MNT}
