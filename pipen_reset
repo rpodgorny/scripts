@@ -1,5 +1,8 @@
 #!/bin/sh
 set -e -x
-pipen --rm || true
-rm -rf Pipfile.lock
-pipen install --dev
+
+pipenv --rm || true
+rm -rf Pipfile Pipfile.lock
+
+test -f requirements.txt && pipen run pip install -r requirements.txt
+test -f requirements-dev.txt && pipen run pip install -r requirements-dev.txt
