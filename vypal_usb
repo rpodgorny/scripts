@@ -66,7 +66,7 @@ echo "menuentry \"Arch Linux install medium (x86_64, UEFI) in RAM\" --class arch
 }
 " >> ${MNT}/boot/grub/grub.cfg
 
-curl ${DATA_PREFIX}/archlive_memtest86.efi >${MNT}/EFI/memtest86.efi
+curl ${DATA_PREFIX}/memtest86.efi >${MNT}/EFI/memtest86.efi
 #echo 'title Memtest86
 #linux EFI/memtest86.efi
 #' > ${MNT}/loader/entries/98-memtest86.conf
