@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+echo
+echo
+lsdisks
+SRC=`ls /dev/sd? /dev/nvme? 2>/dev/null | gum filter --prompt="vyber zdrojovy disk: " --placeholder="<filtr>" --height=10`
+test -b ${SRC}
+DST=`ls /dev/sd? /dev/nvme? 2>/dev/null | gum filter --prompt="vyber cilovy disk: " --placeholder="<filtr>" --height=10`
+test -b ${DST}
+#dd_rescue ${SRC} ${DST}
+MBYTES=`parted -m ${SRC} unit MB print | tail -n 1 | cut -f 3 -d ":" | sed "s/MB//"`
+dd_rescue -m ${MBYTES}M ${SRC} ${DST}
+parted ${DST} resizepart 4 100%
+ntfsresize -f ${DST}4
+ntfsfix -b -d ${DST}4
+beep
