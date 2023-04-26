@@ -43,6 +43,7 @@ git
 gum
 htop
 lm_sensors
+lshw
 mercurial
 mfs_utils
 moosefs
@@ -156,7 +157,7 @@ echo "Universal Rescue" >> ${DIR}/airootfs/etc/motd
 DATE=`date +"%Y-%m-%d %H:%M:%S"`
 echo "I was born ${DATE}. Mooooo." | cowsay >> ${DIR}/airootfs/etc/motd
 echo "
-interesting commands: lsdisks mine-scrypt-cpu showtemp getarchlive ...
+interesting commands: lsdisks mine-scrypt-cpu showtemp vypal_usb kopiruj_disk_na_disk ...
 " >> ${DIR}/airootfs/etc/motd
 
 cd ${DIR}
