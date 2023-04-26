@@ -7,6 +7,7 @@ SRC=`ls /dev/sd? /dev/nvme? 2>/dev/null | gum filter --prompt="vyber zdrojovy di
 test -b ${SRC}
 DST=`ls /dev/sd? /dev/nvme? 2>/dev/null | gum filter --prompt="vyber cilovy disk: " --placeholder="<filtr>" --height=10`
 test -b ${DST}
+test "${SRC}" != "${DST}"
 #dd_rescue ${SRC} ${DST}
 MBYTES=`parted -m ${SRC} unit MB print | tail -n 1 | cut -f 3 -d ":" | sed "s/MB//"`
 echo ${SRC} ${MBYTES} ${DST}
