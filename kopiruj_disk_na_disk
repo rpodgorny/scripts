@@ -9,6 +9,7 @@ DST=`ls /dev/sd? /dev/nvme? 2>/dev/null | gum filter --prompt="vyber cilovy disk
 test -b ${DST}
 #dd_rescue ${SRC} ${DST}
 MBYTES=`parted -m ${SRC} unit MB print | tail -n 1 | cut -f 3 -d ":" | sed "s/MB//"`
+echo ${SRC} ${MBYTES} ${DST}
 dd_rescue -m ${MBYTES}M ${SRC} ${DST}
 parted ${DST} resizepart 4 100%
 ntfsresize -f ${DST}4
