@@ -17,7 +17,8 @@ DATA_PREFIX="https://plukovnik.podgorny.cz/~radek/archlive/"
 
 #DEV=$1
 lsdisks
-DEV=`ls /dev/sd? /dev/nvme? 2>/dev/null | gum filter --prompt="select drive: " --placeholder="<filter>" --height=10`
+#DEV=`ls /dev/sd? /dev/nvme? 2>/dev/null | gum filter --prompt="select drive: " --placeholder="<filter>" --height=10`
+DEV=`ls /dev/sd? 2>/dev/null | gum filter --prompt="select drive: " --placeholder="<filter>" --height=10`
 
 test "${DEV}"
 test -b ${DEV}
