@@ -7,5 +7,5 @@ test -x /usr/bin/ssh
 
 rm -f *.pkg.*
 makepkg "$@"
-rsync -avP ./*.pkg.* archlinux.podgorny.cz:rpodgorny/
+rsync -avP ./*.pkg.tar.zst archlinux.podgorny.cz:rpodgorny/
 ssh archlinux.podgorny.cz "./update rpodgorny"
