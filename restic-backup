@@ -1,0 +1,38 @@
+#!/bin/sh
+set -e -x
+
+EXTRA_DIRS="/mnt/data"
+EXTRA_ARGS="--exclude=/mnt/data/radek/tmp/incoming/mj*"
+
+export RESTIC_REPOSITORY="rest:http://ahoj:vole@muflon.asterix.cz:9999"
+export RESTIC_PASSWORD=abc123
+
+HOSTNAME=`hostname`
+test -n "${HOSTNAME}"
+
+nice restic backup \
+  --host=${HOSTNAME} \
+  --verbose \
+  --exclude-caches \
+  --exclude=/tmp/* \
+  --exclude=/var/log/journal/* \
+  --exclude=/var/cache/pacman/pkg/* \
+  --exclude=/var/tmp/tmp/* \
+  --exclude=/root/.cache/* \
+  --exclude=/home/*/.cache/* \
+  --exclude=/home/*/.thumbnails/* \
+  --exclude=/home/*/tmp/* \
+  --exclude=/home/radek/dotfiles/decrypted \
+  --exclude=/home/radek/syncthing/* \
+  ${EXTRA_ARGS} \
+  --one-file-system \
+  / /boot ${EXTRA_DIRS}
+
+nice restic forget \
+  --host=${HOSTNAME} \
+  --prune \
+  --dry-run \
+  --keep-within=7d \
+  --keep-daily=30 \
+  --keep-monthly=12 \
+  --keep-yearly=100
