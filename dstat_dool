@@ -1,0 +1,2 @@
+#!/bin/sh
+exec dool --bytes --cpu --disk --net --page --sys "$@"
