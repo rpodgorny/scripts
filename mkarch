@@ -15,9 +15,9 @@ def main():
 	assert dev
 	assert name
 
-	part_boot = '%s%s1' % (dev, 'p' if 'nvme' in dev else '')
-	part_swap = '%s%s2' % (dev, 'p' if 'nvme' in dev else '')
-	part_root = '%s%s3' % (dev, 'p' if 'nvme' in dev else '')
+	part_boot = '%s%s1' % (dev, 'p' if 'nvme' in dev or 'mmcblk' in dev else '')
+	part_swap = '%s%s2' % (dev, 'p' if 'nvme' in dev or 'mmcblk' in dev else '')
+	part_root = '%s%s3' % (dev, 'p' if 'nvme' in dev or 'mmcblk' in dev else '')
 	#assert run('test -b %s' % dev) == 0
 	#for part in [part_boot, part_swap, part_root]:
 	#	assert run('test ! -b %s' % part) != 0
@@ -28,21 +28,21 @@ def main():
 
 	swap_size_gb = 1
 
-	#parted --script -a optimal $DEV -- mklabel msdos mkpart primary fat32 0% 256MB mkpart primary linux-swap 256MB 1.256GB mkpart primary btrfs 1.256GB 100% set 1 boot on
-	#run('parted --script -a optimal %s -- mklabel gpt mkpart primary fat32 0%% 256MB mkpart primary linux-swap 256MB 1.256GB mkpart primary btrfs 1.256GB 100%% set 1 boot on' % dev)
-	run('parted --script -a optimal %s -- mklabel gpt mkpart primary fat32 0%% 256MB mkpart primary linux-swap 256MB %d.256GB mkpart primary xfs %d.256GB 100%% set 1 boot on' % (dev, swap_size_gb, swap_size_gb))
+	run('parted --script -a optimal %s -- mklabel gpt mkpart primary fat32 0%% 1GB mkpart primary linux-swap 1GB %dGB mkpart primary btrfs %dGB 100%% set 1 boot on' % (dev, (1 + swap_size_gb), (1 + swap_size_gb)))
+	#run('parted --script -a optimal %s -- mklabel gpt mkpart primary fat32 0%% 1GB mkpart primary linux-swap 1GB %dGB mkpart primary xfs %dGB 100%% set 1 boot on' % (dev, (1 + swap_size_gb), (1 + swap_size_gb)))
 
 	run('mkfs.vfat -n %s_BOOT %s' % (name.upper(), part_boot))
 	run('mkswap -L SWAP %s' % part_swap)
-	#run('mkfs.btrfs -f -L %s_ROOT %s' % (name.upper(), part_root))
-	run('mkfs.xfs -f -L %s_ROOT %s' % (name.upper(), part_root))
+	run('mkfs.btrfs -f -L %s_ROOT %s' % (name.upper(), part_root))
+	#run('mkfs.xfs -f -L %s_ROOT %s' % (name.upper(), part_root))
 
-	#run('mount -o relatime,compress=zstd %s3 /mnt' % dev)
-	run('mount %s /mnt' % part_root)
+	run('mount -o relatime,compress=zstd %s3 /mnt' % dev)
+	#run('mount %s /mnt' % part_root)
 	run('mkdir /mnt/boot')
 	run('mount %s /mnt/boot' % part_boot)
 
-	run('pacstrap /mnt base linux linux-firmware openssh intel-ucode xfsprogs')
+	run('pacstrap /mnt base linux linux-firmware openssh intel-ucode btrfs-progs')
+	#run('pacstrap /mnt base linux linux-firmware openssh intel-ucode xfsprogs')
 
 	run('arch-chroot /mnt bootctl install')
 
