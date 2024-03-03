@@ -36,13 +36,15 @@ def main():
 	run('mkfs.btrfs -f -L %s_ROOT %s' % (name.upper(), part_root))
 	#run('mkfs.xfs -f -L %s_ROOT %s' % (name.upper(), part_root))
 
-	run('mount -o relatime,compress=zstd %s3 /mnt' % dev)
+	run('mount -o relatime,compress=zstd %s /mnt' % part_root)
 	#run('mount %s /mnt' % part_root)
 	run('mkdir /mnt/boot')
 	run('mount %s /mnt/boot' % part_boot)
 
 	run('pacstrap /mnt base linux linux-firmware openssh intel-ucode btrfs-progs')
 	#run('pacstrap /mnt base linux linux-firmware openssh intel-ucode xfsprogs')
+
+	#run('arch-chroot /mnt pacman-key --populate')  # is this really needed?
 
 	run('arch-chroot /mnt bootctl install')
 
