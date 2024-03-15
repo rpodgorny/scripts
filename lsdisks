@@ -13,7 +13,7 @@ def get_serial_number(dev):
 			if 'Serial Number:' not in line:
 				continue
 			return line.split(':', 1)[1].strip()
-	except:
+	except Exception:
 		pass
 	return None
 
@@ -33,7 +33,8 @@ def get_devices():
 
 
 def main():
-	subprocess.call('lsblk -o NAME,SIZE,LABEL', shell=True)
+	subprocess.call('lsblk -o NAME,SIZE,LABEL,MOUNTPOINTS,TRAN,ROTA,RM,HOTPLUG', shell=True)
+	print()
 	subprocess.call('btrfs fi show', shell=True)
 	devs = sorted(get_devices())
 	for dev in devs:
