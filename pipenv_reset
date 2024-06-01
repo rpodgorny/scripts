@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e -x
+
+pipenv --rm || true
+rm -rf Pipfile Pipfile.lock
+
+pipenv "$@"
+
+if [ -f requirements.txt ]; then
+  pipenv run pip install -r requirements.txt
+fi
+if [ -f requirements-dev.txt ]; then
+  pipenv run pip install -r requirements-dev.txt
+fi
