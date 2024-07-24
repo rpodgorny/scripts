@@ -1,2 +1,8 @@
 #!/bin/sh
-podman run --rm --net=host --name=swvolume docker.io/chrislusf/seaweedfs:3.71_large_disk volume --index=leveldb -ip.bind=[::] -mserver=ruprt.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333 -ip=ruprt.podgorny.cz
+set -e -x
+
+IP=`ip addr|grep "inet6 2"|choose 1|choose -f "/" 0`
+
+IMG="docker.io/chrislusf/seaweedfs:3.71_large_disk"
+
+podman run --rm --net=host --name=swvolume ${IMG} volume --index=leveldb -ip.bind=[::] -mserver=ruprt.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333 -ip=${IP}

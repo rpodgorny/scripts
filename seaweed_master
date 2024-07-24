@@ -1,2 +1,8 @@
 #!/bin/sh
-podman run --rm --net=host --name=swmaster docker.io/chrislusf/seaweedfs:3.71_large_disk master -defaultReplication=001 -ip.bind=[::] -ip=ruprt.podgorny.cz -peers=ruprt.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333
+set -e -x
+
+IP=`ip addr|grep "inet6 2"|choose 1|choose -f "/" 0`
+
+IMG="docker.io/chrislusf/seaweedfs:3.71_large_disk"
+
+podman run --rm --net=host --name=swmaster ${IMG} master -defaultReplication=001 -ip.bind=[::] -peers=ruprt.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333 -ip=${IP}

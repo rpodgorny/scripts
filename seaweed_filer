@@ -1,2 +1,8 @@
 #!/bin/sh
-podman run --rm --net=host docker.io/chrislusf/seaweedfs:3.71_large_disk filer -ip.bind=[::] -ip=ruprt.podgorny.cz -master=ruprt.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333
+set -e -x
+
+IP=`ip addr|grep "inet6 2"|choose 1|choose -f "/" 0`
+
+IMG="docker.io/chrislusf/seaweedfs:3.71_large_disk"
+
+podman run --rm --net=host ${IMG} filer -ip.bind=[::] -master=ruprt.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333 -ip=${IP}
