@@ -1,0 +1,36 @@
+#!/usr/bin/python3
+
+import os
+import sys
+import subprocess
+
+
+def run(cmd):
+	print('+ %s' % cmd)
+	return subprocess.check_output(cmd, shell=True).decode()
+
+
+def main():
+	run('umount /mnt/sfs_???????? || true')
+	run('rmdir /mnt/sfs_???????? || true')
+	drvs = os.listdir('/dev/disk/by-label')
+	drvs = list(filter(lambda x: x.startswith('SFS_'), drvs))
+	mounts = run('mount -l')
+	for drv in drvs:
+		if drv in mounts:
+			print('%s already mounted' % drv)
+			continue
+		mountpoint = '/mnt/%s' % drv.lower()
+		if not os.path.isdir(mountpoint):
+			os.mkdir(mountpoint)
+		blkid = run("blkid /dev/disk/by-label/%s" % drv)
+		if 'TYPE="btrfs"' in blkid:
+			opts = "-o noatime,compress=zstd,autodefrag"
+		else:
+			opts = "-o noatime"
+		run("mount %s /dev/disk/by-label/%s %s" % (opts, drv, mountpoint))
+	return 0
+
+
+if __name__ == '__main__':
+	sys.exit(main())

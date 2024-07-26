@@ -1,0 +1,40 @@
+#!/usr/bin/python3
+
+import sys
+import subprocess
+import random
+
+
+def run(cmd):
+	print('+ %s' % cmd)
+	return subprocess.check_call(cmd, shell=True)
+
+
+def main():
+	dev = sys.argv[1]
+	fstype = sys.argv[2] if len(sys.argv) >= 3 else "btrfs"
+	#name = sys.argv[2]
+	name = 'sfs_%08x' % random.randint(0, 2**32)
+
+	assert dev
+	assert name
+	assert fstype in {"btrfs", "xfs"}
+
+	run('test -b %s' % dev)
+	run('test ! -b %s1' % dev)
+	run('which dd')
+	run('which parted')
+
+	run('dd if=/dev/zero of=%s bs=10M count=1' % dev)
+	if fstype == "btrfs":
+		run('parted --script -a optimal %s -- mklabel gpt mkpart primary btrfs 0%% 100%%' % dev)
+		run('mkfs.btrfs -f -L %s %s1' % (name.upper(), dev))
+	elif fstype == "xfs":
+		run('parted --script -a optimal %s -- mklabel gpt mkpart primary xfs 0%% 100%%' % dev)
+		run('mkfs.xfs -f -L %s %s1' % (name.upper(), dev))
+
+	return 0
+
+
+if __name__ == '__main__':
+	sys.exit(main())
