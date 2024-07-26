@@ -1,0 +1,24 @@
+#!/usr/bin/python3
+
+import os
+import sys
+import subprocess
+
+
+def run(cmd):
+	print('+ %s' % cmd)
+	return subprocess.call(cmd, shell=True)
+
+
+def main():
+	vols = os.listdir('/mnt')
+	vols = sorted(list(filter(lambda x: x.startswith('sfs_'), vols)))
+	vols_opt = ''
+	for vol in vols:
+		vols_opt += ' -v /mnt/%s:/mnt/%s' % (vol, vol)
+	dirs_opt = '-dir=' + ','.join(f'/mnt/{vol}' for vol in vols)
+	return run('podman run --rm --net=host %s --name sfsvolume docker.io/chrislusf/seaweedfs:3.71_large_disk volume -index=leveldb -minFreeSpace=10GiB %s -ip.bind=[::] -mserver=ruprt.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333' % (vols_opt, dirs_opt))
+
+
+if __name__ == '__main__':
+	sys.exit(main())
