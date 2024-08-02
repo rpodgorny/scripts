@@ -20,7 +20,7 @@ def main():
 	for vol in vols:
 		vols_opt += ' -v /mnt/%s:/mnt/%s' % (vol, vol)
 	dirs_opt = '-dir=' + ','.join(f'/mnt/{vol}' for vol in vols)
-	return run(f'podman run --rm --net=host {vols_opt} --name sfsvolume docker.io/chrislusf/seaweedfs:3.71_large_disk volume {opts} {dirs_opt} -ip.bind=[::] -mserver=ruprt.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333 -ip={ip}')
+	return run(f'podman run --rm --net=host {vols_opt} --name sfsvolume docker.io/chrislusf/seaweedfs:3.71_large_disk volume {opts} {dirs_opt} -ip.bind=[::] -mserver=milhouse.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333 -ip={ip}')
 
 
 if __name__ == '__main__':
