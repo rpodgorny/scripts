@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e -x
 
-IP=`ip addr|grep "inet6 2"|choose 1|choose -f "/" 0`
+IP=`ip addr|grep "inet6 2"|choose 1|choose -f "/" 0|head -n1`
 
 IMG="docker.io/chrislusf/seaweedfs:3.72_large_disk"
 MASTERS="milhouse.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333"
