@@ -5,23 +5,27 @@ import sys
 import subprocess
 
 
+IMG = "docker.io/chrislusf/seaweedfs:3.72_large_disk"
+MASTERS = "milhouse.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333"
+
+
 def run(cmd):
-	print('+ %s' % cmd)
-	return subprocess.call(cmd, shell=True)
+    print("+ %s" % cmd)
+    return subprocess.call(cmd, shell=True)
 
 
 def main():
-	ip = subprocess.check_output("ip addr | grep 'inet6 2'", shell=True).decode().strip().split()[1].split('/')[0]
-	#opts = "-index=leveldb -minFreeSpace=10GiB"
-	opts = "-index=leveldb"
-	vols = os.listdir('/mnt')
-	vols = sorted(list(filter(lambda x: x.startswith('sfs_'), vols)))
-	vols_opt = ''
-	for vol in vols:
-		vols_opt += ' -v /mnt/%s:/mnt/%s' % (vol, vol)
-	dirs_opt = '-dir=' + ','.join(f'/mnt/{vol}' for vol in vols)
-	return run(f'podman run --rm --net=host {vols_opt} --name sfsvolume docker.io/chrislusf/seaweedfs:3.71_large_disk volume {opts} {dirs_opt} -ip.bind=[::] -mserver=milhouse.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333 -ip={ip}')
+    ip = subprocess.check_output("ip addr | grep 'inet6 2'", shell=True).decode().strip().split()[1].split("/")[0]
+    #opts = "-index=leveldb -minFreeSpace=10GiB"
+    opts = "-index=leveldb"
+    vols = os.listdir("/mnt")
+    vols = sorted(list(filter(lambda x: x.startswith("sfs_"), vols)))
+    vols_opt = ""
+    for vol in vols:
+        vols_opt += f" -v /mnt/{vol}:/mnt/{vol}"
+    dirs_opt = "-dir=" + ",".join(f"/mnt/{vol}" for vol in vols)
+    return run(f"podman run --rm --net=host {vols_opt} --name sfsvolume {IMG} volume {opts} {dirs_opt} -ip.bind=[::] -mserver={MASTERS} -ip={ip}")
 
 
-if __name__ == '__main__':
-	sys.exit(main())
+if __name__ == "__main__":
+    sys.exit(main())
