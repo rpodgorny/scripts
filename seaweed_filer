@@ -6,4 +6,4 @@ IP=`ip addr|grep "inet6 2"|choose 1|choose -f "/" 0|head -n1`
 IMG="docker.io/chrislusf/seaweedfs:3.73_large_disk"
 MASTERS="milhouse.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333"
 
-podman run --rm --net=host --name=sfsfiler -v ./sfs_filer_data:/data ${IMG} filer -defaultReplicaPlacement=001 -ip.bind=[::] -master=${MASTERS} -ip=${IP}
+podman run --rm --net=host --name=sfsfiler -v /docker_volumes/sfs_filer_data:/data ${IMG} filer -defaultReplicaPlacement=001 -ip.bind=[::] -master=${MASTERS} -ip=${IP}
