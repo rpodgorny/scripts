@@ -4,7 +4,7 @@ set -e -x
 IP=`ip addr|grep "inet6 2"|choose 1|choose -f "/" 0|head -n1`
 IP="ruprt.podgorny.cz"
 
-IMG="docker.io/chrislusf/seaweedfs:3.72_large_disk"
+IMG="docker.io/chrislusf/seaweedfs:3.73_large_disk"
 MASTERS="milhouse.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333"
 
 podman run --rm --net=host --name=sfsmaster ${IMG} master -defaultReplication=001 -volumeSizeLimitMB=10000 -raftHashicorp -ip.bind=[::] -peers=${MASTERS} -ip=${IP}

@@ -5,7 +5,7 @@ import sys
 import subprocess
 
 
-IMG = "docker.io/chrislusf/seaweedfs:3.72_large_disk"
+IMG = "docker.io/chrislusf/seaweedfs:3.73_large_disk"
 MASTERS = "milhouse.podgorny.cz:9333,orion.asterix.cz:9333,muflon.asterix.cz:9333"
 
 
