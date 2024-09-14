@@ -9,6 +9,7 @@ REPO=ssh://${USER}@${HOST}:${PORT}/~/borg/${HOSTNAME}
 ARCHIVE=`date +%Y%m%dT%H%M%S`
 
 export BORG_RSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=yes
 export BORG_RELOCATED_REPO_ACCESS_IS_OK=yes
 
 if [ "$1" = "--copy-keys" ]; then
@@ -39,13 +40,14 @@ systemctl start boot.mount || true
 
 #--progress \
 borg create \
---compression zlib,6 \
+--compression zstd \
 --one-file-system \
 --verbose --stats \
 ${REPO}::${ARCHIVE} \
 / /boot ${INCOMING} \
 --exclude-caches \
 --exclude '/tmp/*' \
+--exclude '/var/tmp/*' \
 --exclude '/var/log/journal/*' \
 --exclude '/var/cache/pacman/pkg/*' \
 --exclude '/home/backup/*' \
