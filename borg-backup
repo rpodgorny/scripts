@@ -4,8 +4,8 @@ set -e -x
 HOSTNAME=`uname -n`
 PORT=2233
 HOST=backup.podgorny.cz
-USER=backup
-REPO=ssh://${USER}@${HOST}:${PORT}/~/borg/${HOSTNAME}
+USERNAME=backup
+REPO=ssh://${USERNAME}@${HOST}:${PORT}/~/borg/${HOSTNAME}
 ARCHIVE=`date +%Y%m%dT%H%M%S`
 
 export BORG_RSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
@@ -13,7 +13,7 @@ export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=yes
 export BORG_RELOCATED_REPO_ACCESS_IS_OK=yes
 
 if [ "$1" = "--copy-keys" ]; then
-	ssh-copy-id -p ${PORT} ${USER}@${HOST}
+	ssh-copy-id -p ${PORT} ${USERNAME}@${HOST}
 	exit
 elif [ "$1" = "--init" ]; then
 	borg init --encryption=none --progress ${REPO}
