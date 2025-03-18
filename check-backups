@@ -22,7 +22,6 @@ import traceback
 import arrow
 import subprocess
 import pprint
-import multiprocessing
 
 
 __version__ = '0.0'
@@ -48,10 +47,6 @@ def humanize_dt(dt):
 		ret += "%sm" % m
 	ret += "%ss" % s
 	return ret
-
-
-def run(cmd):
-	return sh.sh(cmd)
 
 
 def parse_borg_list(s):
