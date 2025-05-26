@@ -29,12 +29,13 @@ echo '
 acpi
 beep
 borg
+choose
 cpupower
 dd_rescue
 docker
 docker-compose
+dool
 dosfstools
-dstat
 faddnsc-git
 fish
 fuse-overlayfs
@@ -58,14 +59,14 @@ smartmontools
 sshfs
 sudo
 tmux
+tree
 uptimed
 vim
 zramswap
 zstd
 ' >> ${DIR}/packages.x86_64
-#' >> $DIR/packages.both
 
-# "pv" to show progress when loading image to ram - does not work!
+# "pv" to show progress when loading image to ram - does not work! (actually, it does?)
 echo '
 pv
 ' >> ${DIR}/packages.x86_64
@@ -76,6 +77,11 @@ cpuminer-git
 mprime
 rowhammer-test-git
 xmrig-donateless
+' >> ${DIR}/packages.x86_64
+
+# will be removed later on - just for freeing up some space
+echo '
+localepurge
 ' >> ${DIR}/packages.x86_64
 
 echo '
@@ -100,6 +106,24 @@ chmod go-rwx /root/.ssh/id_rsa*
 
 sed -e "s/^#Audit=/Audit=/g" -i /etc/systemd/journald.conf
 sed -e "s/^Audit=yes/Audit=no/g" -i /etc/systemd/journald.conf
+' >> ${DIR}/airootfs/root/customize_airootfs.sh
+
+# now, try to save some space to fit under 1GB
+echo '
+pacman -Rs --noconfirm hyperv linux-atm linux-firmware-marvell livecd-sounds reiserfsprogs
+
+pacman -Rs --noconfirm man-pages
+rm -rf /usr/share/man
+rm -rf /usr/share/info
+rm -rf /usr/share/doc
+
+#pacman -Sy --noconfirm localepurge
+echo "C" >/etc/locale.nopurge
+localepurge
+pacman -Rs --noconfirm localepurge
+
+pacman -Scc --noconfirm
+rm -rf /var/lib/pacman/sync
 ' >> ${DIR}/airootfs/root/customize_airootfs.sh
 
 echo ${HOSTNAME} >${DIR}/airootfs/etc/hostname
@@ -169,7 +193,7 @@ cd -
 mkdir ${DIR}/upload
 cp ${DIR}/out/*iso ${DIR}/upload/image.iso
 cp -av ${DATA_PREFIX}/archlive_data/* ${DIR}/upload/
-rsync -avP ${DIR}/upload/* plukovnik.podgorny.cz:public_html/archlive/
+rsync -avP ${DIR}/upload/* orion.asterix.cz:public_html/archlive/
 
 sudo rm -rf ${DIR}
 
