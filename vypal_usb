@@ -13,7 +13,7 @@ MNT=/tmp/archlive_mnt
 ID=`date +"%Y%m%d%H%M%S"`
 #ID=`date +%s`
 HOSTNAME="arch-${ID}"
-DATA_PREFIX="https://plukovnik.podgorny.cz/~radek/archlive/"
+DATA_PREFIX="https://orion.asterix.cz/~radek/archlive/"
 
 #DEV=$1
 lsdisks
