@@ -32,7 +32,17 @@ def is_raspi():
 	return call('cat /proc/cpuinfo | grep Raspberry', silent=True) == 0 or call('uname -m | grep aarch64', silent=True) == 0
 
 
+def is_arch():
+	return os.path.isfile("/etc/pacman.conf")
+
+
+def is_debian_or_ubuntu():
+	raise "TODO"
+
+
 def is_package_installed(package):
+	if not is_arch():
+		raise "TODO"
 	try:
 		subprocess.check_output('pacman -Qi %s' % package, shell=True, stderr=subprocess.PIPE)
 		return True
@@ -110,7 +120,10 @@ def fix_radek():
 
 	if call('grep "^radek:" /etc/passwd | grep /usr/bin/fish', silent=True) != 0:
 		if ask('set fish as default shell for radek?'):
-			call('pacman -Sy --noconfirm --needed fish')
+			if is_arch():
+				call('pacman -Sy --noconfirm --needed fish')
+			else:
+				raise "TODO"
 			call('usermod -s /usr/bin/fish radek')
 
 	fn = '/home/radek/.forward'
@@ -134,7 +147,10 @@ def fix_radek():
 
 	if not is_package_installed('encfs'):
 		if ask('install encfs?'):
-			call('pacman -Sy --noconfirm --needed encfs')
+			if is_arch():
+				call('pacman -Sy --noconfirm --needed encfs')
+			else:
+				raise "TODO"
 
 
 def fix_root():
@@ -153,7 +169,10 @@ def fix_packages():
 			p = p[0]  # TODO: quick hack
 		if not ask('install %s?' % p):
 			continue
-		call('pacman -Sy --noconfirm %s' % p)
+		if is_arch():
+			call('pacman -Sy --noconfirm %s' % p)
+		else:
+			raise "TODO"
 
 
 def fix_services():
@@ -187,7 +206,10 @@ def fix_mcelog():
 		return
 	if not is_package_installed('mcelog'):
 		if ask('install mcelog?'):
-			call('pacman -Sy --noconfirm mcelog')
+			if is_arch():
+				call('pacman -Sy --noconfirm mcelog')
+			else:
+				raise "TODO"
 	if not os.path.islink('/etc/systemd/system/multi-user.target.wants/mcelog.service'):
 		if ask('enable and start mcelog?'):
 			call('systemctl enable --now mcelog.service')
@@ -196,7 +218,10 @@ def fix_mcelog():
 def fix_systemd_check_failed():
 	if not is_package_installed('systemd-check-failed'):
 		if ask('install systemd-check-failed?'):
-			call('pacman -Sy --noconfirm systemd-check-failed')
+			if is_arch():
+				call('pacman -Sy --noconfirm systemd-check-failed')
+			else:
+				raise "TODO"
 	if not os.path.islink('/etc/systemd/system/multi-user.target.wants/systemd-check-failed.service'):
 		if ask('enable and start systemd-check-failed?'):
 			call('systemctl enable --now systemd-check-failed.service')
@@ -218,6 +243,8 @@ def fix_sshd_permit_root_login():
 
 
 def fix_pacman_sources():
+	if not is_arch():
+		return
 	fn = '/etc/pacman.conf'
 	if call('grep "^\[rpodgorny\]$" %s' % fn, silent=True) == 0:
 		return
@@ -260,7 +287,10 @@ def fix_x():
 		return
 	if not ask('install terminus font?'):
 		return
-	call('pacman -Sy --noconfirm --needed terminus-font')
+	if is_arch():
+		call('pacman -Sy --noconfirm --needed terminus-font')
+	else:
+		raise "TODO"
 
 
 def fix_fstrim():
@@ -368,7 +398,10 @@ def fix_postfix_ipv6():
 def fix_postfix_generic():
 	if not is_package_installed('postfix-pcre'):
 		if ask("install postfix-pcre?"):
-			call('pacman -Sy --noconfirm --needed postfix-pcre')
+			if is_arch():
+				call('pacman -Sy --noconfirm --needed postfix-pcre')
+			else:
+				raise "TODO"
 	fn = '/etc/postfix/generic.pcre'
 	if os.path.isfile(fn):
 		return
@@ -452,7 +485,10 @@ def ucode():
 def faddnsc():
 	if not is_package_installed('faddnsc'):
 		if ask("install faddnsc?"):
-			call('pacman -Sy --noconfirm --needed faddnsc')
+			if is_arch():
+				call('pacman -Sy --noconfirm --needed faddnsc')
+			else:
+				raise "TODO"
 	fn = '/etc/faddnsc.conf'
 	if os.path.isfile(fn):
 		if call('cat %s | grep podgorny.cz' % fn, silent=True) != 0 \
