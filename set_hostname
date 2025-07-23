@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e -x -o pipefail
+
+uuid=$(cat /sys/class/dmi/id/product_uuid 2>/dev/null)
+hostname="atx-$(echo $uuid | sha256sum | cut -c1-12)"
+hostnamectl set-hostname "$hostname"
