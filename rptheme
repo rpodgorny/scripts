@@ -7,15 +7,19 @@ import subprocess
 def main():
     th = sys.argv[1] if len(sys.argv) > 1 else None
     if th is None:
-        p = subprocess.run("gsettings get org.gnome.desktop.interface gtk-theme | grep Inverse", shell=True, stdout=subprocess.DEVNULL)
-        th = "light" if p.returncode == 0 else "dark"  # this also does the inversion
-    print(th)
+        p = subprocess.run("gsettings get org.gnome.desktop.interface gtk-theme | grep Inverse", shell=True, stdout=subprocess.DEVNULL)  # a stupid and simple way to get currently set theme
+        th = "light" if p.returncode == 0 else "dark"  # do the inversion
+    print(f"new theme: {th}")
+    assert th in {"light", "dark"}
 
-    theme_name = "HighContrast" if th == "light" else "HighContrastInverse"
-    subprocess.run("gsettings set org.gnome.desktop.interface gtk-theme %s" % theme_name, shell=True)
+    # for some reason, we have to set both "global" theme and "gtk" theme
+    val = "prefer-light" if th == "light" else "prefer-dark"
+    subprocess.run(f"gsettings set org.gnome.desktop.interface color-scheme {val}", shell=True)
+    val = "HighContrast" if th == "light" else "HighContrastInverse"
+    subprocess.run(f"gsettings set org.gnome.desktop.interface gtk-theme {val}", shell=True)
 
-    ln = "foot-selenized-white" if th == "light" else "foot-selenized-black"
-    subprocess.run("ln -sf %s foot-theme" % ln, shell=True, cwd="/home/radek/dotfiles")
+    val = "foot-selenized-white" if th == "light" else "foot-selenized-black"
+    subprocess.run(f"ln -sf {val} foot-theme", shell=True, cwd="/home/radek/dotfiles")
 
     subprocess.run("swaymsg reload", shell=True)
 
