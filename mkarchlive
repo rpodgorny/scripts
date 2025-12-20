@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e -x
+set -e -x -o pipefail
 
 which cowsay figlet mkarchiso rsync sudo >/dev/null
 
@@ -19,6 +19,7 @@ cp -r /usr/share/archiso/configs/releng/* ${DIR}
 #sed -i 's/\uefi-x64.grub/uefi-x64.systemd-boot/g' ${DIR}/profiledef.sh
 
 echo '
+
 [rpodgorny]
 SigLevel = Never
 Server = http://archlinux.podgorny.cz/$repo/os/$arch
@@ -78,6 +79,15 @@ mprime
 rowhammer-test-git
 xmrig-donateless
 ' >> ${DIR}/packages.x86_64
+
+# TODO: just for testing - gpu stuff
+#echo '
+#clinfo
+##cuda
+#nvidia
+#opencl-nvidia
+##xmrig-cuda
+#' >> ${DIR}/packages.x86_64
 
 # will be removed later on - just for freeing up some space
 echo '
@@ -171,6 +181,13 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDEbY7KX7edKwQSGO1NmROsikMSAIJHnklxToKKTf9p
 echo '
 orion.asterix.cz,2002:57ec:c733:8800:d63d:7eff:fe9a:da94 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBK4eKU7pIJ4opaOAtqb4vJXa9GIq8EMRyynypNk5WTMxYxY1tlBhlx20bjkD+0MEqYbds5Cf3+p3zYkBb0B4HNU=
 ' >> ${DIR}/airootfs/root/.ssh/known_hosts
+
+echo '
+
+#[rpodgorny]
+#SigLevel = Never
+#Server = http://archlinux.podgorny.cz/$repo/os/$arch
+' >> ${DIR}/airootfs/etc/pacman.conf_
 
 echo '
 tools@orion.asterix.cz: /tools fuse.sshfs x-systemd.automount,_netdev 0 0
