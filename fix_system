@@ -280,28 +280,28 @@ def fix_radek_desktop():
 		else:
 			raise "TODO"
 
-		#call('rustup update stable')
-		#call('rustup target add x86_64-pc-windows-gnu')
-		#call('rustup target add aarch64-unknown-linux-gnu')
-		#call('cargo install cargo-audit')
-		#call('cargo install cargo-msrv')
-		#call('cargo install cargo-mutants')
-		#call('cargo install cargo-nextest')
-		#call('cargo install cargo-update')
+	#call('rustup update stable')
+	#call('rustup target add x86_64-pc-windows-gnu')
+	#call('rustup target add aarch64-unknown-linux-gnu')
+	#call('cargo install cargo-audit')
+	#call('cargo install cargo-msrv')
+	#call('cargo install cargo-mutants')
+	#call('cargo install cargo-nextest')
+	#call('cargo install cargo-update')
 
-		call('usermod --add-subuids 100000-165535 radek')
-		call('usermod --add-subgids 100000-165535 radek')
+	call('usermod --add-subuids 100000-165535 radek')
+	call('usermod --add-subgids 100000-165535 radek')
 
-		call('usermod -aG audio,video,wheel radek')
+	call('usermod -aG audio,video,wheel radek')
 
-		call('systemctl enable bluetooth')
-		call('systemctl enable earlyoom')
+	call('systemctl enable bluetooth')
+	call('systemctl enable earlyoom')
 
-		call('systemctl enable rpautovpn')
-		call('systemctl enable rpbatmanager')
-		call('systemctl enable rpcpu')
+	call('systemctl enable rpautovpn')
+	call('systemctl enable rpbatmanager')
+	call('systemctl enable rpcpu')
 
-		# TODO: add "192.168.11.11 mfsmaster" to /etc/hosts
+	# TODO: add "192.168.11.11 mfsmaster" to /etc/hosts
 
 
 def fix_services():
