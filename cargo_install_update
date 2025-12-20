@@ -1,4 +1,8 @@
 #!/bin/sh
 # updates all packages that were installed using "cargo install"
 
-cargo install $(cargo install --list | grep -E '^[a-z0-9_-]+ v[0-9.]+:$' | cut -f1 -d' ')
+# this is the old version
+#cargo install $(cargo install --list | grep -E '^[a-z0-9_-]+ v[0-9.]+:$' | cut -f1 -d' ')
+
+# this needs cargo-update to be installed -> cargo install cargo-update
+cargo install-update --all
