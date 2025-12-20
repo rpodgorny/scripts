@@ -1,2 +1,5 @@
 #!/bin/sh
-exec youtube-dl -f "bestvideo[height<=?1080]+bestaudio/best" "$@"
+set -eux -o pipefail
+#exec youtube-dl -f "bestvideo[height<=?1080]+bestaudio/best" "$@"
+#exec yt-dlp -f "bestvideo[height<=1080]+bestaudio/best[height<=1080]" "$@"
+exec yt-dlp -f "bestvideo[height<=1080][ext=mp4]+bestaudio/best[height<=1080][ext=mp4]" --concurrent-fragments 5 "$@"
