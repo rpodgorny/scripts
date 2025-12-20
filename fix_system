@@ -91,13 +91,13 @@ def fix_sudo():
 	if not os.path.isfile(fn):
 		return
 	# TODO: ubuntu has different group
-	"""if call('grep "^# %%wheel ALL=(ALL) NOPASSWD: ALL" %s' % fn, silent=True) != 0:
+	"""if call('grep "^# %%wheel ALL=(ALL) ALL" %s' % fn, silent=True) != 0:
 		return
 	if not ask('fix /etc/sudoers? (wheel NOPASSWD)'):
 		return
 	call('sed -e "s/^# %%wheel ALL=(ALL) NOPASSWD: ALL/%%wheel ALL=(ALL) NOPASSWD: ALL/g" -i %s' % fn)"""
 	wanted_content = """root ALL=(ALL) ALL
-%wheel ALL=(ALL) NOPASSWD: ALL
+%wheel ALL=(ALL) ALL
 #includedir /etc/sudoers.d"""
 	if not os.path.isfile(fn):
 		if ask('%s not found. fix?' % fn):
@@ -175,21 +175,140 @@ def fix_packages():
 			raise "TODO"
 
 
+def fix_radek_desktop():
+	if call('grep "^radek:" /etc/passwd', silent=True) != 0:
+		if not ask('add radek desktop stuff?'):
+			return
+	for p in [
+		'aarch64-linux-gnu-gcc',  # for rust cross-compiler
+		'alsa-utils',
+		'bemenu-wayland',
+		'bitwarden',
+		'bitwarden-cli',
+		'blueberry',
+		'borg',
+		'broot',
+		'btrfs-progs',
+		'chromium',
+		'claude-code',
+		'datovka',
+		'ddcutil',
+		'earlyoom',
+		'expect',  # because of vnc_connect
+		'firefox',
+		'freecad',
+		'foot',
+		'fzf',
+		#'gqview',
+		'gemini-cli',
+		'git',
+		'git-delta',
+		'gum',
+		'helix',
+		'i3status',
+		'just',
+		'jq',
+		'lazygit',
+		'light',
+		'mako',
+		'man',
+		'mc',
+		'mingw-w64-gcc',  # for rust cross-compiler
+		'mosh',
+		'moosefs',
+		'mpv',
+		'mtr',
+		'neovim',
+		'niri',
+		'obsidian',
+		'omnirun',
+		'opencode',
+		'otf-font-awesome',  # for waybar icons
+		'pacman-contrib',
+		'podman',
+		'pre-commit',
+		'prusa-slicer',
+		'pyright',
+		'qemu-full',
+		'remmina',
+		'ripgrep',
+		'rpautovpn-git',
+		'rpbatmanager-git',
+		'rpcpu-git',
+		'rsync',
+		'ruff',
+		'rustup',
+		'rust-analyzer',
+		'samba',  # for qemu host disk sharing
+		'smartmontools',
+		'sshpass',  # for omnirun
+		'syncthing',
+		'sway',
+		'swayidle',
+		'swaylock',
+		'terminus-font',
+		'thunderbird',
+		'tigervnc',
+		'tmux',
+		'tree',
+		'trezor-suite-appimage',
+		'ttf-terminus-nerd',
+		'unzip',
+		'uv',
+		'vlc',
+		'watchexec',
+		'waybar',
+		'wdisplays',
+		'wireguard-tools',
+		'wlvncc',
+		'wofi',
+		'xdg-desktop-portal-gnome',  # for niri
+		'xorg-xwayland',
+		'xwayland-satellite',  # for x support in niri
+		'yay',
+		'zip',
+	]:
+		installed = any(map(is_package_installed, p)) if isinstance(p, tuple) else is_package_installed(p)
+		if installed:
+			continue
+		if isinstance(p, tuple):
+			p = p[0]  # TODO: quick hack
+		if not ask('install %s?' % p):
+			continue
+		if is_arch():
+			call('pacman -Sy --noconfirm %s' % p)
+		else:
+			raise "TODO"
+
+		#call('rustup update stable')
+		#call('rustup target add x86_64-pc-windows-gnu')
+		#call('rustup target add aarch64-unknown-linux-gnu')
+		#call('cargo install cargo-audit')
+		#call('cargo install cargo-msrv')
+		#call('cargo install cargo-mutants')
+		#call('cargo install cargo-nextest')
+		#call('cargo install cargo-update')
+
+		call('usermod --add-subuids 100000-165535 radek')
+		call('usermod --add-subgids 100000-165535 radek')
+
+		call('usermod -aG audio,video,wheel radek')
+
+		call('systemctl enable bluetooth')
+		call('systemctl enable earlyoom')
+
+		call('systemctl enable rpautovpn')
+		call('systemctl enable rpbatmanager')
+		call('systemctl enable rpcpu')
+
+		# TODO: add "192.168.11.11 mfsmaster" to /etc/hosts
+
+
 def fix_services():
-	for s in ['sshd', 'postfix', 'systemd-check-failed', 'systemd-networkd', 'systemd-resolved', 'uptimed']:
-		if os.path.islink('/etc/systemd/system/multi-user.target.wants/%s.service' % s):
+	for s in ['haveged', 'sshd', 'postfix', 'systemd-check-failed', 'systemd-networkd', 'systemd-resolved', 'systemd-timesyncd', 'uptimed']:
+		if call(f'systemctl is-enabled {s} | grep enabled', silent=True) == 0:
 			continue
-		if not os.path.islink('/usr/lib/systemd/system/%s.service' % s):
-			continue
-		if not ask('enable and start %s?' % s):
-			continue
-		call('systemctl enable --now %s.service' % s)
-	for s in ['haveged']:
-		if os.path.islink('/etc/systemd/system/sysinit.target.wants/%s.service' % s):
-			continue
-		if not os.path.islink('/usr/lib/systemd/system/%s.service' % s):
-			continue
-		if not ask('enable and start %s?' % s):
+		if not ask(f'enable and start {s}?'):
 			continue
 		call('systemctl enable --now %s.service' % s)
 
@@ -520,6 +639,7 @@ def main():
 	fix_root()
 	fix_sudo()
 	fix_radek()
+	fix_radek_desktop()
 	fix_x()
 	fix_ntp_sync()
 	fix_watchdog()
