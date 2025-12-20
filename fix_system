@@ -170,7 +170,7 @@ def fix_packages():
 		if not ask('install %s?' % p):
 			continue
 		if is_arch():
-			call('pacman -Sy --noconfirm %s' % p)
+			call('pacman -Sy --noconfirm --needed %s' % p)
 		else:
 			raise "TODO"
 
@@ -180,12 +180,9 @@ def fix_radek_desktop():
 		if not ask('add radek desktop stuff?'):
 			return
 	for p in [
-		'aarch64-linux-gnu-gcc',  # for rust cross-compiler
 		'alsa-utils',
-		'bemenu-wayland',
 		'bitwarden',
 		'bitwarden-cli',
-		'blueberry',
 		'borg',
 		'broot',
 		'btrfs-progs',
@@ -193,7 +190,6 @@ def fix_radek_desktop():
 		'claude-code',
 		'datovka',
 		'ddcutil',
-		'earlyoom',
 		'expect',  # because of vnc_connect
 		'firefox',
 		'freecad',
@@ -205,15 +201,12 @@ def fix_radek_desktop():
 		'git-delta',
 		'gum',
 		'helix',
-		'i3status',
 		'just',
 		'jq',
 		'lazygit',
 		'light',
-		'mako',
 		'man',
 		'mc',
-		'mingw-w64-gcc',  # for rust cross-compiler
 		'mosh',
 		'moosefs',
 		'mpv',
@@ -223,32 +216,19 @@ def fix_radek_desktop():
 		'obsidian',
 		'omnirun',
 		'opencode',
-		'otf-font-awesome',  # for waybar icons
 		'pacman-contrib',
-		'podman',
 		'pre-commit',
 		'prusa-slicer',
 		'pyright',
-		'qemu-full',
-		'remmina',
 		'ripgrep',
-		'rpautovpn-git',
-		'rpbatmanager-git',
-		'rpcpu-git',
 		'rsync',
 		'ruff',
-		'rustup',
 		'rust-analyzer',
-		'samba',  # for qemu host disk sharing
 		'smartmontools',
 		'sshpass',  # for omnirun
 		'syncthing',
-		'sway',
-		'swayidle',
-		'swaylock',
 		'terminus-font',
 		'thunderbird',
-		'tigervnc',
 		'tmux',
 		'tree',
 		'trezor-suite-appimage',
@@ -257,14 +237,8 @@ def fix_radek_desktop():
 		'uv',
 		'vlc',
 		'watchexec',
-		'waybar',
 		'wdisplays',
 		'wireguard-tools',
-		'wlvncc',
-		'wofi',
-		'xdg-desktop-portal-gnome',  # for niri
-		'xorg-xwayland',
-		'xwayland-satellite',  # for x support in niri
 		'yay',
 		'zip',
 	]:
@@ -276,29 +250,48 @@ def fix_radek_desktop():
 		if not ask('install %s?' % p):
 			continue
 		if is_arch():
-			call('pacman -Sy --noconfirm %s' % p)
+			call('pacman -Sy --noconfirm --needed %s' % p)
 		else:
 			raise "TODO"
 
-	#call('rustup update stable')
-	#call('rustup target add x86_64-pc-windows-gnu')
-	#call('rustup target add aarch64-unknown-linux-gnu')
-	#call('cargo install cargo-audit')
-	#call('cargo install cargo-msrv')
-	#call('cargo install cargo-mutants')
-	#call('cargo install cargo-nextest')
-	#call('cargo install cargo-update')
+	call('pacman -Sy --noconfirm --needed bemenu-wayland i3status mako sway swayidle swaylock wofi xorg-xwayland')
+	call('pacman -Sy --noconfirm --needed bemenu-wayland mako niri otf-font-awesome waybar wofi xdg-desktop-portal-gnome xwayland-satellite')  # otf-font-awesome for waybar icons
 
+	call('pacman -Sy --noconfirm --needed samba qemu-full')  # samba for host disk sharing
+
+	call('pacman -Sy --noconfirm --needed remmina tigervnc wlvncc')
+
+	call('pacman -Sy --noconfirm --needed rustup')
+	call('rustup update stable')
+	call('pacman -Sy --noconfirm --needed mingw-w64-gcc')
+	call('rustup target add x86_64-pc-windows-gnu')
+	call('pacman -Syu --noconfirm --needed aarch64-linux-gnu-gcc')
+	call('rustup target add aarch64-unknown-linux-gnu')
+	call('cargo install cargo-audit')
+	call('cargo install cargo-msrv')
+	call('cargo install cargo-mutants')
+	call('cargo install cargo-nextest')
+	call('cargo install cargo-update')
+
+	call('pacman -Sy --noconfirm --needed podman')
 	call('usermod --add-subuids 100000-165535 radek')
 	call('usermod --add-subgids 100000-165535 radek')
 
 	call('usermod -aG audio,video,wheel radek')
 
+	call('pacman -Sy --noconfirm --needed blueberry')
 	call('systemctl enable bluetooth')
+
+	call('pacman -Sy --noconfirm --needed earlyoom')
 	call('systemctl enable earlyoom')
 
+	call('pacman -Sy --noconfirm --needed rpautovpn-git')
 	call('systemctl enable rpautovpn')
+
+	call('pacman -Sy --noconfirm --needed rpbatmanager-git')
 	call('systemctl enable rpbatmanager')
+
+	call('pacman -Sy --noconfirm --needed rpcpu-git')
 	call('systemctl enable rpcpu')
 
 	# TODO: add "192.168.11.11 mfsmaster" to /etc/hosts
