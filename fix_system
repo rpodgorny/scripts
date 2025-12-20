@@ -143,7 +143,7 @@ def fix_radek():
 			or call('echo "cd /home/radek/%s; git remote -v|grep origin|grep push|grep ssh://" | su - radek' % repo, silent=True) != 0:
 				if ask('weird fetch/push urls found in /home/radek/%s. fix?' % repo):
 					call('echo "cd /home/radek/%s; git remote set-url origin https://github.com/rpodgorny/%s" | su - radek' % (repo, repo))
-					call('echo "cd /home/radek/%s; git remote set-url --push origin ssh://github.com/rpodgorny/%s" | su - radek' % (repo, repo))
+					call('echo "cd /home/radek/%s; git remote set-url --push origin ssh://git@github.com/rpodgorny/%s" | su - radek' % (repo, repo))
 
 	if not is_package_installed('encfs'):
 		if ask('install encfs?'):
