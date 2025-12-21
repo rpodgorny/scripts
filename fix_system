@@ -190,10 +190,12 @@ def fix_radek_desktop():
 		'claude-code',
 		'datovka',
 		'ddcutil',
+		'dool',
 		'expect',  # because of vnc_connect
 		'firefox',
 		'freecad',
 		'foot',
+		'fwupd',
 		'fzf',
 		#'gqview',
 		'gemini-cli',
@@ -201,6 +203,8 @@ def fix_radek_desktop():
 		'git-delta',
 		'gum',
 		'helix',
+		'htop',
+		'iwd',
 		'just',
 		'jq',
 		'lazygit',
@@ -210,13 +214,14 @@ def fix_radek_desktop():
 		'mosh',
 		'moosefs',
 		'mpv',
-		'mtr',
+		'mtr', 'speedtest-cli'
 		'neovim',
 		'niri',
 		'obsidian',
 		'omnirun',
 		'opencode',
 		'pacman-contrib',
+		'pipewire-pulse', 'pavucontrol',
 		'pre-commit',
 		'prusa-slicer',
 		'pyright',
@@ -293,6 +298,8 @@ def fix_radek_desktop():
 
 	call('pacman -Sy --noconfirm --needed rpcpu-git')
 	call('systemctl enable rpcpu')
+
+	# TODO: enable pipewire-pulse socket service for user
 
 	# TODO: add "192.168.11.11 mfsmaster" to /etc/hosts
 
