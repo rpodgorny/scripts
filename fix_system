@@ -181,6 +181,7 @@ def fix_radek_desktop():
 			return
 	for p in [
 		'alsa-utils',
+		'base-devel',
 		'bitwarden',
 		'bitwarden-cli',
 		'borg',
