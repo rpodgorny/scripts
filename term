@@ -1,5 +1,10 @@
 #!/bin/sh
 
+#exec ghostty --adjust-cell-height=-20% --theme="light:iTerm2 Light Background,dark:iTerm2 Dark Background"
+exec ghostty --adjust-cell-height=-20% --theme="light:iTerm2 Light Background,dark:Ghostty Default Style Dark"
+
+exec foot "$@"
+
 FONT_SIZE=14
 HOSTNAME=`hostname -s`
 
@@ -14,8 +19,6 @@ elif [ $HOSTNAME = 'rasta' ]; then
 elif [ $HOSTNAME = 'ruprt' ]; then
 	FONT_SIZE=18
 fi
-
-exec foot "$@"
 
 #FONT="-*-terminus-medium-*-*-*-${FONT_SIZE}-*-*-*-*-*-*-*"
 FONT="-*-terminus-medium-*-*-*-${FONT_SIZE}-*-*-*-*-*-iso10646-1"
