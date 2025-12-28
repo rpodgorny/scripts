@@ -61,6 +61,7 @@ sshfs
 sudo
 tmux
 tree
+upower
 uptimed
 vim
 zramswap
