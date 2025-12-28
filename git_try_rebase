@@ -1,0 +1,35 @@
+#!/bin/sh
+set -e -x -o pipefail
+#
+#       E - F (topic)
+#      /
+# A - B - C - D (master)
+#
+# "git_merge_diff topic master" tries to rebase E->F onto D
+
+# TODO
+# this lists candidates for rebase:
+# git branch --format '%(refname:short)' | xargs -I{} bash -c 'git merge-base --is-ancestor master {} || echo {}'
+
+TOPIC=$1
+BASE=$2
+
+if [ -z "${BASE}" ]; then
+  BASE="master"
+fi
+
+git checkout "${BASE}"
+git branch -D try-rebase || true
+git checkout -b try-rebase "${TOPIC}"
+git rebase "${BASE}" || {
+  git rebase --abort
+  git checkout "${BASE}"
+  git branch -D try-rebase
+  exit 1
+}
+git checkout "${BASE}"
+git branch -D try-rebase
+
+git checkout "${TOPIC}"
+git rebase "${BASE}"
+git checkout "${BASE}"
