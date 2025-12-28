@@ -1,0 +1,38 @@
+#!/bin/sh
+set -e -x
+
+HOST=$1
+
+if [ -z "${HOST}" ]; then
+  HOST=`curl https://atxupdater:AtxUpdater911@dbs.asterix.cz/sites|jq -r '.[] | (.id)+" "+(.company)+" "+(.place)' | iconv -t ascii//translit | gum filter | cut -f1 -d" "`
+  test ! -z "${HOST}"
+  HOST=${HOST}.asterix.cz
+fi
+
+if [ "`gum choose view control`" = "view" ]; then
+  PASSWD="atx438w"
+else
+  PASSWD="atx438c"
+fi
+test ! -z "${PASSWD}"
+
+CLIENT=`gum choose wlvncc vncviewer remmina`
+
+if [ "${CLIENT}" = "wlvncc" ]; then
+  expect -c "
+spawn wlvncc ${HOST}
+expect Password:
+send ${PASSWD}\r
+interact
+"
+elif [ "${CLIENT}" = "vncviewer" ]; then
+  echo ${PASSWD} | vncpasswd -f | vncviewer ${HOST} -PasswordFile=/dev/stdin
+elif [ "${CLIENT}" = "remmina" ]; then
+  ENC_PASSWD=`echo ${PASSWD} | remmina --encrypt-password 2>/dev/null |grep "Encrypted password" | cut -f2 -d: | sed "s/ //g"`
+  remmina --no-tray-icon -c "vnc://dummy_username:${ENC_PASSWD}=@${HOST}"
+fi
+
+#echo ${PASSWD} | vncpasswd -f | timeout 10s vncviewer ${HOST} -PasswordFile=/dev/stdin
+
+###echo ${PASSWD} | remmina --encrypt-password
+#remmina --no-tray-icon -c "vnc://dummy_username:8G/5Wh0yBSg=@${HOST}"
