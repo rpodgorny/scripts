@@ -187,15 +187,12 @@ def fix_radek_desktop():
 		'borg',
 		'broot',
 		'btrfs-progs',
-		'chromium',
-		'claude-code',
+		'chromium', 'firefox',
+		'claude-code', 'opencode',
 		'datovka',
-		'ddcutil',
-		'dool',
 		'expect',  # because of vnc_connect
-		'firefox',
 		'freecad',
-		'foot',
+		'alacritty', 'foot', 'ghostty',
 		'fwupd',
 		'fzf',
 		#'gqview',
@@ -203,50 +200,42 @@ def fix_radek_desktop():
 		'git',
 		'git-delta',
 		'gum',
-		'helix',
-		'htop',
-		'iotop',
+		'helix', 'neovim', 'vim',
+		'dool', 'htop', 'iotop',
 		'iwd',
 		'just',
 		'jq',
 		'lazygit',
-		'light',
+		'ddcutil', 'light',
 		'man',
 		'mc',
 		'mosh',
 		'moosefs',
-		'mpv',
-		'mtr', 'speedtest-cli'
-		'neovim',
+		'mpv', 'vlc',
+		'mtr', 'speedtest-cli',
 		'niri',
 		'obsidian',
-		'omnirun',
-		'opencode',
-		'pacman-contrib',
+		'omnirun', 'sshpass',
+		'pacman-contrib', 'yay',
 		'pipewire-pulse', 'pavucontrol',
 		'pre-commit',
 		'prusa-slicer',
-		'pyright',
 		'ripgrep',
 		'rsync',
-		'ruff',
+		'pyright', 'ruff',
 		'rust-analyzer',
 		'smartmontools',
-		'sshpass',  # for omnirun
 		'syncthing',
-		'terminus-font',
+		'terminus-font', 'ttf-terminus-nerd',
 		'thunderbird',
 		'tmux',
 		'tree',
 		'trezor-suite-appimage',
-		'ttf-terminus-nerd',
 		'unzip',
 		'uv',
-		'vlc',
 		'watchexec',
 		'wdisplays',
 		'wireguard-tools',
-		'yay',
 		'zip',
 	]:
 		installed = any(map(is_package_installed, p)) if isinstance(p, tuple) else is_package_installed(p)
@@ -268,17 +257,18 @@ def fix_radek_desktop():
 
 	call('pacman -Sy --noconfirm --needed remmina tigervnc wlvncc')
 
+	# TODO: perform the commented-out commands under user
 	call('pacman -Sy --noconfirm --needed rustup')
-	call('rustup update stable')
+	#call('rustup update stable')
 	call('pacman -Sy --noconfirm --needed mingw-w64-gcc')
-	call('rustup target add x86_64-pc-windows-gnu')
+	#call('rustup target add x86_64-pc-windows-gnu')
 	call('pacman -Syu --noconfirm --needed aarch64-linux-gnu-gcc')
-	call('rustup target add aarch64-unknown-linux-gnu')
-	call('cargo install cargo-audit')
-	call('cargo install cargo-msrv')
-	call('cargo install cargo-mutants')
-	call('cargo install cargo-nextest')
-	call('cargo install cargo-update')
+	#call('rustup target add aarch64-unknown-linux-gnu')
+	#call('cargo install cargo-audit')
+	#call('cargo install cargo-msrv')
+	#call('cargo install cargo-mutants')
+	#call('cargo install cargo-nextest')
+	#call('cargo install cargo-update')
 
 	call('pacman -Sy --noconfirm --needed podman')
 	call('usermod --add-subuids 100000-165535 radek')
