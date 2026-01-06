@@ -224,7 +224,7 @@ def fix_radek_desktop():
 		'rust-analyzer',
 		'smartmontools',
 		'syncthing',
-		'terminus-font', 'ttf-terminus-nerd',
+		'terminus-font', 'ttf-terminus-nerd', 'ttf-jetbrains-mono-nerd',
 		'thunderbird',
 		'tmux',
 		'tree',
