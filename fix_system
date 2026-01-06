@@ -202,7 +202,6 @@ def fix_radek_desktop():
 		'gum',
 		'helix', 'neovim', 'vim',
 		'dool', 'htop', 'iotop',
-		'iwd',
 		'just',
 		'jq',
 		'lazygit',
@@ -276,6 +275,9 @@ def fix_radek_desktop():
 
 	call('usermod -aG audio,video,wheel radek')
 
+	call('pacman -Sy --noconfirm --needed iwd')
+	call('systemctl enable iwd')
+
 	call('pacman -Sy --noconfirm --needed blueberry')
 	call('systemctl enable bluetooth')
 
@@ -294,6 +296,8 @@ def fix_radek_desktop():
 	# TODO: enable pipewire-pulse socket service for user
 
 	# TODO: add "192.168.11.11 mfsmaster" to /etc/hosts
+
+	# TODO: create /etc/systemd/network/wlan.network file
 
 
 def fix_services():
