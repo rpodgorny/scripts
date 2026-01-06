@@ -180,7 +180,6 @@ def fix_radek_desktop():
 		if not ask('add radek desktop stuff?'):
 			return
 	for p in [
-		'alsa-utils',
 		'base-devel',
 		'bitwarden',
 		'bitwarden-cli',
@@ -216,7 +215,7 @@ def fix_radek_desktop():
 		'obsidian',
 		'omnirun', 'sshpass',
 		'pacman-contrib', 'yay',
-		'pipewire-pulse', 'pavucontrol',
+		'alsa-utils', 'pipewire-alsa', 'pipewire-pulse', 'pavucontrol',
 		'pre-commit',
 		'prusa-slicer',
 		'ripgrep',
@@ -278,7 +277,7 @@ def fix_radek_desktop():
 	call('pacman -Sy --noconfirm --needed iwd')
 	call('systemctl enable iwd')
 
-	call('pacman -Sy --noconfirm --needed blueberry')
+	call('pacman -Sy --noconfirm --needed bluez bluez-utils blueman')
 	call('systemctl enable bluetooth')
 
 	call('pacman -Sy --noconfirm --needed earlyoom')
