@@ -215,7 +215,7 @@ def fix_radek_desktop():
 		'obsidian',
 		'omnirun', 'sshpass',
 		'pacman-contrib', 'yay',
-		'alsa-utils', 'pipewire-alsa', 'pipewire-pulse', 'pavucontrol',
+		'alsa-utils', 'pipewire-alsa', 'pipewire-pulse', 'pavucontrol', 'wireplumber', 'sof-firmware',  # sof-firmware for new intel laptops
 		'pre-commit',
 		'prusa-slicer',
 		'ripgrep',
