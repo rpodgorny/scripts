@@ -210,7 +210,7 @@ def fix_radek_desktop():
 		'mosh',
 		'moosefs',
 		'mpv', 'vlc',
-		'mtr', 'speedtest-cli',
+		'mtr', 'speedtest-cli', 'dog',
 		'niri',
 		'obsidian',
 		'omnirun', 'sshpass',
@@ -233,6 +233,7 @@ def fix_radek_desktop():
 		'wdisplays',
 		'wireguard-tools',
 		'zip',
+		'wev', 'libinput-tools',  # for debugging
 	]:
 		installed = any(map(is_package_installed, p)) if isinstance(p, tuple) else is_package_installed(p)
 		if installed:
