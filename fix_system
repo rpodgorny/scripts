@@ -181,13 +181,12 @@ def fix_radek_desktop():
 			return
 	for p in [
 		'base-devel',
-		'bitwarden',
-		'bitwarden-cli',
+		'bitwarden', 'bitwarden-cli', 'seahorse',
 		'borg',
 		'broot',
 		'btrfs-progs',
 		'chromium', 'firefox',
-		'claude-code', 'opencode',
+		'claude-code', 'gemini-cli', 'opencode',
 		'datovka',
 		'expect',  # because of vnc_connect
 		'freecad',
@@ -195,9 +194,7 @@ def fix_radek_desktop():
 		'fwupd',
 		'fzf',
 		#'gqview',
-		'gemini-cli',
-		'git',
-		'git-delta',
+		'git', 'git-delta',
 		'gum',
 		'helix', 'neovim', 'vim',
 		'dool', 'htop', 'iotop',
