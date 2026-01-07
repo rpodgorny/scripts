@@ -215,7 +215,6 @@ def fix_radek_desktop():
 		'obsidian',
 		'omnirun', 'sshpass',
 		'pacman-contrib', 'yay',
-		'alsa-utils', 'pipewire-alsa', 'pipewire-pulse', 'pavucontrol', 'wireplumber', 'sof-firmware',  # sof-firmware for new intel laptops
 		'pre-commit',
 		'prusa-slicer',
 		'ripgrep',
@@ -223,7 +222,6 @@ def fix_radek_desktop():
 		'pyright', 'ruff',
 		'rust-analyzer',
 		'smartmontools',
-		'syncthing',
 		'terminus-font', 'ttf-terminus-nerd', 'ttf-jetbrains-mono-nerd',
 		'thunderbird',
 		'tmux',
@@ -247,6 +245,10 @@ def fix_radek_desktop():
 			call('pacman -Sy --noconfirm --needed %s' % p)
 		else:
 			raise "TODO"
+
+	call('pacman -Sy --noconfirm --needed alsa-utils pipewire-alsa pipewire-pulse pavucontrol wireplumber')
+	#call('systemctl --user enable wireplumber')
+	#call('systemctl --user enable pipewire-pulse.socket')
 
 	call('pacman -Sy --noconfirm --needed bemenu-wayland i3status mako sway swayidle swaylock wofi xorg-xwayland')
 	call('pacman -Sy --noconfirm --needed bemenu-wayland mako niri otf-font-awesome waybar wofi xdg-desktop-portal-gnome xwayland-satellite')  # otf-font-awesome for waybar icons
@@ -292,11 +294,22 @@ def fix_radek_desktop():
 	call('pacman -Sy --noconfirm --needed rpcpu-git')
 	call('systemctl enable rpcpu')
 
-	# TODO: enable pipewire-pulse socket service for user
-
-	# TODO: add "192.168.11.11 mfsmaster" to /etc/hosts
+	if call('grep mfsmaster /etc/hosts', silent=True) != 0:
+		call('echo "192.168.11.11 mfsmaster >>/etc/hosts"')
 
 	# TODO: create /etc/systemd/network/wlan.network file
+
+	#call('pacman -Sy --noconfirm --needed syncthing')
+	#call('syncthing generate')
+	#call('syncthing cli config devices add --device-id=NVIX2FO-HMMN5FA-XPEUKBW-S76K4KO-GTZ7VIU-LL6CSWH-UKXZIBQ-5KGZYQJ --name=centrala')
+
+	fn = "/etc/systemd/logind.conf"
+	call('sed -e "s/^#HandleLidSwitch=/HandleLidSwitch=/g" -i %s' % fn)
+	call('sed -e "s/^HandleLidSwitch=.*/HandleLidSwitch=ignore/g" -i %s' % fn)
+
+	# for newer intel laptops
+	if call('dmesg | grep sof-audio', silent=True) == 0:
+		call('pacman -Sy --noconfirm --needed sof-firmware')
 
 
 def fix_services():
