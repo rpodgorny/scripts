@@ -309,6 +309,10 @@ def fix_radek_desktop():
 	if call('dmesg | grep sof-audio', silent=True) == 0:
 		call('pacman -Sy --noconfirm --needed sof-firmware')
 
+	fn = "/etc/pacman.conf"
+	call('sed -e "s/^#Color/Color/g" -i %s' % fn)
+	call('sed -e "s/^#VerbosePkgLists/VerbosePkgLists/g" -i %s' % fn)
+
 
 def fix_services():
 	for s in ['haveged', 'sshd', 'postfix', 'systemd-check-failed', 'systemd-networkd', 'systemd-resolved', 'systemd-timesyncd', 'uptimed']:
