@@ -215,7 +215,7 @@ def fix_desktop():
 		'jq',
 		'kernel-modules-hook',  # to keep modules around until reboot
 		'lazygit',
-		'ddcutil', 'light',
+		'brightnessctl', 'ddcutil', 'light',
 		'man',
 		'mc',
 		'mosh',
@@ -306,8 +306,11 @@ def fix_desktop():
 	call('pacman -Sy --noconfirm --needed rpbatmanager-git')
 	call('systemctl enable rpbatmanager')
 
-	call('pacman -Sy --noconfirm --needed rpcpu-git')
-	call('systemctl enable rpcpu')
+	#call('pacman -Sy --noconfirm --needed rpcpu-git')
+	#call('systemctl enable rpcpu')
+
+	call('pacman -Sy --noconfirm --needed power-profiles-daemon')
+	call('systemctl enable power-profiles-daemon')
 
 	if call('grep mfsmaster /etc/hosts', silent=True) != 0:
 		call('echo "192.168.11.11 mfsmaster >>/etc/hosts"')
