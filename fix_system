@@ -224,6 +224,7 @@ def fix_desktop():
 		'pacman-contrib', 'yay',
 		'pre-commit',
 		'prusa-slicer',
+		'python3.11',
 		'ripgrep',
 		'rsync',
 		'pyright', 'ruff',
