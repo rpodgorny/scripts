@@ -193,7 +193,6 @@ def fix_desktop():
 			return
 	for p in [
 		'base-devel',
-		'bitwarden', 'bitwarden-cli', 'seahorse',
 		'borg',
 		'broot', 'yazi',
 		'btrfs-progs',
@@ -262,6 +261,8 @@ def fix_desktop():
 
 	call('pacman -Sy --noconfirm --needed bemenu-wayland i3status mako sway swayidle swaylock wofi xorg-xwayland')
 	call('pacman -Sy --noconfirm --needed bemenu-wayland mako niri otf-font-awesome waybar wofi xdg-desktop-portal-gnome xwayland-satellite')  # otf-font-awesome for waybar icons
+
+	call('pacman -Sy --noconfirm --needed bitwarden bitwarden-cli seahorse encfs')
 
 	call('pacman -Sy --noconfirm --needed samba qemu-full')  # samba for host disk sharing
 
