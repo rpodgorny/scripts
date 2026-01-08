@@ -303,11 +303,12 @@ def fix_desktop():
 	if call('grep mfsmaster /etc/hosts', silent=True) != 0:
 		call('echo "192.168.11.11 mfsmaster >>/etc/hosts"')
 
-	# TODO: create /etc/systemd/network/wlan.network file
+	call("cp /etc/systemd/network/en.network /etc/systemd/network/wlan.network")
+	call('sed -e "s/^Name=en/Name=wlan/g" -i /etc/systemd/network/wlan.network')
 
 	call('pacman -Sy --noconfirm --needed syncthing')
-	call(f'syncthing generate | su - {user}')
-	call(f'syncthing cli config devices add --device-id=NVIX2FO-HMMN5FA-XPEUKBW-S76K4KO-GTZ7VIU-LL6CSWH-UKXZIBQ-5KGZYQJ --name=centrala | su - {user}')
+	#call(f'syncthing generate | su - {user}')
+	#call(f'syncthing cli config devices add --device-id=NVIX2FO-HMMN5FA-XPEUKBW-S76K4KO-GTZ7VIU-LL6CSWH-UKXZIBQ-5KGZYQJ --name=centrala | su - {user}')
 
 	fn = "/etc/systemd/logind.conf"
 	call('sed -e "s/^#HandleLidSwitch=/HandleLidSwitch=/g" -i %s' % fn)
