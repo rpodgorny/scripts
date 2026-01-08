@@ -181,6 +181,7 @@ def fix_radek_desktop():
 			return
 	for p in [
 		'alsa-utils',
+		'android-tools',  # for adb
 		'base-devel',
 		'bitwarden',
 		'bitwarden-cli',
@@ -205,10 +206,12 @@ def fix_radek_desktop():
 		'gum',
 		'helix',
 		'htop',
+		'intel-gpu-tools',
 		'iotop',
 		'iwd',
 		'just',
 		'jq',
+		'kernel-modules-hook',  # to keep modules around until reboot
 		'lazygit',
 		'light',
 		'man',
@@ -229,6 +232,7 @@ def fix_radek_desktop():
 		'pyright',
 		'ripgrep',
 		'rsync',
+		'rtorrent',
 		'ruff',
 		'rust-analyzer',
 		'smartmontools',
@@ -288,6 +292,9 @@ def fix_radek_desktop():
 
 	call('pacman -Sy --noconfirm --needed blueberry')
 	call('systemctl enable bluetooth')
+
+	call('pacman -Sy --noconfirm --needed zram-generator')
+	call('echo "[zram0]" >/etc/systemd/zram-generator.conf')
 
 	call('pacman -Sy --noconfirm --needed earlyoom')
 	call('systemctl enable earlyoom')
