@@ -111,39 +111,41 @@ def fix_sudo():
 
 
 def fix_radek():
-	if call('grep "^radek:" /etc/passwd', silent=True) != 0:
-		if not ask('add user radek?'):
-			return
-		call('useradd -m radek')
-		call('passwd radek')
-		call('usermod -aG wheel radek')  # TODO: ubuntu has different group
+	user = "radek"
 
-	if call('grep "^radek:" /etc/passwd | grep /usr/bin/fish', silent=True) != 0:
-		if ask('set fish as default shell for radek?'):
+	if call(f'grep "^{user}:" /etc/passwd', silent=True) != 0:
+		if not ask(f'add user {user}?'):
+			return
+		call(f'useradd -m {user}')
+		call(f'passwd {user}')
+		call(f'usermod -aG wheel {user}')  # TODO: ubuntu has different group
+
+	if call(f'grep "^{user}:" /etc/passwd | grep /usr/bin/fish', silent=True) != 0:
+		if ask(f'set fish as default shell for {user}?'):
 			if is_arch():
 				call('pacman -Sy --noconfirm --needed fish')
 			else:
 				raise "TODO"
-			call('usermod -s /usr/bin/fish radek')
+			call(f'usermod -s /usr/bin/fish {user}')
 
-	fn = '/home/radek/.forward'
+	fn = f'/home/{user}/.forward'
 	if not os.path.isfile(fn):
-		if ask('add .forward to radek@podgorny.cz for radek?'):
+		if ask(f'add .forward to radek@podgorny.cz for {user}?'):
 			call('echo "radek@podgorny.cz" > %s' % fn)
-			call('chown radek:radek %s' % fn)
+			call(f'chown {user}:{user} %s' % fn)
 
 	for repo in ['dotfiles', 'scripts']:
-		if not os.path.isdir('/home/radek/%s' % repo):
-			if ask('clone %s for radek?' % repo):
-				call('echo "cd /home/radek; git clone https://github.com/rpodgorny/%s" | su - radek' % repo)
+		if not os.path.isdir(f'/home/{user}/{repo}'):
+			if ask(f'clone {repo} for {user}?'):
+				call(f'echo "cd /home/{user}; git clone https://github.com/rpodgorny/{repo}" | su - {user}')
 				if repo == "dotfiles" and ask("install dotfiles?"):
-					call('echo "cd /home/radek/%s; ./install" | su - radek' % repo)
-		if os.path.isdir('/home/radek/%s' % repo):
-			if call('echo "cd /home/radek/%s; git remote -v|grep origin|grep fetch|grep https://" | su - radek' % repo, silent=True) != 0 \
-			or call('echo "cd /home/radek/%s; git remote -v|grep origin|grep push|grep ssh://" | su - radek' % repo, silent=True) != 0:
-				if ask('weird fetch/push urls found in /home/radek/%s. fix?' % repo):
-					call('echo "cd /home/radek/%s; git remote set-url origin https://github.com/rpodgorny/%s" | su - radek' % (repo, repo))
-					call('echo "cd /home/radek/%s; git remote set-url --push origin ssh://git@github.com/rpodgorny/%s" | su - radek' % (repo, repo))
+					call(f'echo "cd /home/{user}/{repo}; ./install" | su - {user}')
+		if os.path.isdir(f'/home/{user}/{repo}'):
+			if call(f'echo "cd /home/{user}/{repo}; git remote -v|grep origin|grep fetch|grep https://" | su - {user}', silent=True) != 0 \
+			or call(f'echo "cd /home/{user}/{repo}; git remote -v|grep origin|grep push|grep ssh://" | su - {user}', silent=True) != 0:
+				if ask(f'weird fetch/push urls found in /home/{user}/{repo}. fix?'):
+					call(f'echo "cd /home/{user}/{repo}; git remote set-url origin https://github.com/rpodgorny/{repo}" | su - {user}')
+					call(f'echo "cd /home/{user}/{repo}; git remote set-url --push origin ssh://git@github.com/rpodgorny/{repo}" | su - {user}')
 
 	if not is_package_installed('encfs'):
 		if ask('install encfs?'):
@@ -176,14 +178,16 @@ def fix_packages():
 
 
 def fix_radek_desktop():
-	if call('grep "^radek:" /etc/passwd', silent=True) != 0:
-		if not ask('add radek desktop stuff?'):
+	user = "radek"
+
+	if call(f'grep "^{user}:" /etc/passwd', silent=True) != 0:
+		if not ask(f'add {user} desktop stuff?'):
 			return
 	for p in [
 		'base-devel',
 		'bitwarden', 'bitwarden-cli', 'seahorse',
 		'borg',
-		'broot',
+		'broot', 'yazi',
 		'btrfs-progs',
 		'chromium', 'firefox',
 		'claude-code', 'gemini-cli', 'opencode',
@@ -208,7 +212,6 @@ def fix_radek_desktop():
 		'moosefs',
 		'mpv', 'vlc',
 		'mtr', 'speedtest-cli', 'dog',
-		'niri',
 		'obsidian',
 		'omnirun', 'sshpass',
 		'pacman-contrib', 'yay',
@@ -219,7 +222,6 @@ def fix_radek_desktop():
 		'pyright', 'ruff',
 		'rust-analyzer',
 		'smartmontools',
-		'terminus-font', 'ttf-terminus-nerd', 'ttf-jetbrains-mono-nerd',
 		'thunderbird',
 		'tmux',
 		'tree',
@@ -244,9 +246,11 @@ def fix_radek_desktop():
 		else:
 			raise "TODO"
 
+	call('pacman -Sy --noconfirm --needed terminus-font ttf-terminus-nerd ttf-jetbrains-mono-nerd')
+
 	call('pacman -Sy --noconfirm --needed alsa-utils pipewire-alsa pipewire-pulse pavucontrol wireplumber')
-	#call('systemctl --user enable wireplumber')
-	#call('systemctl --user enable pipewire-pulse.socket')
+	call(f'systemctl --user enable wireplumber | su - {user}')
+	call(f'systemctl --user enable pipewire-pulse.socket | su - {user}')
 
 	call('pacman -Sy --noconfirm --needed bemenu-wayland i3status mako sway swayidle swaylock wofi xorg-xwayland')
 	call('pacman -Sy --noconfirm --needed bemenu-wayland mako niri otf-font-awesome waybar wofi xdg-desktop-portal-gnome xwayland-satellite')  # otf-font-awesome for waybar icons
@@ -255,24 +259,19 @@ def fix_radek_desktop():
 
 	call('pacman -Sy --noconfirm --needed remmina tigervnc wlvncc')
 
-	# TODO: perform the commented-out commands under user
 	call('pacman -Sy --noconfirm --needed rustup')
-	#call('rustup update stable')
+	call(f'rustup update stable | su - {user}')
 	call('pacman -Sy --noconfirm --needed mingw-w64-gcc')
-	#call('rustup target add x86_64-pc-windows-gnu')
+	call(f'rustup target add x86_64-pc-windows-gnu | su - {user}')
 	call('pacman -Syu --noconfirm --needed aarch64-linux-gnu-gcc')
-	#call('rustup target add aarch64-unknown-linux-gnu')
-	#call('cargo install cargo-audit')
-	#call('cargo install cargo-msrv')
-	#call('cargo install cargo-mutants')
-	#call('cargo install cargo-nextest')
-	#call('cargo install cargo-update')
+	call(f'rustup target add aarch64-unknown-linux-gnu | su - {user}')
+	call(f'cargo install cargo-audit cargo-msvr cargo-mutants cargo-nextest cargo-update | su - {user}')
 
 	call('pacman -Sy --noconfirm --needed podman')
-	call('usermod --add-subuids 100000-165535 radek')
-	call('usermod --add-subgids 100000-165535 radek')
+	call(f'usermod --add-subuids 100000-165535 {user}')
+	call(f'usermod --add-subgids 100000-165535 {user}')
 
-	call('usermod -aG audio,video,wheel radek')
+	call(f'usermod -aG audio,video,wheel {user}')
 
 	call('pacman -Sy --noconfirm --needed iwd')
 	call('systemctl enable iwd')
@@ -297,9 +296,9 @@ def fix_radek_desktop():
 
 	# TODO: create /etc/systemd/network/wlan.network file
 
-	#call('pacman -Sy --noconfirm --needed syncthing')
-	#call('syncthing generate')
-	#call('syncthing cli config devices add --device-id=NVIX2FO-HMMN5FA-XPEUKBW-S76K4KO-GTZ7VIU-LL6CSWH-UKXZIBQ-5KGZYQJ --name=centrala')
+	call('pacman -Sy --noconfirm --needed syncthing')
+	call(f'syncthing generate | su - {user}')
+	call(f'syncthing cli config devices add --device-id=NVIX2FO-HMMN5FA-XPEUKBW-S76K4KO-GTZ7VIU-LL6CSWH-UKXZIBQ-5KGZYQJ --name=centrala | su - {user}')
 
 	fn = "/etc/systemd/logind.conf"
 	call('sed -e "s/^#HandleLidSwitch=/HandleLidSwitch=/g" -i %s' % fn)
