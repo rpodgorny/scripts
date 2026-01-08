@@ -274,7 +274,7 @@ def fix_desktop():
 	call(f'rustup target add x86_64-pc-windows-gnu | su - {user}')
 	call('pacman -Syu --noconfirm --needed aarch64-linux-gnu-gcc')
 	call(f'rustup target add aarch64-unknown-linux-gnu | su - {user}')
-	call(f'cargo install cargo-audit cargo-msvr cargo-mutants cargo-nextest cargo-update | su - {user}')
+	call(f'cargo install cargo-audit cargo-msrv cargo-mutants cargo-nextest cargo-update | su - {user}')
 
 	call('pacman -Sy --noconfirm --needed podman')
 	call(f'usermod --add-subuids 100000-165535 {user}')
