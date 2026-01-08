@@ -3,7 +3,11 @@
 import os
 import subprocess
 import glob
+import sys
 import socket
+
+# TODO: ugly shit
+yes = None
 
 
 def call(cmd, silent=False):
@@ -16,6 +20,10 @@ def call(cmd, silent=False):
 
 
 def ask(question):
+	global yes
+	if yes:
+		return True
+
 	res = input('%s [Y/n]' % question)
 	if res.lower() == 'y' or res == '':
 		return True
@@ -177,11 +185,11 @@ def fix_packages():
 			raise "TODO"
 
 
-def fix_radek_desktop():
+def fix_desktop():
 	user = "radek"
 
 	if call(f'grep "^{user}:" /etc/passwd', silent=True) != 0:
-		if not ask(f'add {user} desktop stuff?'):
+		if not ask(f'add desktop stuff for user {user}?'):
 			return
 	for p in [
 		'base-devel',
@@ -406,21 +414,6 @@ def hostname():
 	call('echo "%s" > %s' % (hostname, fn))
 
 
-# TODO: check for wayland, too?
-def fix_x():
-	# TODO: find a better way to test for X
-	if not os.path.isfile('/usr/bin/X'):
-		return
-	if is_package_installed('terminus-font'):
-		return
-	if not ask('install terminus font?'):
-		return
-	if is_arch():
-		call('pacman -Sy --noconfirm --needed terminus-font')
-	else:
-		raise "TODO"
-
-
 def fix_fstrim():
 	if is_raspi():
 		return
@@ -625,6 +618,10 @@ def faddnsc():
 
 
 def main():
+	global yes
+	if "-y" in sys.argv:
+		yes = True
+
 	hostname()
 	fix_timezone()
 	locale_gen()
@@ -648,8 +645,7 @@ def main():
 	fix_root()
 	fix_sudo()
 	fix_radek()
-	fix_radek_desktop()
-	fix_x()
+	fix_desktop()
 	fix_ntp_sync()
 	fix_watchdog()
 	fix_mcelog()
