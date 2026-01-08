@@ -253,7 +253,7 @@ def fix_desktop():
 		else:
 			raise "TODO"
 
-	call('pacman -Sy --noconfirm --needed terminus-font ttf-terminus-nerd ttf-jetbrains-mono-nerd')
+	call('pacman -Sy --noconfirm --needed terminus-font ttf-terminus-nerd ttf-jetbrains-mono-nerd ttf-droid')  # ttf-droid for firefox to not look ugly
 
 	call('pacman -Sy --noconfirm --needed alsa-utils pipewire-alsa pipewire-pulse pavucontrol wireplumber')
 	call(f'systemctl --user enable wireplumber | su - {user}')
