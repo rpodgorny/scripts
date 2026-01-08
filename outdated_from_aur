@@ -3,7 +3,7 @@
 repo="rpodgorny"
 
 # get all packages installed from your repo
-pkgs=$(pacman -Sl $repo | awk '/\[installed\]/ {print $2}')
+pkgs=$(pacman -Sl $repo | awk '/installed:/{print $2}')
 
 for pkg in $pkgs; do
     local_ver=$(pacman -Q $pkg | awk '{print $2}')

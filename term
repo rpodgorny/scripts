@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #exec ghostty --adjust-cell-height=-20% --theme="light:iTerm2 Light Background,dark:iTerm2 Dark Background"
-exec ghostty --adjust-cell-height=-20% --theme="light:iTerm2 Light Background,dark:Ghostty Default Style Dark"
+exec ghostty --theme="light:iTerm2 Light Background,dark:Ghostty Default Style Dark"
 
 exec foot "$@"
 

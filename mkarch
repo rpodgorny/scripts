@@ -78,7 +78,7 @@ DHCP=yes'''
 	run('cp ~/scripts/fix_system /mnt/')
 	#run('arch-chroot /mnt pacman -Syu --noconfirm python')
 	run('pacstrap /mnt python')
-	run('arch-chroot /mnt /fix_system')
+	run('arch-chroot /mnt /fix_system -y')
 	run('rm /mnt/fix_system')
 
 	run('arch-chroot /mnt pacman -Scc --noconfirm')

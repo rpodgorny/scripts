@@ -3,7 +3,11 @@
 import os
 import subprocess
 import glob
+import sys
 import socket
+
+# TODO: ugly shit
+yes = None
 
 
 def call(cmd, silent=False):
@@ -16,6 +20,10 @@ def call(cmd, silent=False):
 
 
 def ask(question):
+	global yes
+	if yes:
+		return True
+
 	res = input('%s [Y/n]' % question)
 	if res.lower() == 'y' or res == '':
 		return True
@@ -111,39 +119,41 @@ def fix_sudo():
 
 
 def fix_radek():
-	if call('grep "^radek:" /etc/passwd', silent=True) != 0:
-		if not ask('add user radek?'):
-			return
-		call('useradd -m radek')
-		call('passwd radek')
-		call('usermod -aG wheel radek')  # TODO: ubuntu has different group
+	user = "radek"
 
-	if call('grep "^radek:" /etc/passwd | grep /usr/bin/fish', silent=True) != 0:
-		if ask('set fish as default shell for radek?'):
+	if call(f'grep "^{user}:" /etc/passwd', silent=True) != 0:
+		if not ask(f'add user {user}?'):
+			return
+		call(f'useradd -m {user}')
+		call(f'passwd {user}')
+		call(f'usermod -aG wheel {user}')  # TODO: ubuntu has different group
+
+	if call(f'grep "^{user}:" /etc/passwd | grep /usr/bin/fish', silent=True) != 0:
+		if ask(f'set fish as default shell for {user}?'):
 			if is_arch():
 				call('pacman -Sy --noconfirm --needed fish')
 			else:
 				raise "TODO"
-			call('usermod -s /usr/bin/fish radek')
+			call(f'usermod -s /usr/bin/fish {user}')
 
-	fn = '/home/radek/.forward'
+	fn = f'/home/{user}/.forward'
 	if not os.path.isfile(fn):
-		if ask('add .forward to radek@podgorny.cz for radek?'):
+		if ask(f'add .forward to radek@podgorny.cz for {user}?'):
 			call('echo "radek@podgorny.cz" > %s' % fn)
-			call('chown radek:radek %s' % fn)
+			call(f'chown {user}:{user} %s' % fn)
 
 	for repo in ['dotfiles', 'scripts']:
-		if not os.path.isdir('/home/radek/%s' % repo):
-			if ask('clone %s for radek?' % repo):
-				call('echo "cd /home/radek; git clone https://github.com/rpodgorny/%s" | su - radek' % repo)
+		if not os.path.isdir(f'/home/{user}/{repo}'):
+			if ask(f'clone {repo} for {user}?'):
+				call(f'echo "cd /home/{user}; git clone https://github.com/rpodgorny/{repo}" | su - {user}')
 				if repo == "dotfiles" and ask("install dotfiles?"):
-					call('echo "cd /home/radek/%s; ./install" | su - radek' % repo)
-		if os.path.isdir('/home/radek/%s' % repo):
-			if call('echo "cd /home/radek/%s; git remote -v|grep origin|grep fetch|grep https://" | su - radek' % repo, silent=True) != 0 \
-			or call('echo "cd /home/radek/%s; git remote -v|grep origin|grep push|grep ssh://" | su - radek' % repo, silent=True) != 0:
-				if ask('weird fetch/push urls found in /home/radek/%s. fix?' % repo):
-					call('echo "cd /home/radek/%s; git remote set-url origin https://github.com/rpodgorny/%s" | su - radek' % (repo, repo))
-					call('echo "cd /home/radek/%s; git remote set-url --push origin ssh://git@github.com/rpodgorny/%s" | su - radek' % (repo, repo))
+					call(f'echo "cd /home/{user}/{repo}; ./install" | su - {user}')
+		if os.path.isdir(f'/home/{user}/{repo}'):
+			if call(f'echo "cd /home/{user}/{repo}; git remote -v|grep origin|grep fetch|grep https://" | su - {user}', silent=True) != 0 \
+			or call(f'echo "cd /home/{user}/{repo}; git remote -v|grep origin|grep push|grep ssh://" | su - {user}', silent=True) != 0:
+				if ask(f'weird fetch/push urls found in /home/{user}/{repo}. fix?'):
+					call(f'echo "cd /home/{user}/{repo}; git remote set-url origin https://github.com/rpodgorny/{repo}" | su - {user}')
+					call(f'echo "cd /home/{user}/{repo}; git remote set-url --push origin ssh://git@github.com/rpodgorny/{repo}" | su - {user}')
 
 	if not is_package_installed('encfs'):
 		if ask('install encfs?'):
@@ -175,83 +185,67 @@ def fix_packages():
 			raise "TODO"
 
 
-def fix_radek_desktop():
-	if call('grep "^radek:" /etc/passwd', silent=True) != 0:
-		if not ask('add radek desktop stuff?'):
+def fix_desktop():
+	user = "radek"
+
+	if call(f'grep "^{user}:" /etc/passwd', silent=True) != 0:
+		if not ask(f'add desktop stuff for user {user}?'):
 			return
 	for p in [
-		'alsa-utils',
 		'android-tools',  # for adb
 		'base-devel',
-		'bitwarden',
-		'bitwarden-cli',
 		'borg',
-		'broot',
+		'broot', 'yazi',
 		'btrfs-progs',
-		'chromium',
-		'claude-code',
+		'chromium', 'firefox',
+		'claude-code', 'gemini-cli', 'opencode',
 		'datovka',
-		'ddcutil',
-		'dool',
 		'expect',  # because of vnc_connect
-		'firefox',
 		'freecad',
-		'foot',
+		'alacritty', 'foot', 'ghostty',
 		'fwupd',
 		'fzf',
 		#'gqview',
-		'gemini-cli',
-		'git',
-		'git-delta',
+		'git', 'git-delta',
 		'gum',
-		'helix',
-		'htop',
 		'intel-gpu-tools',
-		'iotop',
-		'iwd',
+		'helix', 'neovim', 'vim',
+		'dool', 'htop', 'iotop',
 		'just',
 		'jq',
 		'kernel-modules-hook',  # to keep modules around until reboot
 		'lazygit',
-		'light',
+		'ddcutil', 'light',
 		'man',
 		'mc',
 		'mosh',
 		'moosefs',
-		'mpv',
-		'mtr', 'speedtest-cli'
-		'neovim',
-		'niri',
+		'mpv', 'vlc',
+		'mtr', 'speedtest-cli', 'dog',
 		'obsidian',
-		'omnirun',
-		'opencode',
-		'pacman-contrib',
-		'pipewire-pulse', 'pavucontrol',
+		'omnirun', 'sshpass',
+		'pacman-contrib', 'yay',
 		'pre-commit',
 		'prusa-slicer',
-		'pyright',
+		'python311',
 		'ripgrep',
 		'rsync',
 		'rtorrent',
 		'ruff',
+		'pyright', 'ruff',
 		'rust-analyzer',
 		'smartmontools',
-		'sshpass',  # for omnirun
-		'syncthing',
-		'terminus-font',
 		'thunderbird',
 		'tmux',
 		'tree',
 		'trezor-suite-appimage',
-		'ttf-terminus-nerd',
 		'unzip',
 		'uv',
-		'vlc',
 		'watchexec',
 		'wdisplays',
 		'wireguard-tools',
-		'yay',
 		'zip',
+		'wev', 'libinput-tools',  # for debugging
 	]:
 		installed = any(map(is_package_installed, p)) if isinstance(p, tuple) else is_package_installed(p)
 		if installed:
@@ -265,32 +259,39 @@ def fix_radek_desktop():
 		else:
 			raise "TODO"
 
+	call('pacman -Sy --noconfirm --needed terminus-font ttf-terminus-nerd ttf-jetbrains-mono-nerd ttf-droid')  # ttf-droid for firefox to not look ugly
+
+	call('pacman -Sy --noconfirm --needed alsa-utils pipewire-alsa pipewire-pulse pavucontrol wireplumber')
+	call(f'systemctl --user enable wireplumber | su - {user}')
+	call(f'systemctl --user enable pipewire-pulse.socket | su - {user}')
+
 	call('pacman -Sy --noconfirm --needed bemenu-wayland i3status mako sway swayidle swaylock wofi xorg-xwayland')
 	call('pacman -Sy --noconfirm --needed bemenu-wayland mako niri otf-font-awesome waybar wofi xdg-desktop-portal-gnome xwayland-satellite')  # otf-font-awesome for waybar icons
+
+	call('pacman -Sy --noconfirm --needed bitwarden bitwarden-cli seahorse encfs')
 
 	call('pacman -Sy --noconfirm --needed samba qemu-full')  # samba for host disk sharing
 
 	call('pacman -Sy --noconfirm --needed remmina tigervnc wlvncc')
 
 	call('pacman -Sy --noconfirm --needed rustup')
-	call('rustup update stable')
+	call(f'rustup update stable | su - {user}')
 	call('pacman -Sy --noconfirm --needed mingw-w64-gcc')
-	call('rustup target add x86_64-pc-windows-gnu')
+	call(f'rustup target add x86_64-pc-windows-gnu | su - {user}')
 	call('pacman -Syu --noconfirm --needed aarch64-linux-gnu-gcc')
-	call('rustup target add aarch64-unknown-linux-gnu')
-	call('cargo install cargo-audit')
-	call('cargo install cargo-msrv')
-	call('cargo install cargo-mutants')
-	call('cargo install cargo-nextest')
-	call('cargo install cargo-update')
+	call(f'rustup target add aarch64-unknown-linux-gnu | su - {user}')
+	call(f'cargo install cargo-audit cargo-msrv cargo-mutants cargo-nextest cargo-update | su - {user}')
 
 	call('pacman -Sy --noconfirm --needed podman')
-	call('usermod --add-subuids 100000-165535 radek')
-	call('usermod --add-subgids 100000-165535 radek')
+	call(f'usermod --add-subuids 100000-165535 {user}')
+	call(f'usermod --add-subgids 100000-165535 {user}')
 
-	call('usermod -aG audio,video,wheel radek')
+	call(f'usermod -aG audio,video,wheel {user}')
 
-	call('pacman -Sy --noconfirm --needed blueberry')
+	call('pacman -Sy --noconfirm --needed iwd')
+	call('systemctl enable iwd')
+
+	call('pacman -Sy --noconfirm --needed bluez bluez-utils blueman')
 	call('systemctl enable bluetooth')
 
 	call('pacman -Sy --noconfirm --needed zram-generator')
@@ -308,9 +309,27 @@ def fix_radek_desktop():
 	call('pacman -Sy --noconfirm --needed rpcpu-git')
 	call('systemctl enable rpcpu')
 
-	# TODO: enable pipewire-pulse socket service for user
+	if call('grep mfsmaster /etc/hosts', silent=True) != 0:
+		call('echo "192.168.11.11 mfsmaster >>/etc/hosts"')
 
-	# TODO: add "192.168.11.11 mfsmaster" to /etc/hosts
+	call("cp /etc/systemd/network/en.network /etc/systemd/network/wlan.network")
+	call('sed -e "s/^Name=en/Name=wlan/g" -i /etc/systemd/network/wlan.network')
+
+	call('pacman -Sy --noconfirm --needed syncthing')
+	#call(f'syncthing generate | su - {user}')
+	#call(f'syncthing cli config devices add --device-id=NVIX2FO-HMMN5FA-XPEUKBW-S76K4KO-GTZ7VIU-LL6CSWH-UKXZIBQ-5KGZYQJ --name=centrala | su - {user}')
+
+	fn = "/etc/systemd/logind.conf"
+	call('sed -e "s/^#HandleLidSwitch=/HandleLidSwitch=/g" -i %s' % fn)
+	call('sed -e "s/^HandleLidSwitch=.*/HandleLidSwitch=ignore/g" -i %s' % fn)
+
+	# for newer intel laptops
+	if call('dmesg | grep sof-audio', silent=True) == 0:
+		call('pacman -Sy --noconfirm --needed sof-firmware')
+
+	fn = "/etc/pacman.conf"
+	call('sed -e "s/^#Color/Color/g" -i %s' % fn)
+	call('sed -e "s/^#VerbosePkgLists/VerbosePkgLists/g" -i %s' % fn)
 
 
 def fix_services():
@@ -404,21 +423,6 @@ def hostname():
 	while not hostname:
 		hostname = input('enter hostname: ').strip()
 	call('echo "%s" > %s' % (hostname, fn))
-
-
-# TODO: check for wayland, too?
-def fix_x():
-	# TODO: find a better way to test for X
-	if not os.path.isfile('/usr/bin/X'):
-		return
-	if is_package_installed('terminus-font'):
-		return
-	if not ask('install terminus font?'):
-		return
-	if is_arch():
-		call('pacman -Sy --noconfirm --needed terminus-font')
-	else:
-		raise "TODO"
 
 
 def fix_fstrim():
@@ -625,6 +629,10 @@ def faddnsc():
 
 
 def main():
+	global yes
+	if "-y" in sys.argv:
+		yes = True
+
 	hostname()
 	fix_timezone()
 	locale_gen()
@@ -648,8 +656,7 @@ def main():
 	fix_root()
 	fix_sudo()
 	fix_radek()
-	fix_radek_desktop()
-	fix_x()
+	fix_desktop()
 	fix_ntp_sync()
 	fix_watchdog()
 	fix_mcelog()
