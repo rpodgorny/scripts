@@ -185,7 +185,7 @@ def fix_packages():
     # to keep modules around until reboot
     r("pacman -Sy --noconfirm --needed kernel-modules-hook")
 
-    for p in ["haveged", "openssh", "postfix", "systemd-check-failed", "uptimed"]:
+    for p in ["openssh", "postfix", "systemd-check-failed", "uptimed"]:
         installed = any(map(is_package_installed, p)) if isinstance(p, tuple) else is_package_installed(p)
         if installed:
             continue
@@ -405,7 +405,7 @@ def fix_desktop():
 
 
 def fix_services():
-    for s in ["haveged", "sshd", "postfix", "systemd-check-failed", "systemd-networkd", "systemd-resolved", "systemd-timesyncd", "uptimed"]:
+    for s in ["sshd", "postfix", "systemd-check-failed", "systemd-networkd", "systemd-resolved", "systemd-timesyncd", "uptimed"]:
         if r(f"systemctl is-enabled {s} | grep enabled", silent=True) == 0:
             continue
         if not ask(f"enable and start {s}?"):
