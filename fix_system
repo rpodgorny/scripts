@@ -260,6 +260,7 @@ def fix_desktop():
 
     # editors
     r("pacman -Sy --noconfirm --needed helix neovim vim")
+    r("echo 'nvim --headless -c \"Lazy! sync\" -c \"qa\"' | su - {user}")
 
     # browsers
     r("pacman -Sy --noconfirm --needed brave-bin chromium firefox")
@@ -279,8 +280,8 @@ def fix_desktop():
 
     # audio
     r("pacman -Sy --noconfirm --needed alsa-utils pipewire-alsa pipewire-pulse pavucontrol wireplumber")
-    r(f"systemctl --user enable wireplumber | su - {user}")
-    r(f"systemctl --user enable pipewire-pulse.socket | su - {user}")
+    r(f"echo 'systemctl --user enable wireplumber' | su - {user}")
+    r(f"echo 'systemctl --user enable pipewire-pulse.socket' | su - {user}")
 
     # desktop debugging
     r("pacman -Sy --noconfirm --needed wev libinput-tools")
@@ -311,12 +312,12 @@ def fix_desktop():
 
     # rust development
     r("pacman -Sy --noconfirm --needed rustup")
-    r(f"rustup update stable | su - {user}")
+    r(f"echo 'rustup update stable' | su - {user}")
     r("pacman -Sy --noconfirm --needed mingw-w64-gcc")
-    r(f"rustup target add x86_64-pc-windows-gnu | su - {user}")
+    r(f"echo 'rustup target add x86_64-pc-windows-gnu' | su - {user}")
     r("pacman -Syu --noconfirm --needed aarch64-linux-gnu-gcc")
-    r(f"rustup target add aarch64-unknown-linux-gnu | su - {user}")
-    r(f"cargo install cargo-audit cargo-msrv cargo-mutants cargo-nextest cargo-update | su - {user}")
+    r(f"echo 'rustup target add aarch64-unknown-linux-gnu' | su - {user}")
+    r(f"echo 'cargo install cargo-audit cargo-msrv cargo-mutants cargo-nextest cargo-update' | su - {user}")
     # make sure this gets installed after rustup, otherwise is pulls rust as dependency
     r("pacman -Sy --noconfirm --needed rust-analyzer")
 
@@ -369,8 +370,8 @@ def fix_desktop():
     r('sed -e "s/^Name=en/Name=wlan/g" -i /etc/systemd/network/wlan.network')
 
     r("pacman -Sy --noconfirm --needed syncthing")
-    # call(f"syncthing generate | su - {user}")
-    # call(f"syncthing cli config devices add --device-id=NVIX2FO-HMMN5FA-XPEUKBW-S76K4KO-GTZ7VIU-LL6CSWH-UKXZIBQ-5KGZYQJ --name=centrala | su - {user}")
+    # call(f"echo 'syncthing generate' | su - {user}")
+    # call(f"echo 'syncthing cli config devices add --device-id=NVIX2FO-HMMN5FA-XPEUKBW-S76K4KO-GTZ7VIU-LL6CSWH-UKXZIBQ-5KGZYQJ --name=centrala' | su - {user}")
 
     fn = "/etc/systemd/logind.conf"
     r(f'sed -e "s/^#HandleLidSwitch=/HandleLidSwitch=/g" -i {fn}')
