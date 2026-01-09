@@ -12,7 +12,7 @@ yes = None
 
 def call(cmd, silent=False):
 	if not silent:
-		print(">>> %s" % cmd)
+		print(f">>> {cmd}")
 		stdout = None
 	else:
 		stdout = subprocess.DEVNULL
@@ -24,7 +24,7 @@ def ask(question):
 	if yes:
 		return True
 
-	res = input("%s [Y/n]" % question)
+	res = input(f"{question} [Y/n]")
 	if res.lower() == "y" or res == "":
 		return True
 	return False
@@ -52,7 +52,7 @@ def is_package_installed(package):
 	if not is_arch():
 		raise "TODO"
 	try:
-		subprocess.check_output("pacman -Qi %s" % package, shell=True, stderr=subprocess.PIPE)
+		subprocess.check_output(f"pacman -Qi {package}", shell=True, stderr=subprocess.PIPE)
 		return True
 	except Exception:
 		return False
@@ -60,11 +60,11 @@ def is_package_installed(package):
 
 def locale_gen():
 	fn = "/etc/locale.gen"
-	if call("grep \"^#en_US.UTF-8\" %s" % fn, silent=True) != 0:
+	if call(f"grep \"^#en_US.UTF-8\" {fn}", silent=True) != 0:
 		return
 	if not ask("fix locale.gen? (en_US.UTF-8)"):
 		return
-	call("sed -e \"s/^#en_US.UTF-8/en_US.UTF-8/g\" -i %s" % fn)
+	call(f"sed -e \"s/^#en_US.UTF-8/en_US.UTF-8/g\" -i {fn}")
 	call("locale-gen")
 
 
@@ -74,24 +74,24 @@ def locale():
 		return
 	if not ask("fix locale.conf? (en_US.UTF-8)"):
 		return
-	call("echo \"LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8\n\" > %s" % fn)
+	call(f"echo \"LANG=en_US.UTF-8\nLC_ALL=en_US.UTF-8\n\" > {fn}")
 
 
 def fix_mkinitcpio():
 	fn = "/etc/mkinitcpio.conf"
 	if not os.path.isfile(fn):
 		return
-	if call("grep \"^HOOKS=.*autodetect.*\" %s" % fn, silent=True) != 0:
+	if call(f"grep \"^HOOKS=.*autodetect.*\" {fn}", silent=True) != 0:
 		return
 	if not ask("fix mkinitcpio (remove autodetect hook)?"):
 		return
-	call("sed -e \"/^HOOKS=/s/autodetect //g\" -i %s" % fn)
+	call(f"sed -e \"/^HOOKS=/s/autodetect //g\" -i {fn}")
 	preset = "linux"
 	if os.path.isfile("/etc/mkinitcpio.d/linux-raspberrypi.preset"):
 		preset = "linux-raspberrypi"
 	elif os.path.isfile("/etc/mkinitcpio.d/linux-aarch64.preset"):
 		preset = "linux-aarch64"
-	call("mkinitcpio -p %s" % preset)
+	call(f"mkinitcpio -p {preset}")
 
 
 def fix_sudo():
@@ -108,12 +108,12 @@ def fix_sudo():
 %wheel ALL=(ALL) ALL
 #includedir /etc/sudoers.d"""
 	if not os.path.isfile(fn):
-		if ask("%s not found. fix?" % fn):
+		if ask(f"{fn} not found. fix?"):
 			open(fn, "w").write(wanted_content)
 		return
 	content = open(fn, "r").read()
 	if content != wanted_content:
-		if not ask("%s different content %s %s. fix?" % (fn, len(content), len(wanted_content))):
+		if not ask(f"{fn} different content {len(content)} {len(wanted_content)}. fix?"):
 			return
 	open(fn, "w").write(wanted_content)
 
@@ -139,8 +139,8 @@ def fix_radek():
 	fn = f"/home/{user}/.forward"
 	if not os.path.isfile(fn):
 		if ask(f"add .forward to radek@podgorny.cz for {user}?"):
-			call("echo \"radek@podgorny.cz\" > %s" % fn)
-			call(f"chown {user}:{user} %s" % fn)
+			call(f"echo \"radek@podgorny.cz\" > {fn}")
+			call(f"chown {user}:{user} {fn}")
 
 	for repo in ["dotfiles", "scripts"]:
 		if not os.path.isdir(f"/home/{user}/{repo}"):
@@ -167,7 +167,7 @@ def fix_root():
 	fn = "/root/.forward"
 	if not os.path.isfile(fn):
 		if ask("add .forward to radek@podgorny.cz for root?"):
-			call("echo \"radek@podgorny.cz\" > %s" % fn)
+			call(f"echo \"radek@podgorny.cz\" > {fn}")
 
 
 def fix_packages():
@@ -177,10 +177,10 @@ def fix_packages():
 			continue
 		if isinstance(p, tuple):
 			p = p[0]  # TODO: quick hack
-		if not ask("install %s?" % p):
+		if not ask(f"install {p}?"):
 			continue
 		if is_arch():
-			call("pacman -Sy --noconfirm --needed %s" % p)
+			call(f"pacman -Sy --noconfirm --needed {p}")
 		else:
 			raise "TODO"
 
@@ -253,10 +253,10 @@ def fix_desktop():
 			continue
 		if isinstance(p, tuple):
 			p = p[0]  # TODO: quick hack
-		if not ask("install %s?" % p):
+		if not ask(f"install {p}?"):
 			continue
 		if is_arch():
-			call("pacman -Sy --noconfirm --needed %s" % p)
+			call(f"pacman -Sy --noconfirm --needed {p}")
 		else:
 			raise "TODO"
 
@@ -324,16 +324,16 @@ def fix_desktop():
 	#call(f"syncthing cli config devices add --device-id=NVIX2FO-HMMN5FA-XPEUKBW-S76K4KO-GTZ7VIU-LL6CSWH-UKXZIBQ-5KGZYQJ --name=centrala | su - {user}")
 
 	fn = "/etc/systemd/logind.conf"
-	call("sed -e \"s/^#HandleLidSwitch=/HandleLidSwitch=/g\" -i %s" % fn)
-	call("sed -e \"s/^HandleLidSwitch=.*/HandleLidSwitch=ignore/g\" -i %s" % fn)
+	call(f"sed -e \"s/^#HandleLidSwitch=/HandleLidSwitch=/g\" -i {fn}")
+	call(f"sed -e \"s/^HandleLidSwitch=.*/HandleLidSwitch=ignore/g\" -i {fn}")
 
 	# for newer intel laptops
 	if call("dmesg | grep sof-audio", silent=True) == 0:
 		call("pacman -Sy --noconfirm --needed sof-firmware")
 
 	fn = "/etc/pacman.conf"
-	call("sed -e \"s/^#Color/Color/g\" -i %s" % fn)
-	call("sed -e \"s/^#VerbosePkgLists/VerbosePkgLists/g\" -i %s" % fn)
+	call(f"sed -e \"s/^#Color/Color/g\" -i {fn}")
+	call(f"sed -e \"s/^#VerbosePkgLists/VerbosePkgLists/g\" -i {fn}")
 
 
 def fix_services():
@@ -342,7 +342,7 @@ def fix_services():
 			continue
 		if not ask(f"enable and start {s}?"):
 			continue
-		call("systemctl enable --now %s.service" % s)
+		call(f"systemctl enable --now {s}.service")
 
 
 def fix_resolv_conf():
@@ -388,24 +388,24 @@ def fix_getty1():
 
 def fix_sshd_permit_root_login():
 	fn = "/etc/ssh/sshd_config"
-	if call("grep \"^#PermitRootLogin\" %s" % fn, silent=True) == 0:
+	if call(f"grep \"^#PermitRootLogin\" {fn}", silent=True) == 0:
 		return
-	print("PermitRootLogin not disabled in %s" % fn)
+	print(f"PermitRootLogin not disabled in {fn}")
 
 
 def fix_pacman_sources():
 	if not is_arch():
 		return
 	fn = "/etc/pacman.conf"
-	if call("grep \"^\[rpodgorny\]$\" %s" % fn, silent=True) == 0:
+	if call(f"grep \"^\[rpodgorny\]$\" {fn}", silent=True) == 0:
 		return
 	if not ask("add rpodgorny repo to pacman.conf?"):
 		return
-	call("""echo "
+	call(f"""echo "
 
 [rpodgorny]
 SigLevel = Never
-Server = http://archlinux.podgorny.cz/\$repo/os/\$arch" >> %s""" % fn)
+Server = http://archlinux.podgorny.cz/\$repo/os/\$arch" >> {fn}""")
 
 
 def fix_timezone():
@@ -414,7 +414,7 @@ def fix_timezone():
 		return
 	if not ask("set timezone to Europe/Prague?"):
 		return
-	call("ln -sf /usr/share/zoneinfo/Europe/Prague %s" % fn)
+	call(f"ln -sf /usr/share/zoneinfo/Europe/Prague {fn}")
 
 
 def hostname():
@@ -426,7 +426,7 @@ def hostname():
 	hostname = None
 	while not hostname:
 		hostname = input("enter hostname: ").strip()
-	call("echo \"%s\" > %s" % (hostname, fn))
+	call(f"echo \"{hostname}\" > {fn}")
 
 
 def fix_fstrim():
@@ -451,9 +451,9 @@ def fix_nginx():
 	fn = "/etc/nginx/nginx.conf"
 	if not os.path.isfile(fn):
 		return
-	if call("grep \"ssl_protocols TLSv1 TLSv1.1 TLSv1.2;\" %s" % fn, silent=True) == 0:
+	if call(f"grep \"ssl_protocols TLSv1 TLSv1.1 TLSv1.2;\" {fn}", silent=True) == 0:
 		return
-	print("%s found but sslv3 seems to be not disabled" % fn)
+	print(f"{fn} found but sslv3 seems to be not disabled")
 
 
 def fix_ntp_sync():
@@ -466,13 +466,13 @@ def fix_ntp_sync():
 
 def fix_ssh_host_keys_hostname():
 	deleted = False
-	should_be = "root@%s" % socket.gethostname()
+	should_be = f"root@{socket.gethostname()}"
 	fns = glob.glob("/etc/ssh/*_key.pub")
 	for fn in fns:
 		with open(fn, "r") as f:
 			user_and_host = f.readline().split()[-1]
 		if user_and_host != should_be:
-			print("i dont like %s in ssh host key in %s" % (user_and_host, fn))
+			print(f"i dont like {user_and_host} in ssh host key in {fn}")
 			if ask("delete?"):
 				os.remove(fn)
 				deleted = True
@@ -484,19 +484,19 @@ def fix_ssh_user_keys_hostname():
 	fns = glob.glob("/home/*/.ssh/id_rsa.pub")
 	for fn in fns:
 		user = fn.split("/")[2]
-		should_be = "%s@%s" % (user, socket.gethostname())
+		should_be = f"{user}@{socket.gethostname()}"
 		with open(fn, "r") as f:
 			user_and_host = f.readline().split()[-1]
 		if user_and_host != should_be:
-			print("i dont like %s in ssh user key in %s" % (user_and_host, fn))
+			print(f"i dont like {user_and_host} in ssh user key in {fn}")
 	fns = glob.glob("/root/.ssh/id_rsa.pub")
 	for fn in fns:
 		user = "root"
-		should_be = "%s@%s" % (user, socket.gethostname())
+		should_be = f"{user}@{socket.gethostname()}"
 		with open(fn, "r") as f:
 			user_and_host = f.readline().split()[-1]
 		if user_and_host != should_be:
-			print("i dont like %s in ssh user key in %s" % (user_and_host, fn))
+			print(f"i dont like {user_and_host} in ssh user key in {fn}")
 
 
 def fix_ssh_user_keys_wrong_type():
@@ -504,12 +504,12 @@ def fix_ssh_user_keys_wrong_type():
 	for fn in fns:
 		if "rsa" in fn:
 			continue
-		print("wrong ssh key found at %s" % fn)
+		print(f"wrong ssh key found at {fn}")
 	fns = glob.glob("/root/.ssh/id_*")
 	for fn in fns:
 		if "rsa" in fn:
 			continue
-		print("wrong type ssh user key found at %s" % fn)
+		print(f"wrong type ssh user key found at {fn}")
 
 
 def fix_ssh_root_authorized_keys():
@@ -522,13 +522,13 @@ def fix_postfix_ipv6():
 	fn = "/etc/postfix/main.cf"
 	if not os.path.isfile(fn):
 		return
-	if call("grep \"^inet_protocols = ipv4,ipv6$\" %s" % fn, silent=True) == 0:
+	if call(f"grep \"^inet_protocols = ipv4,ipv6$\" {fn}", silent=True) == 0:
 		return
-	if call("grep \"^inet_protocols = ipv4$\" %s" % fn, silent=True) != 0:
-		print("\"^inet_protocols = ipv4$\" not found in %s, this is weird" % fn)
+	if call(f"grep \"^inet_protocols = ipv4$\" {fn}", silent=True) != 0:
+		print(f"\"^inet_protocols = ipv4$\" not found in {fn}, this is weird")
 		return
 	if ask("ipv6 not set for postfix. fix?"):
-		call("sed -i \"s/^inet_protocols = ipv4$/inet_protocols = ipv4,ipv6/g\" %s" % fn)
+		call(f"sed -i \"s/^inet_protocols = ipv4$/inet_protocols = ipv4,ipv6/g\" {fn}")
 
 
 def fix_postfix_generic():
@@ -541,12 +541,12 @@ def fix_postfix_generic():
 	fn = "/etc/postfix/generic.pcre"
 	if os.path.isfile(fn):
 		return
-	if ask("%s not found. fix?" % fn):
-		call("echo \"/([a-z]+)@([^.]+)\.localdomain/  \$1+\$2@podgorny.cz\" >%s" % fn, silent=True)
-	if call("grep \"^smtp_generic_maps = %s$\" /etc/postfix/main.cf" % fn, silent=True) == 0:
+	if ask(f"{fn} not found. fix?"):
+		call(f"echo \"/([a-z]+)@([^.]+)\.localdomain/  \$1+\$2@podgorny.cz\" >{fn}", silent=True)
+	if call(f"grep \"^smtp_generic_maps = {fn}$\" /etc/postfix/main.cf", silent=True) == 0:
 		return
-	if ask("%s not set up. fix?" % fn):
-		call("echo \"smtp_generic_maps = pcre:%s\" >>/etc/postfix/main.cf" % fn)
+	if ask(f"{fn} not set up. fix?"):
+		call(f"echo \"smtp_generic_maps = pcre:{fn}\" >>/etc/postfix/main.cf")
 
 
 def fix_watchdog():
@@ -560,15 +560,15 @@ def fix_journald_storage():
 	if not is_raspi():
 		return
 	fn = "/etc/systemd/journald.conf"
-	if call("grep \"Storage=\" %s" % fn, silent=True) != 0:
-		print("no Storage= line found in %s, doing nothing" % fn)
+	if call(f"grep \"Storage=\" {fn}", silent=True) != 0:
+		print(f"no Storage= line found in {fn}, doing nothing")
 		return
-	if call("grep \"^Storage=volatile\" %s" % fn, silent=True) == 0:
+	if call(f"grep \"^Storage=volatile\" {fn}", silent=True) == 0:
 		return
-	if not ask("set Storage=volatile in %s?" % fn):
+	if not ask(f"set Storage=volatile in {fn}?"):
 		return
-	call("sed -e \"s/^#Storage=/Storage=/g\" -i %s" % fn)
-	call("sed -e \"s/^Storage=auto/Storage=volatile/g\" -i %s" % fn)
+	call(f"sed -e \"s/^#Storage=/Storage=/g\" -i {fn}")
+	call(f"sed -e \"s/^Storage=auto/Storage=volatile/g\" -i {fn}")
 
 
 def audit():
@@ -576,15 +576,15 @@ def audit():
 		print("audit=0 found in /proc/cmdline")
 
 	fn = "/etc/systemd/journald.conf"
-	if call("grep \"Audit=\" %s" % fn, silent=True) != 0:
-		print("no Audit= line found in %s, doing nothing" % fn)
+	if call(f"grep \"Audit=\" {fn}", silent=True) != 0:
+		print(f"no Audit= line found in {fn}, doing nothing")
 		return
-	if call("grep \"^Audit=no\" %s" % fn, silent=True) == 0:
+	if call(f"grep \"^Audit=no\" {fn}", silent=True) == 0:
 		return
-	if not ask("set Audit=no in %s?" % fn):
+	if not ask(f"set Audit=no in {fn}?"):
 		return
-	call("sed -e \"s/^#Audit=/Audit=/g\" -i %s" % fn)
-	call("sed -e \"s/^Audit=yes/Audit=no/g\" -i %s" % fn)
+	call(f"sed -e \"s/^#Audit=/Audit=/g\" -i {fn}")
+	call(f"sed -e \"s/^Audit=yes/Audit=no/g\" -i {fn}")
 
 
 def docker_daemon_json():
@@ -593,19 +593,19 @@ def docker_daemon_json():
 	wanted_content = "{\"log-driver\": \"local\"}"
 	fn = "/etc/docker/daemon.json"
 	if not os.path.isfile(fn):
-		if ask("%s not found. fix?" % fn):
+		if ask(f"{fn} not found. fix?"):
 			open(fn, "w").write(wanted_content)
 		return
 	content = open(fn, "r").read()
 	if content != wanted_content:
-		if not ask("%s different content %s %s. fix?" % (fn, len(content), len(wanted_content))):
+		if not ask(f"{fn} different content {len(content)} {len(wanted_content)}. fix?"):
 			return
 	open(fn, "w").write(wanted_content)
 
 
 def running_kernel():
 	ver = subprocess.check_output("uname -r", shell=True).decode().strip()
-	if os.path.isdir("/lib/modules/%s" % ver):
+	if os.path.isdir(f"/lib/modules/{ver}"):
 		return
 	print("running old kernel, reboot recommended!")
 	if ask("reboot?"):
@@ -614,8 +614,8 @@ def running_kernel():
 
 def ucode():
 	for fn in glob.glob("/boot/loader/entries/*.conf"):
-		if call("grep ucode %s" % fn, silent=True) != 0:
-			print("ucode does not seem to enabled for %s" % fn)
+		if call(f"grep ucode {fn}", silent=True) != 0:
+			print(f"ucode does not seem to enabled for {fn}")
 
 
 def faddnsc():
@@ -627,9 +627,9 @@ def faddnsc():
 				raise "TODO"
 	fn = "/etc/faddnsc.conf"
 	if os.path.isfile(fn):
-		if call("cat %s | grep podgorny.cz" % fn, silent=True) != 0 \
-		and call("cat %s | grep asterix.cz" % fn, silent=True) != 0:
-			print("%s not set for neither podgorny.cz nor asterix.cz" % fn)
+		if call(f"cat {fn} | grep podgorny.cz", silent=True) != 0 \
+		and call(f"cat {fn} | grep asterix.cz", silent=True) != 0:
+			print(f"{fn} not set for neither podgorny.cz nor asterix.cz")
 
 
 def main():
@@ -673,6 +673,6 @@ def main():
 	running_kernel()  # this should be last (because of possible reboot)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 	main()
 
