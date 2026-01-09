@@ -263,6 +263,7 @@ def fix_desktop():
 
     # browsers
     r("pacman -Sy --noconfirm --needed brave-bin chromium firefox")
+    r("xdg-settings set default-web-browser firefox.desktop | su - {user}")
 
     # video players
     r("pacman -Sy --noconfirm --needed mpv vlc")
