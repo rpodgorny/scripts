@@ -274,6 +274,9 @@ def fix_desktop():
     # network debugging
     r("pacman -Sy --noconfirm --needed dog mtr speedtest-cli")
 
+    # benchmarking
+    r("pacman -Sy --noconfirm --needed xmrig-donateless")
+
     # audio firmware - for newer intel laptops
     if r("dmesg | grep sof-audio", silent=True) == 0:
         r("pacman -Sy --noconfirm --needed sof-firmware")
@@ -287,8 +290,11 @@ def fix_desktop():
     r("pacman -Sy --noconfirm --needed wev libinput-tools")
 
     cpu_vendor = get_cpu_vendor()
-    gputop_pkg = {"intel": "intel-gpu-tools", "amd": "amdgpu_top"}.get(cpu_vendor)
-    r(f"pacman -Sy --noconfirm --needed {gputop_pkg}")
+    gpu_pkgs = {
+        "intel": "intel-gpu-tools vulkan-intel",
+        "amd": "amdgpu_top vulkan-radeon",
+    }.get(cpu_vendor)
+    r(f"pacman -Sy --noconfirm --needed {gpu_pkgs}")
 
     # window manager and stuff
     # r("pacman -Sy --noconfirm --needed bemenu-wayland i3status mako sway swayidle swaylock wofi xorg-xwayland")
@@ -380,6 +386,12 @@ def fix_desktop():
     fn = "/etc/pacman.conf"
     r(f'sed -e "s/^#Color/Color/g" -i {fn}')
     r(f'sed -e "s/^#VerbosePkgLists/VerbosePkgLists/g" -i {fn}')
+
+    # TODO: login to bitwarden
+    # TODO: login to firefox
+    # TODO: login to thunderbird
+    # TODO: login steam
+    # TODO: login ea (steam -> unravel two)
 
 
 def fix_services():
