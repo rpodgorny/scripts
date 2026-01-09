@@ -45,7 +45,17 @@ def is_arch():
 
 
 def is_debian_or_ubuntu():
-    raise "TODO"
+    return os.path.isfile("/etc/debian_version")
+
+
+def get_cpu_vendor():
+    with open("/proc/cpuinfo", "r") as f:
+        cpuinfo = f.read()
+    if "GenuineIntel" in cpuinfo:
+        return "intel"
+    elif "AuthenticAMD" in cpuinfo:
+        return "amd"
+    return None
 
 
 def is_package_installed(package):
@@ -197,34 +207,14 @@ def fix_desktop():
         "broot",
         "yazi",
         "btrfs-progs",
-        "chromium",
-        "firefox",
-        "claude-code",
-        "gemini-cli",
-        "opencode",
         "datovka",
-        "expect",  # because of vnc_connect
-        "freecad",
-        "alacritty",
-        "foot",
-        "ghostty",
         "fwupd",
         "fzf",
         # "gqview",
-        "git",
-        "git-delta",
         "gum",
-        "intel-gpu-tools",
-        "helix",
-        "neovim",
-        "vim",
-        "dool",
-        "htop",
-        "iotop",
         "just",
         "jq",
         "kernel-modules-hook",  # to keep modules around until reboot
-        "lazygit",
         "brightnessctl",
         "ddcutil",
         "light",
@@ -232,40 +222,24 @@ def fix_desktop():
         "mc",
         "mosh",
         "moosefs",
-        "mpv",
-        "vlc",
-        "mtr",
-        "speedtest-cli",
-        "dog",
         "obsidian",
         "omnirun",
         "sshpass",
         "pacman-contrib",
         "yay",
         "pmount",
-        "pre-commit",
-        "prusa-slicer",
-        "python311",
         "ripgrep",
         "rsync",
         "rtorrent",
-        "ruff",
-        "pyright",
-        "ruff",
-        "rust-analyzer",
-        "smartmontools",
         "thunderbird",
         "tmux",
         "tree",
         "trezor-suite-appimage",
         "unzip",
-        "uv",
         "watchexec",
         "wdisplays",
         "wireguard-tools",
         "zip",
-        "wev",
-        "libinput-tools",  # for debugging
     ]:
         installed = any(map(is_package_installed, p)) if isinstance(p, tuple) else is_package_installed(p)
         if installed:
@@ -281,19 +255,61 @@ def fix_desktop():
 
     r("pacman -Sy --noconfirm --needed terminus-font ttf-terminus-nerd ttf-jetbrains-mono-nerd ttf-droid")  # ttf-droid for firefox to not look ugly
 
+    # terminals
+    r("pacman -Sy --noconfirm --needed alacritty ghostty foot")
+
+    # editors
+    r("pacman -Sy --noconfirm --needed helix neovim vim")
+
+    # browsers
+    r("pacman -Sy --noconfirm --needed brave-bin chromium firefox")
+
+    # video players
+    r("pacman -Sy --noconfirm --needed mpv vlc")
+
+    # system debugging
+    r("pacman -Sy --noconfirm --needed dool htop iotop nvme-cli smartmontools")
+
+    # network debugging
+    r("pacman -Sy --noconfirm --needed dog mtr speedtest-cli")
+
+    # audio firmware - for newer intel laptops
+    if r("dmesg | grep sof-audio", silent=True) == 0:
+        r("pacman -Sy --noconfirm --needed sof-firmware")
+
+    # audio
     r("pacman -Sy --noconfirm --needed alsa-utils pipewire-alsa pipewire-pulse pavucontrol wireplumber")
     r(f"systemctl --user enable wireplumber | su - {user}")
     r(f"systemctl --user enable pipewire-pulse.socket | su - {user}")
 
-    r("pacman -Sy --noconfirm --needed bemenu-wayland i3status mako sway swayidle swaylock wofi xorg-xwayland")
+    # desktop debugging
+    r("pacman -Sy --noconfirm --needed wev libinput-tools")
+
+    cpu_vendor = get_cpu_vendor()
+    gputop_pkg = {"intel": "intel-gpu-tools", "amd": "amdgpu_top"}.get(cpu_vendor)
+    r(f"pacman -Sy --noconfirm --needed {gputop_pkg}")
+
+    # window manager and stuff
+    # r("pacman -Sy --noconfirm --needed bemenu-wayland i3status mako sway swayidle swaylock wofi xorg-xwayland")
     r("pacman -Sy --noconfirm --needed bemenu-wayland mako niri otf-font-awesome waybar wofi xdg-desktop-portal-gnome xwayland-satellite")  # otf-font-awesome for waybar icons
 
+    # encryption and passwords
     r("pacman -Sy --noconfirm --needed bitwarden bitwarden-cli seahorse encfs")
 
+    # virtualization
     r("pacman -Sy --noconfirm --needed samba qemu-full")  # samba for host disk sharing
 
+    # remote desktop
     r("pacman -Sy --noconfirm --needed remmina tigervnc wlvncc")
+    r("pacman -Sy --noconfirm --needed excpect")  # because of vnc_connect
 
+    # development
+    r("pacman -Sy --noconfirm --needed git git-delta lazygit pre-commit")
+
+    # ai for development
+    r("pacman -Sy --noconfirm --needed claude-code gemini-cli opencode")
+
+    # rust development
     r("pacman -Sy --noconfirm --needed rustup")
     r(f"rustup update stable | su - {user}")
     r("pacman -Sy --noconfirm --needed mingw-w64-gcc")
@@ -301,16 +317,30 @@ def fix_desktop():
     r("pacman -Syu --noconfirm --needed aarch64-linux-gnu-gcc")
     r(f"rustup target add aarch64-unknown-linux-gnu | su - {user}")
     r(f"cargo install cargo-audit cargo-msrv cargo-mutants cargo-nextest cargo-update | su - {user}")
+    # make sure this gets installed after rustup, otherwise is pulls rust as dependency
+    r("pacman -Sy --noconfirm --needed rust-analyzer")
 
+    # python development
+    r("pacman -Sy --noconfirm --needed python311 pyright ruff uv")
+
+    # electron development
+    r("pacman -Sy --noconfirm --needed electron")
+
+    # 3d modelling and printing
+    r("pacman -Sy --noconfirm --needed freecad openscad prusa-slicer")
+
+    # containers
     r("pacman -Sy --noconfirm --needed podman")
     r(f"usermod --add-subuids 100000-165535 {user}")
     r(f"usermod --add-subgids 100000-165535 {user}")
 
     r(f"usermod -aG audio,input,video,wheel {user}")
 
+    # wireless networking
     r("pacman -Sy --noconfirm --needed iwd")
     r("systemctl enable iwd")
 
+    # bluetooth
     r("pacman -Sy --noconfirm --needed bluez bluez-utils blueman")
     r("systemctl enable bluetooth")
 
@@ -345,10 +375,6 @@ def fix_desktop():
     fn = "/etc/systemd/logind.conf"
     r(f'sed -e "s/^#HandleLidSwitch=/HandleLidSwitch=/g" -i {fn}')
     r(f'sed -e "s/^HandleLidSwitch=.*/HandleLidSwitch=ignore/g" -i {fn}')
-
-    # for newer intel laptops
-    if r("dmesg | grep sof-audio", silent=True) == 0:
-        r("pacman -Sy --noconfirm --needed sof-firmware")
 
     fn = "/etc/pacman.conf"
     r(f'sed -e "s/^#Color/Color/g" -i {fn}')
@@ -632,16 +658,8 @@ def running_kernel():
 
 
 def ucode():
-    # Check CPU vendor and install appropriate microcode
-    with open("/proc/cpuinfo", "r") as f:
-        cpuinfo = f.read()
-
-    if "GenuineIntel" in cpuinfo:
-        ucode_pkg = "intel-ucode"
-    elif "AuthenticAMD" in cpuinfo:
-        ucode_pkg = "amd-ucode"
-    else:
-        ucode_pkg = None
+    cpu_vendor = get_cpu_vendor()
+    ucode_pkg = {"intel": "intel-ucode", "amd": "amd-ucode"}.get(cpu_vendor)
 
     if ucode_pkg and not is_package_installed(ucode_pkg):
         if ask(f"install {ucode_pkg}?"):
