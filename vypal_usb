@@ -60,34 +60,34 @@ mount ${DEV}1 ${MNT}
 ###editor no
 ###' >>${MNT}/loader/loader.conf
 
-echo "menuentry \"Arch Linux install medium (x86_64, UEFI) in RAM\" --class arch --class gnu-linux --class gnu --class os --id 'archlinux-ram' {
-    set gfxpayload=keep
-    linux /arch/boot/x86_64/vmlinuz-linux archisobasedir=arch archisodevice=UUID=\${ARCHISO_UUID} copytoram=y cow_spacesize=2G
-    initrd /arch/boot/intel-ucode.img /arch/boot/amd-ucode.img /arch/boot/x86_64/initramfs-linux.img
-}
-" >> ${MNT}/boot/grub/grub.cfg
+#echo "menuentry \"Arch Linux install medium (x86_64, UEFI) in RAM\" --class arch --class gnu-linux --class gnu --class os --id 'archlinux-ram' {
+#    set gfxpayload=keep
+#    linux /arch/boot/x86_64/vmlinuz-linux archisobasedir=arch archisodevice=UUID=\${ARCHISO_UUID} copytoram=y cow_spacesize=2G
+#    initrd /arch/boot/intel-ucode.img /arch/boot/amd-ucode.img /arch/boot/x86_64/initramfs-linux.img
+#}
+#" >> ${MNT}/boot/grub/grub.cfg
 
 curl ${DATA_PREFIX}/memtest86.efi >${MNT}/EFI/memtest86.efi
-#echo 'title Memtest86
-#linux EFI/memtest86.efi
-#' > ${MNT}/loader/entries/98-memtest86.conf
-echo "menuentry \"Custom Memtest86\" {
-insmod chain
-search --no-floppy --set=root --label ARCHISO_ATX
-chainloader /EFI/memtest86.efi
-}" >> ${MNT}/boot/grub/grub.cfg
+echo 'title Custom Memtest86
+linux EFI/memtest86.efi
+' > ${MNT}/loader/entries/98-memtest86.conf
+#echo "menuentry \"Custom Memtest86\" {
+#insmod chain
+#search --no-floppy --set=root --label ARCHISO_ATX
+#chainloader /EFI/memtest86.efi
+#}" >> ${MNT}/boot/grub/grub.cfg
 
 curl ${DATA_PREFIX}/memtest86_plus.efi >${MNT}/EFI/memtest86_plus.efi
-#echo 'title Memtest86+
-#linux EFI/memtest86_plus.efi
-#' > ${MNT}/loader/entries/99-memtest86-plus.conf
-echo "menuentry \"Custom Memtest86+\" {
-insmod chain
-search --no-floppy --set=root --label ARCHISO_ATX
-chainloader /EFI/memtest86_plus.efi
-}" >> ${MNT}/boot/grub/grub.cfg
+echo 'title Custom Memtest86+
+linux EFI/memtest86_plus.efi
+' > ${MNT}/loader/entries/99-memtest86-plus.conf
+#echo "menuentry \"Custom Memtest86+\" {
+#insmod chain
+#search --no-floppy --set=root --label ARCHISO_ATX
+#chainloader /EFI/memtest86_plus.efi
+#}" >> ${MNT}/boot/grub/grub.cfg
 
-sed -i 's/default=archlinux/default=archlinux-ram/g' ${MNT}/boot/grub/grub.cfg
+#sed -i 's/default=archlinux/default=archlinux-ram/g' ${MNT}/boot/grub/grub.cfg
 
 curl ${DATA_PREFIX}/freedos.img >${MNT}/arch/boot/freedos.img
 echo '
