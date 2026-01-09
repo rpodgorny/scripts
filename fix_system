@@ -225,6 +225,7 @@ def fix_desktop():
 		'obsidian',
 		'omnirun', 'sshpass',
 		'pacman-contrib', 'yay',
+		'pmount',
 		'pre-commit',
 		'prusa-slicer',
 		'python311',
