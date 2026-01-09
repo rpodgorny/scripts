@@ -105,6 +105,8 @@ def fix_mkinitcpio():
 
 
 def fix_sudo():
+    r("pacman -Sy --noconfirm --needed sudo")
+
     fn = "/etc/sudoers"
     if not os.path.isfile(fn):
         return
@@ -180,7 +182,10 @@ def fix_root():
 
 
 def fix_packages():
-    for p in ["git", "haveged", ("openssh", "openssh-hpn", "openssh-hpn-git"), "postfix", "systemd-check-failed", "sudo", "uptimed"]:
+    # to keep modules around until reboot
+    r("pacman -Sy --noconfirm --needed kernel-modules-hook")
+
+    for p in ["haveged", "openssh", "postfix", "systemd-check-failed", "uptimed"]:
         installed = any(map(is_package_installed, p)) if isinstance(p, tuple) else is_package_installed(p)
         if installed:
             continue
@@ -201,37 +206,23 @@ def fix_desktop():
         if not ask(f"add desktop stuff for user {user}?"):
             return
     for p in [
-        "android-tools",  # for adb
         "base-devel",
-        "borg",
-        "broot",
-        "yazi",
         "btrfs-progs",
-        "datovka",
         "fwupd",
         "fzf",
         # "gqview",
         "gum",
         "just",
         "jq",
-        "kernel-modules-hook",  # to keep modules around until reboot
-        "brightnessctl",
-        "ddcutil",
-        "light",
         "man",
-        "mc",
-        "mosh",
         "moosefs",
         "obsidian",
-        "omnirun",
-        "sshpass",
         "pacman-contrib",
         "yay",
         "pmount",
         "ripgrep",
         "rsync",
         "rtorrent",
-        "thunderbird",
         "tmux",
         "tree",
         "trezor-suite-appimage",
@@ -265,6 +256,12 @@ def fix_desktop():
     # browsers
     r("pacman -Sy --noconfirm --needed brave-bin chromium firefox")
 
+    # email and stuff
+    r("pacman -Sy --noconfirm --needed datovka thunderbird")
+
+    # file managers
+    r("pacman -Sy --noconfirm --needed broot mc yazi")
+
     # video players
     r("pacman -Sy --noconfirm --needed mpv vlc")
 
@@ -273,6 +270,15 @@ def fix_desktop():
 
     # network debugging
     r("pacman -Sy --noconfirm --needed dog mtr speedtest-cli")
+
+    # backlight
+    r("pacman -Sy --noconfirm --needed ddcutil brightnessctl light")
+
+    # android
+    r("pacman -Sy --noconfirm --needed android-tools")
+
+    # backup
+    # TODO r("pacman -Sy --noconfirm --needed restic")
 
     # audio firmware - for newer intel laptops
     if r("dmesg | grep sof-audio", silent=True) == 0:
@@ -299,6 +305,9 @@ def fix_desktop():
 
     # virtualization
     r("pacman -Sy --noconfirm --needed samba qemu-full")  # samba for host disk sharing
+
+    # remote shell
+    r("pacman -Sy --noconfirm --needed mosh omnirun sshpass")
 
     # remote desktop
     r("pacman -Sy --noconfirm --needed remmina tigervnc wlvncc")
@@ -488,6 +497,7 @@ def fix_fstrim():
 
 
 def fix_backup():
+    r("pacman -Sy --noconfirm --needed borg")
     if os.path.islink("/etc/systemd/system/timers.target.wants/borg-backup.timer"):
         return
     print("no backup set up")
