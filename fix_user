@@ -1,0 +1,178 @@
+#!/usr/bin/python3
+
+import os
+import subprocess
+
+
+def r(cmd, silent=False):
+      if not silent:
+          print(f">>> {cmd}")
+          stdout = None
+      else:
+          stdout = subprocess.DEVNULL
+      return subprocess.call(cmd, shell=True, stdout=stdout)
+
+
+def is_arch():
+    return os.path.isfile("/etc/pacman.conf")
+
+
+def enable_pacman_multilib():
+    if not is_arch():
+        return
+    fn = "/etc/pacman.conf"
+    # Check if multilib is commented out
+    if r(rf"grep '^#\[multilib\]$' {fn}", silent=True) != 0:
+        return  # multilib already enabled or section not present
+    # Uncomment both [multilib] and the following Include line
+    r(rf"sudo sed -i '/^#\[multilib\]$/{{s/^#//;n;s/^#//}}' {fn}")
+
+
+def main():
+    if not is_arch():
+        raise Exception("not arch!")
+
+    user = "radek"
+
+    r(f"sudo usermod -aG audio,input,video,wheel {user}")
+
+    enable_pacman_multilib()
+
+    r("sudo pacman -Sy --noconfirm --needed \
+        base-devel \
+        btrfs-progs \
+        fwupd \
+        fzf \
+        gum \
+        gthumb \
+        just \
+        jq \
+        man \
+        moosefs \
+        obsidian \
+        pacman-contrib \
+        yay \
+        pmount \
+        ripgrep \
+        rsync \
+        rtorrent \
+        tmux \
+        tree \
+        trezor-suite-appimage \
+        unzip \
+        watchexec \
+        wdisplays \
+        wireguard-tools \
+        zip \
+    ")
+
+    r("sudo pacman -Sy --noconfirm --needed terminus-font ttf-terminus-nerd ttf-jetbrains-mono-nerd ttf-droid")  # ttf-droid for firefox to not look ugly
+
+    # window manager and stuff
+    # r("pacman -Sy --noconfirm --needed bemenu-wayland i3status mako sway swayidle swaylock wofi xorg-xwayland")
+    r("sudo pacman -Sy --noconfirm --needed bemenu-wayland mako niri otf-font-awesome waybar wofi xdg-desktop-portal-gnome xwayland-satellite")  # otf-font-awesome for waybar icons
+
+
+    # terminals
+    r("sudo pacman -Sy --noconfirm --needed alacritty ghostty foot")
+
+    # editors
+    r("sudo pacman -Sy --noconfirm --needed helix neovim vim")
+    r("nvim --headless -c 'Lazy! sync' -c 'qa'")
+
+    # browsers
+    r("sudo pacman -Sy --noconfirm --needed brave-bin chromium firefox")
+
+    # email and stuff
+    r("sudo pacman -Sy --noconfirm --needed datovka thunderbird")
+
+    # file managers
+    r("sudo pacman -Sy --noconfirm --needed broot mc yazi")
+
+    # video players
+    r("sudo pacman -Sy --noconfirm --needed mpv vlc")
+
+    # system debugging
+    r("sudo pacman -Sy --noconfirm --needed btop dool htop iotop nvme-cli smartmontools")
+
+    # network debugging
+    r("sudo pacman -Sy --noconfirm --needed dog mtr speedtest-cli")
+
+    # encryption and passwords
+    r("sudo pacman -Sy --noconfirm --needed bitwarden bitwarden-cli seahorse encfs")
+
+    # virtualization
+    r("sudo pacman -Sy --noconfirm --needed samba qemu-full")  # samba for host disk sharing
+
+    # remote shell
+    r("sudo pacman -Sy --noconfirm --needed mosh omnirun sshpass")
+
+    # remote desktop
+    r("sudo pacman -Sy --noconfirm --needed remmina tigervnc wlvncc")
+    r("sudo pacman -Sy --noconfirm --needed expect")  # because of vnc_connect
+
+    # development
+    r("sudo pacman -Sy --noconfirm --needed git git-delta lazygit pre-commit")
+
+    # ai for development
+    r("sudo pacman -Sy --noconfirm --needed claude-code gemini-cli opencode")
+
+    # rust development
+    r("sudo pacman -Sy --noconfirm --needed rustup")
+    r("rustup update stable")
+    r("rustup component add rust-analyzer")
+    r("sudo pacman -Sy --noconfirm --needed mingw-w64-gcc")
+    r("rustup target add x86_64-pc-windows-gnu")
+    r("sudo pacman -Syu --noconfirm --needed aarch64-linux-gnu-gcc")
+    r("rustup target add aarch64-unknown-linux-gnu")
+    r("cargo install cargo-audit cargo-msrv cargo-mutants cargo-nextest cargo-update")
+
+    # python development
+    r("sudo pacman -Sy --noconfirm --needed python311 pyright ruff uv")
+
+    # electron development
+    r("sudo pacman -Sy --noconfirm --needed electron")
+
+    # 3d modelling and printing
+    r("sudo pacman -Sy --noconfirm --needed freecad openscad prusa-slicer")
+
+    # benchmarking and stress testing
+    r("sudo pacman -Sy --noconfirm --needed xmrig-donateless")
+
+    # backlight
+    r("sudo pacman -Sy --noconfirm --needed ddcutil brightnessctl light")
+
+    # android
+    r("sudo pacman -Sy --noconfirm --needed android-tools")
+    r("xdg-settings set default-web-browser firefox.desktop")
+
+    # personal backup
+    # TODO: r("sudo pacman -Sy --noconfirm --needed restic")
+    r("sudo pacman -Sy --noconfirm --needed syncthing")
+    r("syncthing generate")
+    r("systemctl --user start syncthing")
+    r("syncthing cli config devices add --device-id=NVIX2FO-HMMN5FA-XPEUKBW-S76K4KO-GTZ7VIU-LL6CSWH-UKXZIBQ-5KGZYQJ --name=centrala")
+
+    # audio
+    r("sudo pacman -Sy --noconfirm --needed alsa-utils pipewire-alsa pipewire-pulse pavucontrol wireplumber")
+    r("systemctl --user enable --now wireplumber")
+    r("systemctl --user enable --now pipewire-pulse.socket")
+
+    # desktop debugging
+    r("sudo pacman -Sy --noconfirm --needed wev libinput-tools")
+
+    # containers
+    r("sudo pacman -Sy --noconfirm --needed podman")
+    r(f"sudo usermod --add-subuids 100000-165535 {user}")
+    r(f"sudo usermod --add-subgids 100000-165535 {user}")
+
+    # TODO: login to bitwarden
+    # TODO: login to firefox
+    # TODO: login to thunderbird
+    # TODO: login to steam
+    # TODO: login to ea (steam -> unravel two)
+
+    
+
+if __name__ == "__main__":
+    main()
