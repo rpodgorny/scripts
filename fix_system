@@ -105,6 +105,8 @@ def fix_mkinitcpio():
 
 
 def fix_sudo():
+    r("pacman -Sy --noconfirm --needed sudo")
+
     fn = "/etc/sudoers"
     if not os.path.isfile(fn):
         return
@@ -180,7 +182,10 @@ def fix_root():
 
 
 def fix_packages():
-    for p in ["git", "haveged", ("openssh", "openssh-hpn", "openssh-hpn-git"), "postfix", "systemd-check-failed", "sudo", "uptimed"]:
+    # to keep modules around until reboot
+    r("pacman -Sy --noconfirm --needed kernel-modules-hook")
+
+    for p in ["haveged", "openssh", "postfix", "systemd-check-failed", "uptimed"]:
         installed = any(map(is_package_installed, p)) if isinstance(p, tuple) else is_package_installed(p)
         if installed:
             continue
@@ -201,37 +206,23 @@ def fix_desktop():
         if not ask(f"add desktop stuff for user {user}?"):
             return
     for p in [
-        "android-tools",  # for adb
         "base-devel",
-        "borg",
-        "broot",
-        "yazi",
         "btrfs-progs",
-        "datovka",
         "fwupd",
         "fzf",
         # "gqview",
         "gum",
         "just",
         "jq",
-        "kernel-modules-hook",  # to keep modules around until reboot
-        "brightnessctl",
-        "ddcutil",
-        "light",
         "man",
-        "mc",
-        "mosh",
         "moosefs",
         "obsidian",
-        "omnirun",
-        "sshpass",
         "pacman-contrib",
         "yay",
         "pmount",
         "ripgrep",
         "rsync",
         "rtorrent",
-        "thunderbird",
         "tmux",
         "tree",
         "trezor-suite-appimage",
@@ -260,10 +251,17 @@ def fix_desktop():
 
     # editors
     r("pacman -Sy --noconfirm --needed helix neovim vim")
+    r("echo 'nvim --headless -c \"Lazy! sync\" -c \"qa\"' | su - {user}")
 
     # browsers
     r("pacman -Sy --noconfirm --needed brave-bin chromium firefox")
     r("xdg-settings set default-web-browser firefox.desktop | su - {user}")
+
+    # email and stuff
+    r("pacman -Sy --noconfirm --needed datovka thunderbird")
+
+    # file managers
+    r("pacman -Sy --noconfirm --needed broot mc yazi")
 
     # video players
     r("pacman -Sy --noconfirm --needed mpv vlc")
@@ -274,8 +272,17 @@ def fix_desktop():
     # network debugging
     r("pacman -Sy --noconfirm --needed dog mtr speedtest-cli")
 
-    # benchmarking
+    # benchmarking and stress testing
     r("pacman -Sy --noconfirm --needed xmrig-donateless")
+
+    # backlight
+    r("pacman -Sy --noconfirm --needed ddcutil brightnessctl light")
+
+    # android
+    r("pacman -Sy --noconfirm --needed android-tools")
+
+    # backup
+    # TODO r("pacman -Sy --noconfirm --needed restic")
 
     # audio firmware - for newer intel laptops
     if r("dmesg | grep sof-audio", silent=True) == 0:
@@ -283,8 +290,8 @@ def fix_desktop():
 
     # audio
     r("pacman -Sy --noconfirm --needed alsa-utils pipewire-alsa pipewire-pulse pavucontrol wireplumber")
-    r(f"systemctl --user enable wireplumber | su - {user}")
-    r(f"systemctl --user enable pipewire-pulse.socket | su - {user}")
+    r(f"echo 'systemctl --user enable wireplumber' | su - {user}")
+    r(f"echo 'systemctl --user enable pipewire-pulse.socket' | su - {user}")
 
     # desktop debugging
     r("pacman -Sy --noconfirm --needed wev libinput-tools")
@@ -306,6 +313,9 @@ def fix_desktop():
     # virtualization
     r("pacman -Sy --noconfirm --needed samba qemu-full")  # samba for host disk sharing
 
+    # remote shell
+    r("pacman -Sy --noconfirm --needed mosh omnirun sshpass")
+
     # remote desktop
     r("pacman -Sy --noconfirm --needed remmina tigervnc wlvncc")
     r("pacman -Sy --noconfirm --needed excpect")  # because of vnc_connect
@@ -318,12 +328,12 @@ def fix_desktop():
 
     # rust development
     r("pacman -Sy --noconfirm --needed rustup")
-    r(f"rustup update stable | su - {user}")
+    r(f"echo 'rustup update stable' | su - {user}")
     r("pacman -Sy --noconfirm --needed mingw-w64-gcc")
-    r(f"rustup target add x86_64-pc-windows-gnu | su - {user}")
+    r(f"echo 'rustup target add x86_64-pc-windows-gnu' | su - {user}")
     r("pacman -Syu --noconfirm --needed aarch64-linux-gnu-gcc")
-    r(f"rustup target add aarch64-unknown-linux-gnu | su - {user}")
-    r(f"cargo install cargo-audit cargo-msrv cargo-mutants cargo-nextest cargo-update | su - {user}")
+    r(f"echo 'rustup target add aarch64-unknown-linux-gnu' | su - {user}")
+    r(f"echo 'cargo install cargo-audit cargo-msrv cargo-mutants cargo-nextest cargo-update' | su - {user}")
     # make sure this gets installed after rustup, otherwise is pulls rust as dependency
     r("pacman -Sy --noconfirm --needed rust-analyzer")
 
@@ -376,8 +386,8 @@ def fix_desktop():
     r('sed -e "s/^Name=en/Name=wlan/g" -i /etc/systemd/network/wlan.network')
 
     r("pacman -Sy --noconfirm --needed syncthing")
-    # call(f"syncthing generate | su - {user}")
-    # call(f"syncthing cli config devices add --device-id=NVIX2FO-HMMN5FA-XPEUKBW-S76K4KO-GTZ7VIU-LL6CSWH-UKXZIBQ-5KGZYQJ --name=centrala | su - {user}")
+    # call(f"echo 'syncthing generate' | su - {user}")
+    # call(f"echo 'syncthing cli config devices add --device-id=NVIX2FO-HMMN5FA-XPEUKBW-S76K4KO-GTZ7VIU-LL6CSWH-UKXZIBQ-5KGZYQJ --name=centrala' | su - {user}")
 
     fn = "/etc/systemd/logind.conf"
     r(f'sed -e "s/^#HandleLidSwitch=/HandleLidSwitch=/g" -i {fn}')
@@ -500,6 +510,7 @@ def fix_fstrim():
 
 
 def fix_backup():
+    r("pacman -Sy --noconfirm --needed borg")
     if os.path.islink("/etc/systemd/system/timers.target.wants/borg-backup.timer"):
         return
     print("no backup set up")
