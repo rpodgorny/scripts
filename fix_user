@@ -93,7 +93,7 @@ def main():
     r("sudo pacman -Sy --noconfirm --needed mpv vlc")
 
     # system debugging
-    r("sudo pacman -Sy --noconfirm --needed btop dool htop iotop nvme-cli smartmontools")
+    r("sudo pacman -Sy --noconfirm --needed btop dool htop iotop nvme-cli powertop smartmontools")
 
     # network debugging
     r("sudo pacman -Sy --noconfirm --needed dog mtr speedtest-cli")
@@ -137,7 +137,10 @@ def main():
     r("sudo pacman -Sy --noconfirm --needed freecad openscad prusa-slicer")
 
     # benchmarking and stress testing
-    r("sudo pacman -Sy --noconfirm --needed xmrig-donateless")
+    r("sudo pacman -Sy --noconfirm --needed geekbench geekbench-ai xmrig-donateless")
+
+    # benchmarking and stress testing (graphics)
+    r("sudo pacman -Sy --noconfirm --needed mangohud unigine-valley")
 
     # backlight
     r("sudo pacman -Sy --noconfirm --needed ddcutil brightnessctl light")
