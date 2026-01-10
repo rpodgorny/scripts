@@ -30,6 +30,7 @@ echo '
 acpi
 beep
 borg
+btop
 choose
 cpupower
 dd_rescue
