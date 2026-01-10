@@ -240,6 +240,8 @@ def fix_desktop():
     # call("pacman -Sy --noconfirm --needed rpcpu-git")
     # call("systemctl enable rpcpu")
 
+    r("pacman -Sy --noconfirm --needed powertop")
+
     r("pacman -Sy --noconfirm --needed power-profiles-daemon")
     r("systemctl enable power-profiles-daemon")
 
