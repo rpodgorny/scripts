@@ -5,12 +5,15 @@ import subprocess
 
 
 def r(cmd, silent=False):
-      if not silent:
-          print(f">>> {cmd}")
-          stdout = None
-      else:
-          stdout = subprocess.DEVNULL
-      return subprocess.call(cmd, shell=True, stdout=stdout)
+    if not silent:
+        print(f">>> {cmd}")
+        stdout = None
+    else:
+        stdout = subprocess.DEVNULL
+    # TODO: hacky shit
+    if silent:
+        return subprocess.call(cmd, shell=True, stdout=stdout)
+    return subprocess.check_call(cmd, shell=True, stdout=stdout)
 
 
 def is_arch():
@@ -151,6 +154,7 @@ def main():
 
     # personal backup
     # TODO: r("sudo pacman -Sy --noconfirm --needed restic")
+    r(f"mkdir -p /home/{user}/syncthing")
     r("sudo pacman -Sy --noconfirm --needed syncthing")
     r("syncthing generate")
     r("systemctl --user start syncthing")
