@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e -x -o pipefail
+
+~/dotfiles/decrypt
+trap 'umount ~/dotfiles/decrypted' EXIT
+
+find ~/dotfiles/decrypted/ssh -type f ! -name "*.pub" | xargs ssh-add
+ssh-add -l
+
+rm -rf ~/.ssh/from_agent
+mkdir -p ~/.ssh/from_agent
+cp -av ~/dotfiles/decrypted/ssh/*.pub ~/.ssh/from_agent
