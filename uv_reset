@@ -1,9 +1,14 @@
 #!/bin/sh
-set -e -x
+set -e -x -o pipefail
 
 rm -rf .venv
 
 uv venv "$@"
+
+tmpdir=`mktemp -d -p /var/tmp/tmp/`
+mv .venv ${tmpdir}
+ln -s ${tmpdir}/.venv .venv
+ln -s `pwd` ${tmpdir}/.backlink
 
 if [ -f requirements.txt ]; then
   uv pip install -r requirements.txt
