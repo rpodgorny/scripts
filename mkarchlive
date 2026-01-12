@@ -144,6 +144,16 @@ echo ${HOSTNAME} >${DIR}/airootfs/etc/hostname
 
 echo "192.168.11.11 mfsmaster" >${DIR}/airootfs/etc/hosts
 
+# TODO: hack to make wireless interface get ipv6 address
+# this is probably a problem of iwd+networkd interaction or something
+mkdir -p ${DIR}/airootfs/usr/local/bin
+echo '#!/bin/sh
+set -e -x
+impala
+systemctl restart systemd-networkd
+' >${DIR}/airootfs/usr/local/bin/wifi_connect
+chmod a+x ${DIR}/airootfs/usr/local/bin/wifi_connect
+
 mkdir ${DIR}/airootfs/root/.ssh
 
 echo '
@@ -202,7 +212,7 @@ echo "Universal Rescue" >> ${DIR}/airootfs/etc/motd
 DATE=`date +"%Y-%m-%d %H:%M:%S"`
 echo "I was born ${DATE}. Mooooo." | cowsay >> ${DIR}/airootfs/etc/motd
 echo "
-interesting commands: impala lsdisks mine-scrypt-cpu showtemp vypal_usb kopiruj_disk_na_disk ...
+interesting commands: wifi_connect lsdisks mine-scrypt-cpu showtemp vypal_usb kopiruj_disk_na_disk ...
 " >> ${DIR}/airootfs/etc/motd
 
 cd ${DIR}
