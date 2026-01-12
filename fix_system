@@ -114,7 +114,7 @@ def fix_mkinitcpio():
 
 
 def fix_sudo():
-    r("pacman -Sy --noconfirm --needed sudo")
+    r("pacman -S --noconfirm --needed sudo")
 
     fn = "/etc/sudoers"
     if not os.path.isfile(fn):
@@ -152,7 +152,7 @@ def fix_radek():
     if rf(f'grep "^{user}:" /etc/passwd | grep /usr/bin/fish', silent=True) != 0:
         if ask(f"set fish as default shell for {user}?"):
             if is_arch():
-                r("pacman -Sy --noconfirm --needed fish")
+                r("pacman -S --noconfirm --needed fish")
             else:
                 raise "TODO"
             r(f"usermod -s /usr/bin/fish {user}")
@@ -178,7 +178,7 @@ def fix_radek():
     if not is_package_installed("encfs"):
         if ask("install encfs?"):
             if is_arch():
-                r("pacman -Sy --noconfirm --needed encfs")
+                r("pacman -S --noconfirm --needed encfs")
             else:
                 raise "TODO"
 
@@ -195,7 +195,7 @@ def fix_packages():
     rf("pacman -Rcs --noconfirm haveged")
 
     # to keep modules around until reboot
-    r("pacman -Sy --noconfirm --needed kernel-modules-hook")
+    r("pacman -S --noconfirm --needed kernel-modules-hook")
 
     for p in ["openssh", "postfix", "systemd-check-failed", "uptimed"]:
         installed = any(map(is_package_installed, p)) if isinstance(p, tuple) else is_package_installed(p)
@@ -206,7 +206,7 @@ def fix_packages():
         if not ask(f"install {p}?"):
             continue
         if is_arch():
-            r(f"pacman -Sy --noconfirm --needed {p}")
+            r(f"pacman -S --noconfirm --needed {p}")
         else:
             raise "TODO"
 
@@ -217,41 +217,41 @@ def fix_desktop():
 
     # audio firmware - for newer intel laptops
     if rf("dmesg | grep sof-audio", silent=True) == 0:
-        r("pacman -Sy --noconfirm --needed sof-firmware")
+        r("pacman -S --noconfirm --needed sof-firmware")
 
     cpu_vendor = get_cpu_vendor()
     gpu_pkgs = {
         "intel": "intel-gpu-tools vulkan-intel",
         "amd": "amdgpu_top rocm-smi-lib vulkan-radeon",  # rocm-smi-lib for btop to show gpu info
     }.get(cpu_vendor)
-    r(f"pacman -Sy --noconfirm --needed {gpu_pkgs}")
+    r(f"pacman -S --noconfirm --needed {gpu_pkgs}")
 
     # wireless networking
-    r("pacman -Sy --noconfirm --needed iwd wireless-regdb impala")  # impala is gui for easier connection
+    r("pacman -S --noconfirm --needed iwd wireless-regdb impala")  # impala is gui for easier connection
     r("systemctl enable iwd")
 
     # bluetooth
-    r("pacman -Sy --noconfirm --needed bluez bluez-utils blueman")
+    r("pacman -S --noconfirm --needed bluez bluez-utils blueman")
     r("systemctl enable bluetooth")
 
-    r("pacman -Sy --noconfirm --needed zram-generator")
+    r("pacman -S --noconfirm --needed zram-generator")
     r('echo "[zram0]" >/etc/systemd/zram-generator.conf')
 
-    r("pacman -Sy --noconfirm --needed earlyoom")
+    r("pacman -S --noconfirm --needed earlyoom")
     r("systemctl enable earlyoom")
 
-    r("pacman -Sy --noconfirm --needed rpautovpn-git")
+    r("pacman -S --noconfirm --needed rpautovpn-git")
     r("systemctl enable rpautovpn")
 
-    r("pacman -Sy --noconfirm --needed rpbatmanager-git")
+    r("pacman -S --noconfirm --needed rpbatmanager-git")
     r("systemctl enable rpbatmanager")
 
-    # call("pacman -Sy --noconfirm --needed rpcpu-git")
+    # call("pacman -S --noconfirm --needed rpcpu-git")
     # call("systemctl enable rpcpu")
 
-    r("pacman -Sy --noconfirm --needed powertop")
+    r("pacman -S --noconfirm --needed powertop")
 
-    r("pacman -Sy --noconfirm --needed power-profiles-daemon")
+    r("pacman -S --noconfirm --needed power-profiles-daemon")
     r("systemctl enable power-profiles-daemon")
 
     if rf("grep mfsmaster /etc/hosts", silent=True) != 0:
@@ -292,7 +292,7 @@ def fix_mcelog():
     if not is_package_installed("mcelog"):
         if ask("install mcelog?"):
             if is_arch():
-                r("pacman -Sy --noconfirm mcelog")
+                r("pacman -S --noconfirm mcelog")
             else:
                 raise "TODO"
     if not os.path.islink("/etc/systemd/system/multi-user.target.wants/mcelog.service"):
@@ -304,7 +304,7 @@ def fix_systemd_check_failed():
     if not is_package_installed("systemd-check-failed"):
         if ask("install systemd-check-failed?"):
             if is_arch():
-                r("pacman -Sy --noconfirm systemd-check-failed")
+                r("pacman -S --noconfirm systemd-check-failed")
             else:
                 raise "TODO"
     if not os.path.islink("/etc/systemd/system/multi-user.target.wants/systemd-check-failed.service"):
@@ -376,7 +376,7 @@ def fix_fstrim():
 
 
 def fix_backup():
-    r("pacman -Sy --noconfirm --needed borg")
+    r("pacman -S --noconfirm --needed borg")
     if os.path.islink("/etc/systemd/system/timers.target.wants/borg-backup.timer"):
         return
     print("no backup set up")
@@ -470,7 +470,7 @@ def fix_postfix_generic():
     if not is_package_installed("postfix-pcre"):
         if ask("install postfix-pcre?"):
             if is_arch():
-                r("pacman -Sy --noconfirm --needed postfix-pcre")
+                r("pacman -S --noconfirm --needed postfix-pcre")
             else:
                 raise "TODO"
     fn = "/etc/postfix/generic.pcre"
@@ -554,7 +554,7 @@ def ucode():
     if ucode_pkg and not is_package_installed(ucode_pkg):
         if ask(f"install {ucode_pkg}?"):
             if is_arch():
-                r(f"pacman -Sy --noconfirm --needed {ucode_pkg}")
+                r(f"pacman -S --noconfirm --needed {ucode_pkg}")
             else:
                 raise "TODO"
 
@@ -570,7 +570,7 @@ def faddnsc():
     if not is_package_installed("faddnsc"):
         if ask("install faddnsc?"):
             if is_arch():
-                r("pacman -Sy --noconfirm --needed faddnsc")
+                r("pacman -S --noconfirm --needed faddnsc")
             else:
                 raise "TODO"
     fn = "/etc/faddnsc.conf"
@@ -583,6 +583,8 @@ def main():
     global yes
     if "-y" in sys.argv:
         yes = True
+
+    r("pacman -Sy")
 
     hostname()
     fix_timezone()
