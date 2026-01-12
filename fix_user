@@ -184,6 +184,8 @@ now prepare some device with access to email...
 - login to bitwarden
 - login to firefox
 - login to thunderbird
+- login to claude code
+- login to gemini
 - login to steam
 - login to ea (steam -> unravel two)
 """)
