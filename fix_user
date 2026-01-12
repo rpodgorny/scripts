@@ -159,6 +159,8 @@ def main():
     r(f"mkdir -p /home/{user}/syncthing/rpodgorny")
     if not os.path.exists(f"/home/{user}/sync"):
         r(f"cd /home/{user}; ln -s syncthing/rpodgorny sync")
+    if not os.path.exists(f"/home/{user}/.thunderbird"):
+        r(f"cd /home/{user}; ln -s syncthing/rpodgorny-trunderbird .thunderbird")
     r("sudo pacman -S --noconfirm --needed syncthing")
     r("syncthing generate")
     r("systemctl --user start syncthing")
