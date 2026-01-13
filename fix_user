@@ -60,7 +60,6 @@ def main():
         pmount \
         ripgrep \
         rsync \
-        rtorrent \
         tmux \
         tree \
         trezor-suite-appimage \
@@ -76,7 +75,6 @@ def main():
     # window manager and stuff
     # r("pacman -S --noconfirm --needed bemenu-wayland i3status mako sway swayidle swaylock wofi xorg-xwayland")
     r("sudo pacman -S --noconfirm --needed bemenu-wayland mako niri otf-font-awesome waybar wofi xdg-desktop-portal-gnome xwayland-satellite")  # otf-font-awesome for waybar icons
-
 
     # terminals
     r("sudo pacman -S --noconfirm --needed alacritty ghostty foot")
@@ -115,6 +113,9 @@ def main():
     # remote desktop
     r("sudo pacman -S --noconfirm --needed remmina tigervnc wlvncc")
     r("sudo pacman -S --noconfirm --needed expect")  # because of vnc_connect
+
+    # downloaders
+    r("sudo pacman -S --noconfirm --needed rtorrent yt-dlp")
 
     # development
     r("sudo pacman -S --noconfirm --needed git git-delta lazygit pre-commit")
