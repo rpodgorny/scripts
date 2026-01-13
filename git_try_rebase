@@ -15,7 +15,12 @@ TOPIC=$1
 BASE=$2
 
 if [ -z "${BASE}" ]; then
-  BASE="master"
+  # Auto-detect main branch (main or master)
+  if git rev-parse --verify main >/dev/null 2>&1; then
+    BASE="main"
+  else
+    BASE="master"
+  fi
 fi
 
 git checkout "${BASE}"
