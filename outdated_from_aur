@@ -12,7 +12,7 @@ for pkg in $pkgs; do
     aur_ver=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$pkg" \
         | jq -r '.results[0].Version')
 
-    if [ "$aur_ver" != "null" ] && [ "$local_ver" != "$aur_ver" ]; then
+    if [ "$aur_ver" != "null" ] && [ "$(vercmp "$aur_ver" "$local_ver")" -gt 0 ]; then
         echo "$pkg $local_ver -> $aur_ver"
         outdated_packages+=("$pkg:$local_ver:$aur_ver")
     fi
