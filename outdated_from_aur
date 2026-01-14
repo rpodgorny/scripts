@@ -5,6 +5,8 @@ repo="rpodgorny"
 # get all packages installed from your repo
 pkgs=$(pacman -Sl $repo | awk '/\[installed\]/{print $2}')
 
+outdated_packages=()
+
 for pkg in $pkgs; do
     local_ver=$(pacman -Q $pkg | awk '{print $2}')
     aur_ver=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$pkg" \
@@ -12,5 +14,45 @@ for pkg in $pkgs; do
 
     if [ "$aur_ver" != "null" ] && [ "$local_ver" != "$aur_ver" ]; then
         echo "$pkg $local_ver -> $aur_ver"
+        outdated_packages+=("$pkg:$local_ver:$aur_ver")
     fi
 done
+
+if [ ${#outdated_packages[@]} -eq 0 ]; then
+    echo "No outdated packages found."
+    exit 0
+fi
+
+echo
+read -p "Do you want to rebuild any of these packages? (y/N): " rebuild_any
+
+if [[ ! "$rebuild_any" =~ ^[Yy]$ ]]; then
+    echo "No packages will be rebuilt."
+    exit 0
+fi
+
+echo
+for package_info in "${outdated_packages[@]}"; do
+    IFS=':' read -r pkg local_ver aur_ver <<< "$package_info"
+    
+    read -p "Rebuild $pkg ($local_ver -> $aur_ver)? (y/N): " rebuild_pkg
+    
+    if [[ "$rebuild_pkg" =~ ^[Yy]$ ]]; then
+        echo "Rebuilding $pkg..."
+        
+        cd /var/tmp/tmp || { echo "Cannot cd to /var/tmp/tmp"; exit 1; }
+        
+        echo "Getting PKGBUILD for $pkg..."
+        yay -aG "$pkg" || { echo "Failed to get PKGBUILD for $pkg"; continue; }
+        
+        cd "$pkg" || { echo "Cannot cd to $pkg directory"; continue; }
+        
+        echo "Building package..."
+        makepkg-rpodgorny -s --skippgpcheck || { echo "Failed to build $pkg"; continue; }
+        
+        echo "Successfully built $pkg"
+        echo
+    fi
+done
+
+echo "Done."
