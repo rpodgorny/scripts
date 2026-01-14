@@ -87,7 +87,7 @@ def main():
     r("sudo pacman -S --noconfirm --needed brave-bin chromium firefox")
 
     # email and stuff
-    r("sudo pacman -S --noconfirm --needed datovka thunderbird")
+    r("sudo pacman -S --noconfirm --needed datovka betterbird")
 
     # file managers
     r("sudo pacman -S --noconfirm --needed broot mc yazi")
@@ -160,8 +160,6 @@ def main():
     r(f"mkdir -p /home/{user}/syncthing/rpodgorny")
     if not os.path.exists(f"/home/{user}/sync"):
         r(f"cd /home/{user}; ln -s syncthing/rpodgorny sync")
-    if not os.path.exists(f"/home/{user}/.thunderbird"):
-        r(f"cd /home/{user}; ln -s syncthing/rpodgorny-thunderbird .thunderbird")
     r("sudo pacman -S --noconfirm --needed syncthing")
     r("syncthing generate")
     r("systemctl --user start syncthing")
@@ -186,7 +184,7 @@ now prepare some device with access to email...
 
 - login to bitwarden
 - login to firefox
-- login to thunderbird
+- login to betterbird
 - login to claude code
 - login to gemini
 - login to steam
