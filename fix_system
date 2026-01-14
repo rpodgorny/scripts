@@ -229,6 +229,7 @@ def fix_desktop():
     # wireless networking
     r("pacman -S --noconfirm --needed iwd wireless-regdb impala")  # impala is gui for easier connection
     r("systemctl enable iwd")
+    # TODO: set correct region for wifi
 
     # bluetooth
     r("pacman -S --noconfirm --needed bluez bluez-utils blueman")
