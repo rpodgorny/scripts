@@ -9,12 +9,7 @@ def run(cmd):
 	return subprocess.call(cmd, shell=True)
 
 
-def main():
-	dev = sys.argv[1]
-	name = sys.argv[2]
-	assert dev
-	assert name
-
+def partition_format_mount(dev, name, mountpoint, swap_size_gb=1):
 	part_boot = '%s%s1' % (dev, 'p' if 'nvme' in dev or 'mmcblk' in dev else '')
 	part_swap = '%s%s2' % (dev, 'p' if 'nvme' in dev or 'mmcblk' in dev else '')
 	part_root = '%s%s3' % (dev, 'p' if 'nvme' in dev or 'mmcblk' in dev else '')
@@ -36,28 +31,30 @@ def main():
 	run('mkfs.btrfs -f -L %s_ROOT %s' % (name.upper(), part_root))
 	#run('mkfs.xfs -f -L %s_ROOT %s' % (name.upper(), part_root))
 
-	run('mount -o relatime,compress=zstd %s /mnt' % part_root)
-	#run('mount %s /mnt' % part_root)
-	run('mkdir /mnt/boot')
-	run('mount %s /mnt/boot' % part_boot)
+	run(f'mount -o relatime,compress=zstd {part_root} {mountpoint}')
+	#run(f'mount {part_root} {mountpoint}')
+	run(f'mkdir {mountpoint}/boot')
+	run(f'mount {part_boot} {mountpoint}/boot')
 
-	run('pacstrap /mnt base linux linux-firmware openssh intel-ucode btrfs-progs')
-	#run('pacstrap /mnt base linux linux-firmware openssh intel-ucode xfsprogs')
 
-	#run('arch-chroot /mnt pacman-key --populate')  # is this really needed?
+def bootstrap(name, mountpoint):
+	run(f'pacstrap {mountpoint} base linux linux-firmware openssh intel-ucode btrfs-progs')
+	#run(f'pacstrap {mountpoint} base linux linux-firmware openssh intel-ucode xfsprogs')
 
-	run('arch-chroot /mnt bootctl install')
+	#run(f'arch-chroot {mountpoint} pacman-key --populate')  # is this really needed?
 
-	run('arch-chroot /mnt mkdir -p /boot/loader/entries')
+	run(f'arch-chroot {mountpoint} bootctl install')
+
+	run(f'arch-chroot {mountpoint} mkdir -p /boot/loader/entries')
 	s = '''title   Arch Linux
 linux   /vmlinuz-linux
 initrd  /intel-ucode.img
 initrd  /initramfs-linux.img
 options root=/dev/disk/by-label/%s_ROOT rw''' % name.upper()
-	with open('/mnt/boot/loader/entries/arch.conf', 'w') as f:
+	with open(f'{mountpoint}/boot/loader/entries/arch.conf', 'w') as f:
 		f.write(s)
 
-	with open('/mnt/etc/hostname', 'w') as f:
+	with open(f'{mountpoint}/etc/hostname', 'w') as f:
 		f.write(name)
 
 	s = '''[Match]
@@ -65,24 +62,41 @@ Name=en*
 
 [Network]
 DHCP=yes'''
-	with open('/mnt/etc/systemd/network/en.network', 'w') as f:
+	with open(f'{mountpoint}/etc/systemd/network/en.network', 'w') as f:
 		f.write(s)
 
-	run('arch-chroot /mnt timedatectl set-timezone Europe/Prague')
+	run(f'arch-chroot {mountpoint} timedatectl set-timezone Europe/Prague')
 
-	run('arch-chroot /mnt systemctl enable systemd-networkd')
-	run('arch-chroot /mnt systemctl enable systemd-resolved')
-	run('arch-chroot /mnt systemctl enable systemd-timesyncd')
-	run('arch-chroot /mnt systemctl enable sshd')
+	run(f'arch-chroot {mountpoint} systemctl enable systemd-networkd')
+	run(f'arch-chroot {mountpoint} systemctl enable systemd-resolved')
+	run(f'arch-chroot {mountpoint} systemctl enable systemd-timesyncd')
+	run(f'arch-chroot {mountpoint} systemctl enable sshd')
 
-	run('cp ~/scripts/fix_system /mnt/')
-	#run('arch-chroot /mnt pacman -Syu --noconfirm python')
-	run('pacstrap /mnt python')
-	run('arch-chroot /mnt /fix_system -y')
-	run('rm /mnt/fix_system')
+	run(f'cp ~/scripts/fix_system {mountpoint}/')
+	#run(f'arch-chroot {mountpoint} pacman -Syu --noconfirm python')
+	run(f'pacstrap {mountpoint} python')
+	run(f'arch-chroot {mountpoint} /fix_system -y')
+	run(f'rm {mountpoint}/fix_system')
 
-	run('arch-chroot /mnt pacman -Scc --noconfirm')
-	run('umount -R /mnt')
+	run(f'arch-chroot {mountpoint} pacman -Scc --noconfirm')
+
+
+def umount(mountpoint):
+	run(f'umount -R {mountpoint}')
+
+
+def main():
+	dev = sys.argv[1]
+	assert dev
+	name = sys.argv[2]
+	assert name
+
+	mountpoint = '/mnt'
+
+	partition_format_mount(dev, name, mountpoint)
+	bootstrap(name, mountpoint)
+	umount(mountpoint)
+
 	return 0
 
 
