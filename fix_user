@@ -70,11 +70,12 @@ def main():
         zip \
     ")
 
-    r("sudo pacman -S --noconfirm --needed terminus-font ttf-terminus-nerd ttf-jetbrains-mono-nerd ttf-droid")  # ttf-droid for firefox to not look ugly
+    r("sudo pacman -S --noconfirm --needed terminus-font ttf-terminus-nerd ttf-jetbrains-mono-nerd")
 
     # window manager and stuff
     # r("pacman -S --noconfirm --needed bemenu-wayland i3status mako sway swayidle swaylock wofi xorg-xwayland")
     r("sudo pacman -S --noconfirm --needed bemenu-wayland mako niri otf-font-awesome waybar wofi xdg-desktop-portal-gnome xwayland-satellite")  # otf-font-awesome for waybar icons
+    r("sudo pacman -S --noconfirm --needed wl-clipboard")
 
     # terminals
     r("sudo pacman -S --noconfirm --needed alacritty ghostty foot")
@@ -84,7 +85,7 @@ def main():
     r("nvim --headless -c 'Lazy! sync' -c 'qa'")
 
     # browsers
-    r("sudo pacman -S --noconfirm --needed brave-bin chromium firefox")
+    r("sudo pacman -S --noconfirm --needed brave-bin chromium firefox ttf-droid")  # ttf-droid for firefox to not look ugly
 
     # email and stuff
     r("sudo pacman -S --noconfirm --needed datovka betterbird")
@@ -121,7 +122,7 @@ def main():
     r("sudo pacman -S --noconfirm --needed git git-delta lazygit pre-commit")
 
     # ai for development
-    r("sudo pacman -S --noconfirm --needed claude-code gemini-cli opencode")
+    r("sudo pacman -S --noconfirm --needed bubblewrap claude-code gemini-cli opencode")
 
     # rust development
     r("sudo pacman -S --noconfirm --needed rustup")
