@@ -66,7 +66,6 @@ def main():
         unzip \
         watchexec \
         wdisplays \
-        wireguard-tools \
         zip \
     ")
 
@@ -179,8 +178,16 @@ def main():
     r(f"sudo usermod --add-subuids 100000-165535 {user}")
     r(f"sudo usermod --add-subgids 100000-165535 {user}")
 
+    # vpn
+    r("sudo pacman -S --noconfirm --needed openvpn wireguard-tools")
+
     # TODO: try to automatize as much of the following as possible
     print("""
+don't forget to configure:
+
+- openvpn
+- wireguard
+
 now prepare some device with access to email...
 
 - login to bitwarden
