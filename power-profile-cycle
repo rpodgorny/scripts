@@ -1,0 +1,22 @@
+#!/bin/bash
+
+current=$(powerprofilesctl get)
+
+case "$current" in
+    "power-saver")
+        next="balanced"
+        ;;
+    "balanced")
+        next="performance"
+        ;;
+    "performance")
+        next="power-saver"
+        ;;
+    *)
+        echo "Unknown profile: $current"
+        exit 1
+        ;;
+esac
+
+powerprofilesctl set "$next"
+echo "Switched to $next profile"
