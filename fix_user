@@ -51,7 +51,7 @@ def main():
         gum \
         gthumb \
         just \
-        jq \
+        jless jq \
         man \
         moosefs \
         obsidian \
@@ -194,6 +194,7 @@ now prepare some device with access to email...
 - login to firefox
 - login to betterbird
 - login to claude code
+- login to nvim-codeium (run nvim, enter insert mode, then run ":Codeium Auth")
 - login to gemini
 - login to steam
 - login to ea (steam -> unravel two)
