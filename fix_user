@@ -131,10 +131,14 @@ def main():
     r("rustup target add x86_64-pc-windows-gnu")
     r("sudo pacman -S --noconfirm --needed aarch64-linux-gnu-gcc")
     r("rustup target add aarch64-unknown-linux-gnu")
-    r("cargo install cargo-audit cargo-msrv cargo-mutants cargo-nextest cargo-update")
+    r("cargo install cargo-audit cargo-msrv cargo-mutants cargo-update")
+    r("cargo install --locked cargo-nextest")  # TODO: this has to be installed with --locked - why?
 
     # python development
-    r("sudo pacman -S --noconfirm --needed python311 pyright ruff uv")
+    r("sudo pacman -S --noconfirm --needed python311 py-spy pyright ruff uv")
+
+    # javascript development
+    r("sudo pacman -S --noconfirm --needed typescript-language-server")
 
     # electron development
     r("sudo pacman -S --noconfirm --needed electron")
