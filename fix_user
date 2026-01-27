@@ -131,7 +131,7 @@ def main():
     r("rustup target add x86_64-pc-windows-gnu")
     r("sudo pacman -S --noconfirm --needed aarch64-linux-gnu-gcc")
     r("rustup target add aarch64-unknown-linux-gnu")
-    r("cargo install cargo-audit cargo-msrv cargo-mutants cargo-update")
+    r("cargo install cargo-audit cargo-llvm-cov cargo-msrv cargo-mutants cargo-update")
     r("cargo install --locked cargo-nextest")  # TODO: this has to be installed with --locked - why?
 
     # python development
