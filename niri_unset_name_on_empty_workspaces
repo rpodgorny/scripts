@@ -1,0 +1,10 @@
+#!/bin/bash
+# Unset names on empty, unfocused workspaces in niri
+
+# Get names of empty, unfocused, named workspaces
+empty_named_workspaces=$(niri msg --json workspaces | jq -r '.[] | select(.name != null and .active_window_id == null and .is_focused == false) | .name')
+
+# Unset name for each matching workspace
+for ws_name in $empty_named_workspaces; do
+    niri msg action unset-workspace-name "$ws_name"
+done
