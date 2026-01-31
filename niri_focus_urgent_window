@@ -1,0 +1,10 @@
+#!/bin/bash
+# Focus the first window with the urgent flag set in niri
+
+window_id=$(niri msg --json windows | jq -r '.[] | select(.is_urgent) | .id' | head -1)
+
+if [[ -n "$window_id" ]]; then
+    niri msg action focus-window --id "$window_id"
+else
+    exit 1  # No urgent windows
+fi
