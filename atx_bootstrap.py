@@ -6,6 +6,20 @@ import subprocess
 import sys
 
 
+def load_env():
+    env_file = ".env"
+    if os.path.exists(env_file):
+        with open(env_file) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    os.environ.setdefault(key, value)
+
+
+load_env()
+
+
 def get_env(name):
     value = os.environ.get(name)
     if not value:
