@@ -73,7 +73,7 @@ def main():
 
     # window manager and stuff
     # r("pacman -S --noconfirm --needed bemenu-wayland i3status mako sway swayidle swaylock wofi xorg-xwayland")
-    r("sudo pacman -S --noconfirm --needed bemenu-wayland mako niri otf-font-awesome waybar wofi xdg-desktop-portal-gnome xwayland-satellite")  # otf-font-awesome for waybar icons
+    r("sudo pacman -S --noconfirm --needed bemenu-wayland mako niri otf-font-awesome waybar wofi xdg-desktop-portal-gnome xorg-xhost xwayland-satellite")  # otf-font-awesome for waybar icons
     r("sudo pacman -S --noconfirm --needed wl-clipboard")
 
     # terminals
@@ -105,7 +105,7 @@ def main():
     r("sudo pacman -S --noconfirm --needed bitwarden bitwarden-cli seahorse encfs")
 
     # virtualization
-    r("sudo pacman -S --noconfirm --needed samba qemu-full")  # samba for host disk sharing
+    r("sudo pacman -S --noconfirm --needed samba qemu-full qemu-user-static-binfmt")  # samba for host disk sharing, qemu-user-static-binfmt to be able to run docker images of other architectures
 
     # remote shell
     r("sudo pacman -S --noconfirm --needed mosh omnirun sshpass")
@@ -184,6 +184,10 @@ def main():
 
     # vpn
     r("sudo pacman -S --noconfirm --needed openvpn wireguard-tools")
+
+    # set default apps
+    r("xdg-mime default betterbird.desktop x-scheme-handler/mailto")
+    r("xdg-settings set default-web-browser brave-browser.desktop")
 
     # TODO: try to automatize as much of the following as possible
     print("""
