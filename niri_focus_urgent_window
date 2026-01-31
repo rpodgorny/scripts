@@ -1,10 +1,30 @@
 #!/bin/bash
 # Focus the first window with the urgent flag set in niri
+# Tracks the original window to return to after all urgent windows are resolved
 
-window_id=$(niri msg --json windows | jq -r '.[] | select(.is_urgent) | .id' | head -1)
+SAVE_FILE="${XDG_RUNTIME_DIR:-/run/user/$UID}/niri_focus_urgent_window_id"
 
-if [[ -n "$window_id" ]]; then
-    niri msg action focus-window --id "$window_id"
+# Get the first urgent window ID
+urgent_window_id=$(niri msg --json windows | jq -r '.[] | select(.is_urgent) | .id' | head -1)
+
+# Get the currently focused window ID
+focused_window_id=$(niri msg --json windows | jq -r '.[] | select(.is_focused) | .id')
+
+if [[ -n "$urgent_window_id" ]]; then
+    # Urgent windows exist
+    if [[ ! -f "$SAVE_FILE" ]]; then
+        # No saved ID: save current focused window ID
+        echo "$focused_window_id" > "$SAVE_FILE"
+    fi
+    # Focus the first urgent window
+    niri msg action focus-window --id "$urgent_window_id"
 else
-    exit 1  # No urgent windows
+    # No urgent windows
+    if [[ -f "$SAVE_FILE" ]]; then
+        # Saved ID exists: focus that window and delete the save file
+        saved_window_id=$(cat "$SAVE_FILE")
+        niri msg action focus-window --id "$saved_window_id"
+        rm "$SAVE_FILE"
+    fi
+    # If no saved ID: do nothing (exit silently)
 fi
