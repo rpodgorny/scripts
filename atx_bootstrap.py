@@ -190,6 +190,17 @@ en_US.UTF-8
     # TODO: this is probably not enough - we also need to regenerate /etc/dpkg/dpkg.cfg.d/50localepurge file
 
 
+def keyboard():
+    with open("/etc/default/keyboard", "w") as f:
+        f.write("""XKBMODEL="pc105"
+XKBLAYOUT="us,cz"
+XKBVARIANT=","
+XKBOPTIONS="grp:alt_shift_toggle"
+BACKSPACE="guess"
+""")
+    call("dpkg-reconfigure -f noninteractive keyboard-configuration")
+
+
 def main():
     if os.geteuid() != 0:
         print("Error: This script must be run as root.", file=sys.stderr)
@@ -230,6 +241,7 @@ def main():
     # TODO: maybe get rid of /usr/share/doc and others: https://askubuntu.com/questions/129566/remove-documentation-to-save-hard-drive-space
 
     locale()
+    keyboard()
 
     openvpn()
     wireguard()
