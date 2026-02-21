@@ -1,14 +1,12 @@
 #!/bin/bash
 
-name=$(wofi --dmenu -p 'move to workspace')
-[ -z "$name" ] && exit 0
-
-# Save current workspace info
 ws_json=$(niri msg --json workspaces)
+name=$(echo "$ws_json" | jq -r '[.[] | select(.name != "" and .name != null and .is_focused != true)] | sort_by(.name) | .[].name' | wofi --dmenu -e -p 'move to workspace')
+[ -z "$name" ] && exit 0
 current_idx=$(echo "$ws_json" | jq '[.[] | select(.is_focused)] | .[0].idx')
 current_ws_id=$(echo "$ws_json" | jq '[.[] | select(.is_focused)] | .[0].id')
 
-if niri msg --json workspaces | jq -e --arg n "$name" '.[] | select(.name == $n)' > /dev/null 2>&1; then
+if echo "$ws_json" | jq -e --arg n "$name" '.[] | select(.name == $n)' > /dev/null 2>&1; then
     # Workspace exists — move window there
     niri msg action move-window-to-workspace "$name"
 else
