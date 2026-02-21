@@ -1,0 +1,32 @@
+#!/bin/bash
+
+name=$(wofi --dmenu -p 'move to workspace')
+[ -z "$name" ] && exit 0
+
+# Save current workspace index to return focus later
+current_idx=$(niri msg --json workspaces | jq '[.[] | select(.is_focused)] | .[0].idx')
+
+if niri msg --json workspaces | jq -e --arg n "$name" '.[] | select(.name == $n)' > /dev/null 2>&1; then
+    # Workspace exists — move window there, then focus back
+    niri msg action move-window-to-workspace "$name"
+    niri msg action focus-workspace "$current_idx"
+else
+    # Workspace doesn't exist — create one below current
+    output=$(niri msg --json workspaces | jq -r '[.[] | select(.is_focused)] | .[0].output')
+    ws_count=$(niri msg --json workspaces | jq --arg o "$output" '[.[] | select(.output == $o)] | length')
+
+    # Move window to the empty workspace at the bottom (focus follows)
+    niri msg action move-window-to-workspace "$ws_count"
+
+    # Name this workspace
+    niri msg action set-workspace-name "$name"
+
+    # Move it up to be right below the original workspace
+    moves=$((ws_count - current_idx - 1))
+    for ((i = 0; i < moves; i++)); do
+        niri msg action move-workspace-up
+    done
+
+    # Return focus to original workspace
+    niri msg action focus-workspace "$current_idx"
+fi
