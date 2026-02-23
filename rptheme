@@ -21,6 +21,10 @@ def main():
     val = "foot-selenized-white" if th == "light" else "foot-selenized-black"
     subprocess.run(f"ln -sf {val} foot-theme", shell=True, cwd="/home/radek/dotfiles")
 
+    val = "style-light.css" if th == "light" else "style-dark.css"
+    subprocess.run(f"ln -sf {val} style.css", shell=True, cwd="/home/radek/.config/waybar")
+    subprocess.run("pkill -SIGUSR2 waybar", shell=True)
+
     subprocess.run("swaymsg reload", shell=True)
 
 
