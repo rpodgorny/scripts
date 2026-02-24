@@ -55,11 +55,12 @@ def main():
         man \
         moosefs \
         obsidian \
-        pacman-contrib \
+        pacman-contrib downgrade \
         yay \
         pmount \
         ripgrep \
         rsync \
+        plocate \
         tmux \
         tree \
         trezor-suite-appimage \
@@ -147,13 +148,20 @@ def main():
     r("sudo pacman -S --noconfirm --needed freecad openscad prusa-slicer")
 
     # benchmarking and stress testing
-    r("sudo pacman -S --noconfirm --needed geekbench geekbench-ai xmrig-donateless")
+    ###r("sudo pacman -S --noconfirm --needed geekbench geekbench-ai xmrig-donateless")
+    r("sudo pacman -S --noconfirm --needed geekbench xmrig-donateless")
 
     # benchmarking and stress testing (graphics)
     r("sudo pacman -S --noconfirm --needed mangohud unigine-valley")
 
     # backlight
     r("sudo pacman -S --noconfirm --needed ddcutil brightnessctl light")
+
+    # wifi hacking
+    r("sudo pacman -S --noconfirm --needed wifite termshark reaver bully hashcat cowpatty")
+
+    # office shit
+    r("sudo pacman -S --noconfirm --needed libreoffice-fresh")
 
     # android
     r("sudo pacman -S --noconfirm --needed android-tools")
@@ -204,6 +212,7 @@ now prepare some device with access to email...
 - login to claude code
 - login to nvim-codeium (run nvim, enter insert mode, then run ":Codeium Auth")
 - login to gemini
+- login to podman (docker)
 - login to steam
 - login to ea (steam -> unravel two)
 """)
