@@ -119,7 +119,7 @@ def main():
     r("sudo pacman -S --noconfirm --needed rtorrent yt-dlp")
 
     # development
-    r("sudo pacman -S --noconfirm --needed git git-delta lazygit pre-commit")
+    r("sudo pacman -S --noconfirm --needed cloc git git-delta lazygit pre-commit")
 
     # ai for development
     r("sudo pacman -S --noconfirm --needed bubblewrap claude-code gemini-cli opencode")
