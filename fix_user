@@ -158,7 +158,7 @@ def main():
     r("sudo pacman -S --noconfirm --needed ddcutil brightnessctl light")
 
     # wifi hacking
-    r("sudo pacman -S --noconfirm --needed wifite-git termshark reaver bully hashcat cowpatty hcxdumptool hcxtools")
+    r("sudo pacman -S --noconfirm --needed wifite-git termshark reaver bully hashcat cowpatty hcxdumptool hcxtools rockyou")
 
     # office shit
     r("sudo pacman -S --noconfirm --needed libreoffice-fresh")
