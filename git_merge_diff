@@ -9,6 +9,10 @@
 TOPIC=$1
 BASE=$2
 
+if [ -z "${TOPIC}" ]; then
+  TOPIC="HEAD"
+fi
+
 if [ -z "${BASE}" ]; then
   # Auto-detect main branch (main or master)
   if git rev-parse --verify main >/dev/null 2>&1; then
