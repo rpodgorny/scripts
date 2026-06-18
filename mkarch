@@ -41,6 +41,8 @@ def bootstrap(name, mountpoint):
 
 	#run(f'arch-chroot {mountpoint} pacman-key --populate')  # is this really needed?
 
+	# TODO: add / to fstab so that it's mounted with compression etc...
+
 	run(f'arch-chroot {mountpoint} bootctl install')
 
 	run(f'arch-chroot {mountpoint} mkdir -p /boot/loader/entries')
