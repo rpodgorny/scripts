@@ -1,0 +1,7 @@
+#!/bin/bash
+
+ws_json=$(niri msg --json workspaces)
+name=$(echo "$ws_json" | jq -r '[.[] | select(.name != "" and .name != null and .is_focused != true)] | sort_by(.name) | .[].name' | wofi --dmenu -p 'jump to workspace')
+[ -z "$name" ] && exit 0
+
+niri msg action focus-workspace "$name"
