@@ -5,6 +5,7 @@ name=$(echo "$ws_json" | jq -r '[.[] | select(.name != "" and .name != null and 
 [ -z "$name" ] && exit 0
 current_idx=$(echo "$ws_json" | jq '[.[] | select(.is_focused)] | .[0].idx')
 current_ws_id=$(echo "$ws_json" | jq '[.[] | select(.is_focused)] | .[0].id')
+current_output=$(echo "$ws_json" | jq -r '[.[] | select(.is_focused)] | .[0].output')
 
 if echo "$ws_json" | jq -e --arg n "$name" '.[] | select(.name == $n)' > /dev/null 2>&1; then
     # Workspace exists — move window there
@@ -31,5 +32,6 @@ fi
 # otherwise return focus to original workspace
 remaining=$(niri msg --json windows | jq --argjson wsid "$current_ws_id" '[.[] | select(.workspace_id == $wsid)] | length')
 if [ "$remaining" -gt 0 ]; then
+    niri msg action focus-monitor "$current_output"
     niri msg action focus-workspace "$current_idx"
 fi
