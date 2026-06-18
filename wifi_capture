@@ -15,13 +15,14 @@ if [ -z "${IFACE}" ]; then
   echo "Auto-selected: ${IFACE}"
 fi
 
-#BAND5=""
-BAND5="-5"
+IGNORE="-E radatko.net -E Tashii"
+VERBOSITY="-vvvv"
+VERBOSITY="-v"
 
 #sudo wifite -i ${IFACE} -5 --wps-only -vvvv --first 999 --pillage 60 --ignore-cracked --skip-crack --ignore-captured
 ###sudo wifite -i ${IFACE} ${BAND5} --wps-only -vvvv --first 999 --pillage 60 --ignore-cracked --skip-crack --ignore-captured
 #sudo wifite -i ${IFACE} -5 --clients-only --wpa --wps -vvvv --first 999 --pillage 300 --ignore-cracked --skip-crack --ignore-captured
-sudo wifite -i ${IFACE} ${BAND5} --clients-only --wpa --wps -vvvv --first 999 --pillage 300 --ignore-cracked --skip-crack --ignore-captured
+sudo wifite -i ${IFACE} ${IGNORE} --allbands --wpa --wps ${VERBOSITY} --first 999 --pillage 300 --ignore-cracked --skip-crack --ignore-captured
 
 cat cracked.json || true
 tree hs
