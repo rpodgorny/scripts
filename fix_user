@@ -144,6 +144,9 @@ def main():
     # electron development
     r("sudo pacman -S --noconfirm --needed electron")
 
+    # other development
+    r("sudo pacman -S --noconfirm --needed tailwindcss-language-server")
+
     # 3d modelling and printing
     r("sudo pacman -S --noconfirm --needed freecad openscad prusa-slicer")
 
