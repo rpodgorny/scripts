@@ -34,6 +34,10 @@ struct Site {
 struct Args {
     #[arg(short = 'r', long, help = "Run rotate and sync before getting data")]
     rotate_and_sync: bool,
+    #[arg(short = 'n', long, help = "Do not actually sync")]
+    no_sync: bool,
+    #[arg(short = 'a', long, help = "Activate after download")]
+    activate: bool,
     #[arg(help = "Site IDs to process")]
     sites: Vec<String>,
 }
@@ -100,65 +104,65 @@ fn rotate_and_sync(mj: &str) {
     r(&cmd);
 }
 
-fn sync(mj: &str) {
+fn sync(mj: &str, dest: &str) {
     //let rsync = "rsync -avP --timeout=20";
     //let rsync = "rsync -azz --info=progress2,stats --timeout=20";
     let rsync = "rsync -azz --info=progress2 --timeout=20";
 
-    r(&f!("mkdir -p ./{mj}/atx300/control/data"));
-    r(&f!("{rsync} {REMOTE}/{mj}/atx300/control/data/info.txt ./{mj}/atx300/control/data/ --delete-after || true"));
+    r(&f!("mkdir -p {dest}/{mj}/atx300/control/data"));
+    r(&f!("{rsync} {REMOTE}/{mj}/atx300/control/data/info.txt {dest}/{mj}/atx300/control/data/ --delete-after || true"));
     r(&f!(
-        "{rsync} {REMOTE}/{mj}/atx300/log/control.log ./{mj}/atx300/log/ --delete-after || true"
+        "{rsync} {REMOTE}/{mj}/atx300/log/control.log {dest}/{mj}/atx300/log/ --delete-after || true"
     ));
     r(&f!(
-        "{rsync} {REMOTE}/{mj}/atx300/log ./{mj}/atx300/ --delete-after"
+        "{rsync} {REMOTE}/{mj}/atx300/log {dest}/{mj}/atx300/ --delete-after"
     ));
     r(&f!(
-        "{rsync} {REMOTE}/{mj}/atx300/*.mem ./{mj}/atx300/ --delete-after"
+        "{rsync} {REMOTE}/{mj}/atx300/*.mem {dest}/{mj}/atx300/ --delete-after"
     ));
     r(&f!(
-        "{rsync} {REMOTE}/{mj}/atx300/set ./{mj}/atx300/ --delete-after"
+        "{rsync} {REMOTE}/{mj}/atx300/set {dest}/{mj}/atx300/ --delete-after"
     ));
     r(&f!(
-        "{rsync} {REMOTE}/{mj}/atx300/conf ./{mj}/atx300/ --delete-after"
+        "{rsync} {REMOTE}/{mj}/atx300/conf {dest}/{mj}/atx300/ --delete-after"
     ));
     r(&f!(
-        "{rsync} {REMOTE}/{mj}/atx300/param/data ./{mj}/atx300/param/ --delete-after"
+        "{rsync} {REMOTE}/{mj}/atx300/param/data {dest}/{mj}/atx300/param/ --delete-after"
     ));
     r(&f!(
-        "{rsync} {REMOTE}/{mj}/atx300/comm ./{mj}/atx300/ --delete-after"
+        "{rsync} {REMOTE}/{mj}/atx300/comm {dest}/{mj}/atx300/ --delete-after"
     ));
     r(&f!(
-        "{rsync} {REMOTE}/{mj}/atx300/data ./{mj}/atx300/ --delete-after || true"
+        "{rsync} {REMOTE}/{mj}/atx300/data {dest}/{mj}/atx300/ --delete-after || true"
     ));
     r(&f!(
-        "{rsync} {REMOTE}/{mj}/atx300/minidisp ./{mj}/atx300/ --delete-after || true"
+        "{rsync} {REMOTE}/{mj}/atx300/minidisp {dest}/{mj}/atx300/ --delete-after || true"
     ));
-    r(&f!("mkdir -p ./{mj}/atx300/visual"));
-    r(&f!("{rsync} {REMOTE}/{mj}/atx300/visual/data ./{mj}/atx300/visual/ --exclude=data/log.txt --delete-after || true"));
-    r(&f!("mkdir -p ./{mj}/atx300/history"));
+    r(&f!("mkdir -p {dest}/{mj}/atx300/visual"));
+    r(&f!("{rsync} {REMOTE}/{mj}/atx300/visual/data {dest}/{mj}/atx300/visual/ --exclude=data/log.txt --delete-after || true"));
+    r(&f!("mkdir -p {dest}/{mj}/atx300/history"));
     r(&f!(
-        "{rsync} {REMOTE}/{mj}/history/comm ./{mj}/history/ --delete-after || true"
-    ));
-    r(&f!(
-        "{rsync} {REMOTE}/{mj}/history/log ./{mj}/history/ --delete-after || true"
+        "{rsync} {REMOTE}/{mj}/history/comm {dest}/{mj}/history/ --delete-after || true"
     ));
     r(&f!(
-        "{rsync} {REMOTE}/{mj}/history/signals ./{mj}/history/ --delete-after || true"
+        "{rsync} {REMOTE}/{mj}/history/log {dest}/{mj}/history/ --delete-after || true"
+    ));
+    r(&f!(
+        "{rsync} {REMOTE}/{mj}/history/signals {dest}/{mj}/history/ --delete-after || true"
     ));
 
-    r(&f!("{rsync} {REMOTE}/{mj} ./ --exclude={mj}/atx300/Backup_DBW --exclude={mj}/archive --exclude={mj}/history --exclude={mj}/atx300/log || true"));
+    r(&f!("{rsync} {REMOTE}/{mj} {dest}/ --exclude={mj}/atx300/Backup_DBW --exclude={mj}/archive --exclude={mj}/history --exclude={mj}/atx300/log || true"));
     r(&f!(
-        "{rsync} {REMOTE}/{mj} ./ --exclude={mj}/archive --exclude={mj}/history || true"
+        "{rsync} {REMOTE}/{mj} {dest}/ --exclude={mj}/archive --exclude={mj}/history || true"
     ));
     r(&f!(
-        "{rsync} {REMOTE}/{mj} ./ --exclude={mj}/archive --exclude={mj}/history/signals || true"
+        "{rsync} {REMOTE}/{mj} {dest}/ --exclude={mj}/archive --exclude={mj}/history/signals || true"
     ));
     r(&f!(
-        "{rsync} {REMOTE}/{mj} ./ --exclude={mj}/archive || true"
+        "{rsync} {REMOTE}/{mj} {dest}/ --exclude={mj}/archive || true"
     ));
-    r(&f!("{rsync} {REMOTE}/{mj} ./"));
-    //r(&f!("{rsync} {REMOTE}/{mj} ./ --delete-after"));
+    r(&f!("{rsync} {REMOTE}/{mj} {dest}/"));
+    //r(&f!("{rsync} {REMOTE}/{mj} {dest}/ --delete-after"));
 }
 
 fn main() {
@@ -172,26 +176,37 @@ fn main() {
         args.sites
     };
 
+    // TODO: do this in parallel
     if args.rotate_and_sync {
         for mj in &mjs {
             rotate_and_sync(mj);
         }
     }
 
-    unsafe {
-        std::env::set_var("RSYNC_RSH", f!("ssh -p {PORT}"));
-    }
+    let dest = "/home/radek/tmp/incoming";
 
-    for mj in mjs.iter() {
-        sync(mj);
+    if !args.no_sync {
+        unsafe {
+            std::env::set_var("RSYNC_RSH", f!("ssh -p {PORT}"));
+        }
+
+        for mj in mjs.iter() {
+            sync(mj, dest);
+        }
     }
 
     let mj = mjs[mjs.len() - 1].clone();
-    println!("activate {mj}?");
-    let mut line = String::new();
-    let _ = std::io::stdin().read_line(&mut line).unwrap();
-    if line.starts_with("y") {
-        r(&f!("sudo ln -sf /home/radek/tmp/incoming/{mj}/atx300 /"));
+    let activate = if args.activate {
+        true
+    } else {
+        println!("activate {mj}?");
+        let mut line = String::new();
+        let _ = std::io::stdin().read_line(&mut line).unwrap();
+        line.starts_with("y")
+    };
+    if activate {
+        r(&f!("ln -sf {dest}/{mj}/atx300 /home/radek/"));
+        r(&f!("ln -sf {dest}/{mj} /home/radek/atx300/_incoming"));
     }
     //Ok(())
 }
