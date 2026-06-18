@@ -57,6 +57,82 @@ def is_debian_or_ubuntu():
     return os.path.isfile("/etc/debian_version")
 
 
+ARCH_ONLY_PACKAGES = {
+    "kernel-modules-hook", "rpautovpn-git", "rpbatmanager-git", "rpcpu-git",
+    "faddnsc", "systemd-check-failed", "impala",
+}
+
+# Logical name -> {"arch": ..., "deb": ...}. Missing entry => same name on both.
+PKG_MAP = {
+    "openssh":         {"arch": "openssh",         "deb": "openssh-server"},
+    "intel-ucode":     {"arch": "intel-ucode",     "deb": "intel-microcode"},
+    "amd-ucode":       {"arch": "amd-ucode",       "deb": "amd64-microcode"},
+    "vulkan-intel":    {"arch": "vulkan-intel",    "deb": "mesa-vulkan-drivers"},
+    "vulkan-radeon":   {"arch": "vulkan-radeon",   "deb": "mesa-vulkan-drivers"},
+    "borg":            {"arch": "borg",            "deb": "borgbackup"},
+    "bluez-utils":     {"arch": "bluez-utils",     "deb": "bluez"},
+    "intel-gpu-tools": {"arch": "intel-gpu-tools", "deb": "intel-gpu-tools"},
+}
+
+
+def pkg_name(logical):
+    entry = PKG_MAP.get(logical)
+    if entry is None:
+        return logical
+    return entry["arch"] if is_arch() else entry["deb"]
+
+
+def pkg_installed(name):
+    if is_arch():
+        return rf(f"pacman -Qi {name}", silent=True) == 0
+    if is_debian_or_ubuntu():
+        return rf(f"dpkg -s {name}", silent=True) == 0
+    return False
+
+
+def pkg_install(*logical_names):
+    """Install packages by logical name. Skips Arch-only ones on Ubuntu with a warning."""
+    to_install = []
+    for n in logical_names:
+        if n in ARCH_ONLY_PACKAGES and not is_arch():
+            print(f"!!! {n}: no Ubuntu equivalent, skipping")
+            continue
+        to_install.append(pkg_name(n))
+    if not to_install:
+        return
+    joined = " ".join(to_install)
+    if is_arch():
+        r(f"pacman -S --noconfirm --needed {joined}")
+    elif is_debian_or_ubuntu():
+        r(f"DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends {joined}")
+
+
+def pkg_remove(name):
+    if is_arch():
+        rf(f"pacman -Rcs --noconfirm {name}")
+    elif is_debian_or_ubuntu():
+        rf(f"DEBIAN_FRONTEND=noninteractive apt-get purge -y {name}")
+
+
+def pkg_refresh():
+    if is_arch():
+        r("pacman -Sy")
+    elif is_debian_or_ubuntu():
+        r("apt-get update")
+
+
+def admin_group():
+    return "wheel" if is_arch() else "sudo"
+
+
+def bootloader():
+    if os.path.isdir("/boot/loader/entries"):
+        return "systemd-boot"
+    if os.path.isdir("/boot/grub") or os.path.isfile("/etc/default/grub"):
+        return "grub"
+    return None
+
+
 def get_cpu_vendor():
     with open("/proc/cpuinfo", "r") as f:
         cpuinfo = f.read()
@@ -68,13 +144,7 @@ def get_cpu_vendor():
 
 
 def is_package_installed(package):
-    if not is_arch():
-        raise "TODO"
-    try:
-        subprocess.check_output(f"pacman -Qi {package}", shell=True, stderr=subprocess.PIPE)
-        return True
-    except Exception:
-        return False
+    return pkg_installed(package)
 
 
 def locale_gen():
@@ -114,29 +184,7 @@ def fix_mkinitcpio():
 
 
 def fix_sudo():
-    r("pacman -S --noconfirm --needed sudo")
-
-    fn = "/etc/sudoers"
-    if not os.path.isfile(fn):
-        return
-    # TODO: ubuntu has different group
-    """if rf('grep "^# %%wheel ALL=(ALL) ALL" %s' % fn, silent=True) != 0:
-		return
-	if not ask('fix /etc/sudoers? (wheel NOPASSWD)'):
-		return
-	call('sed -e "s/^# %%wheel ALL=(ALL) NOPASSWD: ALL/%%wheel ALL=(ALL) NOPASSWD: ALL/g" -i %s' % fn)"""
-    wanted_content = """root ALL=(ALL) ALL
-%wheel ALL=(ALL) ALL
-#includedir /etc/sudoers.d"""
-    if not os.path.isfile(fn):
-        if ask(f"{fn} not found. fix?"):
-            open(fn, "w").write(wanted_content)
-        return
-    content = open(fn, "r").read()
-    if content != wanted_content:
-        if not ask(f"{fn} different content {len(content)} {len(wanted_content)}. fix?"):
-            return
-    open(fn, "w").write(wanted_content)
+    pkg_install("sudo")
 
 
 def fix_radek():
@@ -147,14 +195,11 @@ def fix_radek():
             return
         r(f"useradd -m {user}")
         r(f"passwd {user}")
-        r(f"usermod -aG wheel {user}")  # TODO: ubuntu has different group
+        r(f"usermod -aG {admin_group()} {user}")
 
     if rf(f'grep "^{user}:" /etc/passwd | grep /usr/bin/fish', silent=True) != 0:
         if ask(f"set fish as default shell for {user}?"):
-            if is_arch():
-                r("pacman -S --noconfirm --needed fish")
-            else:
-                raise "TODO"
+            pkg_install("fish")
             r(f"usermod -s /usr/bin/fish {user}")
 
     fn = f"/home/{user}/.forward"
@@ -177,10 +222,7 @@ def fix_radek():
 
     if not is_package_installed("encfs"):
         if ask("install encfs?"):
-            if is_arch():
-                r("pacman -S --noconfirm --needed encfs")
-            else:
-                raise "TODO"
+            pkg_install("encfs")
 
 
 def fix_root():
@@ -192,28 +234,25 @@ def fix_root():
 
 def fix_packages():
     # remove obsolete packages
-    rf("pacman -Rcs --noconfirm haveged")
+    pkg_remove("haveged")
 
-    # to keep modules around until reboot
-    r("pacman -S --noconfirm --needed kernel-modules-hook")
+    # to keep modules around until reboot (Arch-only; warns and skips on Ubuntu)
+    pkg_install("kernel-modules-hook")
 
     for p in ["openssh", "postfix", "systemd-check-failed", "uptimed"]:
-        installed = any(map(is_package_installed, p)) if isinstance(p, tuple) else is_package_installed(p)
-        if installed:
+        if p in ARCH_ONLY_PACKAGES and not is_arch():
             continue
-        if isinstance(p, tuple):
-            p = p[0]  # TODO: quick hack
+        if is_package_installed(pkg_name(p)):
+            continue
         if not ask(f"install {p}?"):
             continue
-        if is_arch():
-            r(f"pacman -S --noconfirm --needed {p}")
-        else:
-            raise "TODO"
+        pkg_install(p)
 
 
 def fix_desktop():
     if not is_arch():
-        raise Exception("not arch!")
+        print("fix_desktop: skipped (Arch-only)")
+        return
 
     # audio firmware - for newer intel laptops
     if rf("dmesg | grep sof-audio", silent=True) == 0:
@@ -292,22 +331,18 @@ def fix_mcelog():
         return
     if not is_package_installed("mcelog"):
         if ask("install mcelog?"):
-            if is_arch():
-                r("pacman -S --noconfirm mcelog")
-            else:
-                raise "TODO"
+            pkg_install("mcelog")
     if not os.path.islink("/etc/systemd/system/multi-user.target.wants/mcelog.service"):
         if ask("enable and start mcelog?"):
             r("systemctl enable --now mcelog.service")
 
 
 def fix_systemd_check_failed():
+    if not is_arch():
+        return  # Arch-only AUR package
     if not is_package_installed("systemd-check-failed"):
         if ask("install systemd-check-failed?"):
-            if is_arch():
-                r("pacman -S --noconfirm systemd-check-failed")
-            else:
-                raise "TODO"
+            pkg_install("systemd-check-failed")
     if not os.path.islink("/etc/systemd/system/multi-user.target.wants/systemd-check-failed.service"):
         if ask("enable and start systemd-check-failed?"):
             r("systemctl enable --now systemd-check-failed.service")
@@ -377,7 +412,7 @@ def fix_fstrim():
 
 
 def fix_backup():
-    r("pacman -S --noconfirm --needed borg")
+    pkg_install("borg")
     if os.path.islink("/etc/systemd/system/timers.target.wants/borg-backup.timer"):
         return
     print("no backup set up")
@@ -413,7 +448,11 @@ def fix_ssh_host_keys_hostname():
                 os.remove(fn)
                 deleted = True
     if deleted:
-        r("systemctl start sshdgenkeys")
+        if is_arch():
+            r("systemctl start sshdgenkeys")
+        elif is_debian_or_ubuntu():
+            r("ssh-keygen -A")
+            r("systemctl restart ssh")
 
 
 def fix_ssh_user_keys_hostname():
@@ -470,10 +509,7 @@ def fix_postfix_ipv6():
 def fix_postfix_generic():
     if not is_package_installed("postfix-pcre"):
         if ask("install postfix-pcre?"):
-            if is_arch():
-                r("pacman -S --noconfirm --needed postfix-pcre")
-            else:
-                raise "TODO"
+            pkg_install("postfix-pcre")
     fn = "/etc/postfix/generic.pcre"
     if os.path.isfile(fn):
         return
@@ -551,16 +587,16 @@ def running_kernel():
 def ucode():
     cpu_vendor = get_cpu_vendor()
     ucode_pkg = {"intel": "intel-ucode", "amd": "amd-ucode"}.get(cpu_vendor)
+    if not ucode_pkg:
+        return
 
-    if ucode_pkg and not is_package_installed(ucode_pkg):
-        if ask(f"install {ucode_pkg}?"):
-            if is_arch():
-                r(f"pacman -S --noconfirm --needed {ucode_pkg}")
-            else:
-                raise "TODO"
+    if not is_package_installed(pkg_name(ucode_pkg)):
+        if ask(f"install {pkg_name(ucode_pkg)}?"):
+            pkg_install(ucode_pkg)
 
-    # Check boot loader entries for ucode
-    if ucode_pkg:
+    # Check boot loader entries for ucode (systemd-boot only;
+    # GRUB picks up microcode automatically via update-grub triggers).
+    if bootloader() == "systemd-boot":
         ucode_img = ucode_pkg + ".img"
         for fn in glob.glob("/boot/loader/entries/*.conf"):
             if rf(f"grep {ucode_img} {fn}", silent=True) != 0:
@@ -568,12 +604,11 @@ def ucode():
 
 
 def faddnsc():
+    if not is_arch():
+        return  # Arch-only AUR package
     if not is_package_installed("faddnsc"):
         if ask("install faddnsc?"):
-            if is_arch():
-                r("pacman -S --noconfirm --needed faddnsc")
-            else:
-                raise "TODO"
+            pkg_install("faddnsc")
     fn = "/etc/faddnsc.conf"
     if os.path.isfile(fn):
         if rf(f"cat {fn} | grep podgorny.cz", silent=True) != 0 and rf(f"cat {fn} | grep asterix.cz", silent=True) != 0:
@@ -585,7 +620,7 @@ def main():
     if "-y" in sys.argv:
         yes = True
 
-    r("pacman -Sy")
+    pkg_refresh()
 
     hostname()
     fix_timezone()
