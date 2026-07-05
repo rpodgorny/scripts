@@ -557,7 +557,7 @@ def fix_journald_storage():
     if not ask(f"set Storage=volatile in {fn}?"):
         return
     r(f'sed -e "s/^#Storage=/Storage=/g" -i {fn}')
-    r(f'sed -e "s/^Storage=auto/Storage=volatile/g" -i {fn}')
+    r(f'sed -e "s/^Storage=.*/Storage=volatile/g" -i {fn}')
 
 
 def audit():
