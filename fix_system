@@ -279,25 +279,30 @@ def fix_desktop():
     r("pacman -S --noconfirm --needed bluez bluez-utils blueman")
     r("systemctl enable bluetooth")
 
-    r("pacman -S --noconfirm --needed zram-generator")
-    r('echo "[zram0]" >/etc/systemd/zram-generator.conf')
+    # only install on systems with no swap - otherwise zswap should be used
+    if is_raspi():
+        r("pacman -S --noconfirm --needed zram-generator")
+        r('echo "[zram0]" >/etc/systemd/zram-generator.conf')
 
     r("pacman -S --noconfirm --needed earlyoom")
     r("systemctl enable earlyoom")
 
-    r("pacman -S --noconfirm --needed rpautovpn-git")
-    r("systemctl enable rpautovpn")
+    # TODO: disabled for now
+    #r("pacman -S --noconfirm --needed rpautovpn-git")
+    #r("systemctl enable rpautovpn")
 
-    r("pacman -S --noconfirm --needed rpbatmanager-git")
-    r("systemctl enable rpbatmanager")
+    if not is_raspi():
+        r("pacman -S --noconfirm --needed rpbatmanager-git")
+        r("systemctl enable rpbatmanager")
 
     # call("pacman -S --noconfirm --needed rpcpu-git")
     # call("systemctl enable rpcpu")
 
     r("pacman -S --noconfirm --needed powertop")
 
-    r("pacman -S --noconfirm --needed power-profiles-daemon")
-    r("systemctl enable power-profiles-daemon")
+    if not is_raspi():
+        r("pacman -S --noconfirm --needed power-profiles-daemon")
+        r("systemctl enable power-profiles-daemon")
 
     if rf("grep mfsmaster /etc/hosts", silent=True) != 0:
         r('echo "192.168.11.11 mfsmaster" >>/etc/hosts')
@@ -306,8 +311,9 @@ def fix_desktop():
         r("cp /etc/systemd/network/en.network /etc/systemd/network/wlan.network")
         r('sed -e "s/^Name=en/Name=wlan/g" -i /etc/systemd/network/wlan.network')
 
-    r("sed -e 's/^#HandleLidSwitch=/HandleLidSwitch=/g' -i /etc/systemd/logind.conf")
-    r("sed -e 's/^HandleLidSwitch=.*/HandleLidSwitch=ignore/g' -i /etc/systemd/logind.conf")
+    if not is_raspi():
+        r("sed -e 's/^#HandleLidSwitch=/HandleLidSwitch=/g' -i /etc/systemd/logind.conf")
+        r("sed -e 's/^HandleLidSwitch=.*/HandleLidSwitch=ignore/g' -i /etc/systemd/logind.conf")
 
     r("sed -e 's/^#Color/Color/g' -i /etc/pacman.conf")
     r("sed -e 's/^#VerbosePkgLists/VerbosePkgLists/g' -i /etc/pacman.conf")
