@@ -257,6 +257,9 @@ def fix_desktop():
         print("fix_desktop: skipped (Arch-only)")
         return
 
+    if not ask("is this a desktop?"):
+        return
+
     # audio firmware - for newer intel laptops
     if rf("dmesg | grep sof-audio", silent=True) == 0:
         r("pacman -S --noconfirm --needed sof-firmware")
