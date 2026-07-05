@@ -84,9 +84,9 @@ def pkg_name(logical):
 
 def pkg_installed(name):
     if is_arch():
-        return rf(f"pacman -Qi {name}", silent=True) == 0
+        return rf(f"pacman -Qi {name} 2>/dev/null", silent=True) == 0
     if is_debian_or_ubuntu():
-        return rf(f"dpkg -s {name}", silent=True) == 0
+        return rf(f"dpkg -s {name} 2>/dev/null", silent=True) == 0
     return False
 
 
@@ -108,6 +108,8 @@ def pkg_install(*logical_names):
 
 
 def pkg_remove(name):
+    if not pkg_installed(name):
+        return  # not installed, nothing to do
     if is_arch():
         rf(f"pacman -Rcs --noconfirm {name}")
     elif is_debian_or_ubuntu():
@@ -211,6 +213,7 @@ def fix_radek():
     for repo in ["dotfiles", "scripts"]:
         if not os.path.isdir(f"/home/{user}/{repo}"):
             if ask(f"clone {repo} for {user}?"):
+                pkg_install("git")
                 r(f'echo "cd /home/{user}; git clone https://github.com/rpodgorny/{repo}" | su - {user}')
                 if repo == "dotfiles" and ask("install dotfiles?"):
                     r(f'echo "cd /home/{user}/{repo}; ./install" | su - {user}')
