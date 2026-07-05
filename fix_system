@@ -565,7 +565,7 @@ def audit():
     if rf(f'grep "Audit=" {fn}', silent=True) != 0:
         print(f"no Audit= line found in {fn}, doing nothing")
         return
-    if r(f'grep "^Audit=no" {fn}', silent=True) == 0:
+    if rf(f'grep "^Audit=no" {fn}', silent=True) == 0:
         return
     if not ask(f"set Audit=no in {fn}?"):
         return
