@@ -187,6 +187,14 @@ def fix_mkinitcpio():
 
 def fix_sudo():
     pkg_install("sudo")
+    if not is_arch():
+        return  # debian's sudo package ships %sudo enabled
+    if rf('grep -Eq "^\\s*%wheel\\s+ALL=" /etc/sudoers /etc/sudoers.d/* 2>/dev/null', silent=True) == 0:
+        return
+    if not ask("enable %wheel in /etc/sudoers?"):
+        return
+    r("sed -E 's/^#\\s*(%wheel\\s+ALL=\\(ALL(:ALL)?\\)\\s+ALL)$/\\1/' -i /etc/sudoers")
+    r("visudo -c")
 
 
 def fix_radek():
