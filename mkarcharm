@@ -2,8 +2,19 @@
 set -e -x
 
 DEV=$1
+PI=$2  # 3 or 4
 
 test -b ${DEV}
+
+case "${PI}" in
+	3|4) ;;
+	*) echo "usage: $0 <device> <3|4>  (raspberry pi model)" >&2; exit 1 ;;
+esac
+
+if [ "$(cat /sys/block/$(basename ${DEV})/removable)" != "1" ]; then
+	echo "${DEV} is not a removable device, refusing" >&2
+	exit 1
+fi
 
 BOOT=${DEV}1
 ROOT=${DEV}2
@@ -40,4 +51,7 @@ bsdtar -xpf /var/tmp/${FN} -C ${TMP}/root
 mv ${TMP}/root/boot/* ${TMP}/boot
 rm ${TMP}/root/etc/hostname
 cp /home/radek/scripts/mkarcharm_init.sh ${TMP}/root/root/init.sh
+if [ "${PI}" = "4" ]; then
+	sed -i 's/mmcblk0/mmcblk1/g' ${TMP}/root/etc/fstab
+fi
 umount ${TMP}/boot ${TMP}/root
