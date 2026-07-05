@@ -197,7 +197,10 @@ def fix_radek():
             return
         r(f"useradd -m {user}")
         r(f"passwd {user}")
-        r(f"usermod -aG {admin_group()} {user}")
+
+    if rf(f"id -nG {user} | grep -qw {admin_group()}", silent=True) != 0:
+        if ask(f"add {user} to {admin_group()}?"):
+            r(f"usermod -aG {admin_group()} {user}")
 
     if rf(f'grep "^{user}:" /etc/passwd | grep /usr/bin/fish', silent=True) != 0:
         if ask(f"set fish as default shell for {user}?"):
