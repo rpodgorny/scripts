@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e -x
 
-which wifite reaver tshark bully cowpatty
+which wifite reaver tshark bully cowpatty tree
 
 IFACE=$1
 if [ -z "${IFACE}" ]; then
@@ -15,7 +15,7 @@ if [ -z "${IFACE}" ]; then
   echo "Auto-selected: ${IFACE}"
 fi
 
-IGNORE="-E radatko.net -E Tashii"
+IGNORE="-E radatko.net -E Tashii -E bydlicoin -E radek -E asterix"
 VERBOSITY="-vvvv"
 VERBOSITY="-v"
 
