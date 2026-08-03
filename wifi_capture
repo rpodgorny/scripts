@@ -37,7 +37,7 @@ restore_iface() {
 }
 trap restore_iface EXIT INT TERM
 
-IGNORE="-E radatko.net -E Tashii -E bydlicoin -E radek -E asterix"
+IGNORE="-E radatko.net -E Tashii -E bydlicoin -E radek -E asterix -E guest"
 VERBOSITY="-vvvv"
 VERBOSITY="-v"
 
