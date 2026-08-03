@@ -15,6 +15,28 @@ if [ -z "${IFACE}" ]; then
   echo "Auto-selected: ${IFACE}"
 fi
 
+# Always hand the interface back to a usable managed state, however we exit
+# (clean finish, error via set -e, or Ctrl-C). wifite only restores on a clean
+# exit and never re-adopts the device, which otherwise leaves it stuck as
+# type=monitor (and, under iwd, Powered=off) and unusable for normal scanning.
+restore_iface() {
+  set +e
+  # wifite may spawn a separate airmon monitor iface (e.g. ${IFACE}mon); undo both.
+  for m in "${IFACE}mon" "${IFACE}"; do
+    ip link show "$m" >/dev/null 2>&1 || continue
+    sudo ip link set "$m" down
+    sudo iw dev "$m" set type managed 2>/dev/null
+  done
+  sudo ip link set "${IFACE}" up 2>/dev/null
+  # Kernel-level restore above is enough for NetworkManager/wpa_supplicant to
+  # re-adopt on their own. iwd does NOT auto-repower a device that went to
+  # monitor, so nudge it — but only where iwd is actually in use.
+  if command -v iwctl >/dev/null 2>&1; then
+    sudo iwctl device "${IFACE}" set-property Powered on 2>/dev/null
+  fi
+}
+trap restore_iface EXIT INT TERM
+
 IGNORE="-E radatko.net -E Tashii -E bydlicoin -E radek -E asterix"
 VERBOSITY="-vvvv"
 VERBOSITY="-v"
