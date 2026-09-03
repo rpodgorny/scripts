@@ -1,5 +1,6 @@
 #!/bin/sh
 # create/enter a project in ~/sync/projects and open a tmux session with claude
+# (or a custom command: p <project> <command> [args...])
 
 set -e
 
@@ -7,7 +8,9 @@ base="$HOME/sync/projects"
 name="$1"
 
 [ -d "$base" ] || { echo "p: $base does not exist" >&2; exit 1; }
-[ $# -eq 1 ] || { echo "p: usage: p <project>" >&2; exit 1; }
+[ $# -ge 1 ] || { echo "p: usage: p <project> [command...]" >&2; exit 1; }
+shift
+[ $# -gt 0 ] || set -- claude --name "$name"  # default command
 
 case "$name" in
 	''|*/*|.|..) echo "p: invalid project name: '$name'" >&2; exit 1 ;;
@@ -25,7 +28,7 @@ cd "$base/$name"
 session=$(echo "$name" | tr '.:' '__')
 
 if ! tmux has-session -t "=$session" 2>/dev/null; then
-	tmux new-session -d -s "$session" -c "$PWD" claude
+	tmux new-session -d -s "$session" -c "$PWD" -- "$@"
 	tmux new-window -t "=$session" -c "$PWD"
 	tmux select-window -t "=$session:^"
 fi
