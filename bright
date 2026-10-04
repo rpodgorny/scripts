@@ -1,29 +1,130 @@
 #!/usr/bin/python3
 
-import sys
+import glob
+import json
+import os
+import shlex
 import subprocess
+import sys
 
 
-LEVELS = [1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 25, 30, 40, 50, 60, 80, 100]  # TODO: maybe go full exponential?
+INTERNAL_LEVELS = [1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 25, 30, 40, 50, 60, 80, 100]  # TODO: maybe go full exponential?
+EXTERNAL_LEVELS = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]  # ddc panels are linear-ish, the dark end is not useful
+
+
+USAGE = "usage: bright up|down [--output NAME]"
 
 
 def call(cmd):
 	return subprocess.check_output(cmd, shell=True, universal_newlines=True).split("\n")
 
 
+class Internal:
+	"""laptop panel via light(1)"""
+
+	levels = INTERNAL_LEVELS
+
+	def __init__(self, label):
+		self.label = label
+
+	def get(self):
+		return int(round(float(call("light -G")[0])))
+
+	def set(self, percent):
+		call(f"light -S {percent}")
+
+
+class External:
+	"""external monitor via ddc/ci"""
+
+	levels = EXTERNAL_LEVELS
+
+	def __init__(self, label, bus):
+		self.label = label
+		self.bus = bus
+		self.maximum = 100
+
+	def get(self):
+		# "VCP 10 C <current> <max>" - max is monitor specific, remember it for set()
+		fields = call(f"ddcutil --bus {self.bus} --brief getvcp 10")[0].split()
+		if len(fields) < 5:
+			raise RuntimeError(f"{self.label}: cannot read brightness on i2c-{self.bus}")
+		self.maximum = int(fields[4])
+		return int(round(int(fields[3]) * 100 / self.maximum))
+
+	def set(self, percent):
+		raw = int(round(percent * self.maximum / 100))
+		call(f"ddcutil --bus {self.bus} --noverify --sleep-multiplier .2 setvcp 10 {raw}")
+
+
+def focused_output():
+	try:
+		return json.loads(call("niri msg --json focused-output")[0])["name"]
+	except (subprocess.CalledProcessError, ValueError, KeyError) as e:
+		print(f"cannot ask niri for the focused output ({e}), using the laptop panel", file=sys.stderr)
+		return None
+
+
+def ddc_bus(output):
+	links = glob.glob(f"/sys/class/drm/card*-{output}/ddc")
+	if not links:
+		return None
+	bus = os.path.basename(os.readlink(links[0]))
+	return bus.removeprefix("i2c-") if bus.startswith("i2c-") else None
+
+
+def backend_for(output):
+	if output is None:
+		return Internal("internal")
+	if output.startswith("eDP"):
+		return Internal(output)
+	bus = ddc_bus(output)
+	if bus is None:
+		print(f"no ddc bus for {output}, using the laptop panel", file=sys.stderr)
+		return Internal("internal")
+	return External(output, bus)
+
+
+def notify(summary, value):
+	call(f"notify-send {shlex.quote(summary)} -t 1000 -h int:value:{value} --hint=string:x-canonical-private-synchronous:bright -i notification-display-brightness")
+
+
+def notify_error(message):
+	call(f"notify-send bright {shlex.quote(message)} -u critical -t 3000 --hint=string:x-canonical-private-synchronous:bright -i notification-display-brightness")
+
+
+def parse_args(argv):
+	argv = list(argv)
+	output = None
+	if "--output" in argv:
+		i = argv.index("--output")
+		if i + 1 >= len(argv):
+			sys.exit("--output needs an output name (see: niri msg outputs)")
+		output = argv[i + 1]
+		del argv[i:i + 2]
+	if len(argv) != 1 or argv[0] not in ("up", "down"):
+		sys.exit(USAGE)
+	return argv[0] == "down", output
+
+
 def main():
-	down = "down" in sys.argv
-	cur = int(round(float(call("light -G")[0])))
+	down, output = parse_args(sys.argv[1:])
+	backend = backend_for(output or focused_output())
+	cur = backend.get()
 	# find (kinda) nearest - that's why i don't use list.index()
-	for i, v in enumerate(LEVELS):
+	for i, v in enumerate(backend.levels):
 		if v >= cur:
 			break
 	i = (i - 1) if down else (i + 1)
-	new = LEVELS[i] if 0 <= i < len(LEVELS) else cur
-	print(f"{cur} -> {new}")
-	call(f"light -S {new}")
-	call(f"notify-send {new} -t 1000 -h int:value:{new} --hint=string:x-canonical-private-synchronous:bright -i notification-display-brightness")
+	new = backend.levels[i] if 0 <= i < len(backend.levels) else cur
+	print(f"{backend.label}: {cur} -> {new}")
+	backend.set(new)
+	notify(f"{backend.label} {new}%", new)
 
 
 if __name__ == "__main__":
-	main()
+	try:
+		main()
+	except (subprocess.CalledProcessError, RuntimeError) as e:
+		notify_error(str(e))
+		sys.exit(f"bright: {e}")
