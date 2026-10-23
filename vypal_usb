@@ -28,12 +28,13 @@ umount ${DIR}/work/efiboot || true
 
 rmdir ${MNT} || true
 mkdir -p ${MNT}
+trap 'mountpoint -q ${MNT} && umount ${MNT}; rmdir ${MNT} 2>/dev/null; true' EXIT
 
 dd if=/dev/zero of=${DEV} bs=10M count=1
 parted --script -a optimal ${DEV} -- mklabel msdos mkpart primary fat32 0% 100% set 1 boot on
 mkfs.vfat -n ARCHISO_ATX ${DEV}1
 mount ${DEV}1 ${MNT}
-curl ${DATA_PREFIX}/image.iso | bsdtar -x --exclude=isolinux/ -f - -C ${MNT}
+curl ${DATA_PREFIX}/image.iso | bsdtar -x --no-same-owner --exclude=isolinux/ -f - -C ${MNT}
 extlinux -i ${MNT}/boot/syslinux
 umount ${MNT}
 dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/bios/mbr.bin of=${DEV}
@@ -66,38 +67,6 @@ mount ${DEV}1 ${MNT}
 #    initrd /arch/boot/intel-ucode.img /arch/boot/amd-ucode.img /arch/boot/x86_64/initramfs-linux.img
 #}
 #" >> ${MNT}/boot/grub/grub.cfg
-
-curl ${DATA_PREFIX}/memtest86.efi >${MNT}/EFI/memtest86.efi
-echo 'title Custom Memtest86
-linux EFI/memtest86.efi
-' > ${MNT}/loader/entries/98-memtest86.conf
-#echo "menuentry \"Custom Memtest86\" {
-#insmod chain
-#search --no-floppy --set=root --label ARCHISO_ATX
-#chainloader /EFI/memtest86.efi
-#}" >> ${MNT}/boot/grub/grub.cfg
-
-curl ${DATA_PREFIX}/memtest86_plus.efi >${MNT}/EFI/memtest86_plus.efi
-echo 'title Custom Memtest86+
-linux EFI/memtest86_plus.efi
-' > ${MNT}/loader/entries/99-memtest86-plus.conf
-#echo "menuentry \"Custom Memtest86+\" {
-#insmod chain
-#search --no-floppy --set=root --label ARCHISO_ATX
-#chainloader /EFI/memtest86_plus.efi
-#}" >> ${MNT}/boot/grub/grub.cfg
-
-#sed -i 's/default=archlinux/default=archlinux-ram/g' ${MNT}/boot/grub/grub.cfg
-
-curl ${DATA_PREFIX}/freedos.img >${MNT}/arch/boot/freedos.img
-echo '
-LABEL freedos
-MENU LABEL FreeDOS
-LINUX boot/syslinux/memdisk
-APPEND initrd=boot/freedos.img floppy
-' > ${MNT}/boot/syslinux/archiso_tail.cfg_
-cat ${MNT}/boot/syslinux/archiso_tail.cfg >> ${MNT}/boot/syslinux/archiso_tail.cfg_
-mv ${MNT}/boot/syslinux/archiso_tail.cfg_ ${MNT}/boot/syslinux/archiso_tail.cfg
 
 umount ${MNT}
 

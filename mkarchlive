@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e -x -o pipefail
 
-which cowsay figlet mkarchiso rsync sudo >/dev/null
+which cowsay figlet mkarchiso rsync sudo xorriso >/dev/null
 
 DIR=/var/tmp/archlive
 
@@ -120,6 +120,9 @@ chmod go-rwx /root/.ssh/id_rsa*
 
 sed -e "s/^#Audit=/Audit=/g" -i /etc/systemd/journald.conf
 sed -e "s/^Audit=yes/Audit=no/g" -i /etc/systemd/journald.conf
+
+# mkarchiso only picks up memtest.efi but the package ships memtest86x64.efi
+cp /boot/memtest86+/memtest86x64.efi /boot/memtest86+/memtest.efi
 ' >> ${DIR}/airootfs/root/customize_airootfs.sh
 
 # now, try to save some space to fit under 1GB
@@ -215,6 +218,22 @@ echo "
 interesting commands: wifi_connect lsdisks mine-scrypt-cpu showtemp vypal_usb kopiruj_disk_na_disk ...
 " >> ${DIR}/airootfs/etc/motd
 
+# memtest86 (passmark) and freedos are not packaged - the binaries get injected into the iso after build (see xorriso below)
+# the uefi entry only shows up on the usb stick made by vypal_usb (systemd-boot hides it on the iso's own esp where the file is missing)
+echo 'title    Memtest86 (PassMark)
+sort-key 04
+efi      /EFI/memtest86.efi
+architecture x64
+' > ${DIR}/efiboot/loader/entries/04-memtest86.conf
+
+echo '
+LABEL freedos
+MENU LABEL FreeDOS
+LINUX /boot/syslinux/memdisk
+INITRD /boot/freedos.img
+APPEND floppy
+' >> ${DIR}/syslinux/archiso_tail.cfg
+
 cd ${DIR}
 ###./build.sh -v -L ARCHISO_ATX
 ###mkarchiso -v -L ARCHISO_ATX /usr/share/archiso/configs/releng/
@@ -222,9 +241,12 @@ sudo mkarchiso -v -L ARCHISO_ATX .
 cd -
 
 mkdir ${DIR}/upload
-cp ${DIR}/out/*iso ${DIR}/upload/image.iso
-cp -av ${DATA_PREFIX}/archlive_data/* ${DIR}/upload/
-rsync -avP ${DIR}/upload/* orion.asterix.cz:public_html/archlive/
+xorriso -indev ${DIR}/out/*iso -outdev ${DIR}/upload/image.iso \
+  -map ${DATA_PREFIX}/archlive_data/memtest86.efi /EFI/memtest86.efi \
+  -map ${DATA_PREFIX}/archlive_data/freedos.img /boot/freedos.img \
+  -chown_r 0 / -- -chgrp_r 0 / -- \
+  -boot_image any replay
+rsync -avP ${DIR}/upload/image.iso orion.asterix.cz:public_html/archlive/
 
 sudo rm -rf ${DIR}
 
