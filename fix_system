@@ -186,7 +186,10 @@ def fix_mkinitcpio():
 
 
 def fix_sudo():
-    pkg_install("sudo")
+    if not is_package_installed("sudo"):
+        if not ask("install sudo?"):
+            return
+        pkg_install("sudo")
     if not is_arch():
         return  # debian's sudo package ships %sudo enabled
     if rf('grep -Eq "^\\s*%wheel\\s+ALL=" /etc/sudoers /etc/sudoers.d/* 2>/dev/null', silent=True) == 0:
@@ -251,7 +254,9 @@ def fix_packages():
     pkg_remove("haveged")
 
     # to keep modules around until reboot (Arch-only; warns and skips on Ubuntu)
-    pkg_install("kernel-modules-hook")
+    if is_arch() and not is_package_installed("kernel-modules-hook"):
+        if ask("install kernel-modules-hook?"):
+            pkg_install("kernel-modules-hook")
 
     for p in ["openssh", "postfix", "systemd-check-failed", "uptimed"]:
         if p in ARCH_ONLY_PACKAGES and not is_arch():
@@ -437,7 +442,9 @@ def fix_fstrim():
 
 
 def fix_backup():
-    pkg_install("borg")
+    if not is_package_installed(pkg_name("borg")):
+        if ask("install borg?"):
+            pkg_install("borg")
     if os.path.islink("/etc/systemd/system/timers.target.wants/borg-backup.timer"):
         return
     print("no backup set up")
