@@ -219,7 +219,7 @@ def fix_radek():
             r(f"usermod -s /usr/bin/fish {user}")
 
     fn = f"/home/{user}/.forward"
-    if not os.path.isfile(fn):
+    if not os.path.isfile(fn) and is_package_installed("postfix"):
         if ask(f"add .forward to radek@podgorny.cz for {user}?"):
             r(f'echo "radek@podgorny.cz" > {fn}')
             r(f"chown {user}:{user} {fn}")
@@ -244,7 +244,7 @@ def fix_radek():
 
 def fix_root():
     fn = "/root/.forward"
-    if not os.path.isfile(fn):
+    if not os.path.isfile(fn) and is_package_installed("postfix"):
         if ask("add .forward to radek@podgorny.cz for root?"):
             r(f'echo "radek@podgorny.cz" > {fn}')
 
@@ -341,8 +341,8 @@ def fix_desktop():
 def fix_services():
     ssh = "sshd" if is_arch() else "ssh"  # debian: sshd is only an alias of ssh.service
     for s in [ssh, "postfix", "systemd-check-failed", "systemd-networkd", "systemd-resolved", "systemd-timesyncd", "uptimed"]:
-        if s in ARCH_ONLY_PACKAGES and not is_arch():
-            continue
+        if rf(f"systemctl cat {s}.service 2>/dev/null", silent=True) != 0:
+            continue  # unit not installed (package declined or missing)
         if rf(f"systemctl is-enabled -q {s}.service", silent=True) == 0:
             continue
         # ubuntu 22.10+ starts ssh via socket activation, ssh.service stays disabled
@@ -532,12 +532,14 @@ def fix_ssh_root_authorized_keys():
 
 
 def fix_postfix_ipv6():
+    if not is_package_installed("postfix"):
+        return
     fn = "/etc/postfix/main.cf"
     if not os.path.isfile(fn):
         return
-    if rf(f'grep "^inet_protocols = ipv4,ipv6$" {fn}', silent=True) == 0:
+    if rf(f'grep -E "^inet_protocols = (ipv4,ipv6|all)$" {fn}', silent=True) == 0:
         return
-    if r(f'grep "^inet_protocols = ipv4$" {fn}', silent=True) != 0:
+    if rf(f'grep "^inet_protocols = ipv4$" {fn}', silent=True) != 0:
         print(f'"^inet_protocols = ipv4$" not found in {fn}, this is weird')
         return
     if ask("ipv6 not set for postfix. fix?"):
@@ -545,15 +547,16 @@ def fix_postfix_ipv6():
 
 
 def fix_postfix_generic():
+    if not is_package_installed("postfix"):
+        return
     if not is_package_installed("postfix-pcre"):
         if ask("install postfix-pcre?"):
             pkg_install("postfix-pcre")
     fn = "/etc/postfix/generic.pcre"
-    if os.path.isfile(fn):
-        return
-    if ask(f"{fn} not found. fix?"):
-        rf(rf'echo "/([a-z]+)@([^.]+)\.localdomain/  \$1+\$2@podgorny.cz" >{fn}', silent=True)
-    if rf(f'grep "^smtp_generic_maps = {fn}$" /etc/postfix/main.cf', silent=True) == 0:
+    if not os.path.isfile(fn):
+        if ask(f"{fn} not found. fix?"):
+            rf(rf'echo "/([a-z]+)@([^.]+)\.localdomain/  \$1+\$2@podgorny.cz" >{fn}', silent=True)
+    if rf(f'grep "^smtp_generic_maps = pcre:{fn}$" /etc/postfix/main.cf', silent=True) == 0:
         return
     if ask(f"{fn} not set up. fix?"):
         r(f'echo "smtp_generic_maps = pcre:{fn}" >>/etc/postfix/main.cf')
