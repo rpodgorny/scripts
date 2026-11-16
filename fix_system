@@ -600,6 +600,33 @@ def docker_daemon_json():
     open(fn, "w").write(wanted_content)
 
 
+def podman_network_json():
+    if not os.path.isfile("/usr/bin/podman"):
+        return
+    wanted_content = """{
+  "name": "podman",
+  "id": "2f259bab93aaaaa2542ba43ef33eb990d0999ee1b9924b557b7be53c0b7a1bb9",
+  "driver": "bridge",
+  "network_interface": "podman0",
+  "subnets": [
+    { "subnet": "10.88.0.0/16" },
+    { "subnet": "fd00:88::/64" }
+  ]
+}
+"""
+    fn = "/etc/containers/networks/podman.json"
+    if not os.path.isfile(fn):
+        if ask(f"{fn} not found. fix?"):
+            os.makedirs(os.path.dirname(fn), exist_ok=True)
+            open(fn, "w").write(wanted_content)
+        return
+    content = open(fn, "r").read()
+    if content != wanted_content:
+        if not ask(f"{fn} different content {len(content)} {len(wanted_content)}. fix?"):
+            return
+    open(fn, "w").write(wanted_content)
+
+
 def running_kernel():
     ver = subprocess.check_output("uname -r", shell=True).decode().strip()
     if os.path.isdir(f"/lib/modules/{ver}"):
@@ -676,6 +703,7 @@ def main():
     fix_mcelog()
     fix_systemd_check_failed()
     docker_daemon_json()
+    podman_network_json()
     audit()
     fix_journald_storage()
     ucode()
