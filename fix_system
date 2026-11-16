@@ -339,8 +339,14 @@ def fix_desktop():
 
 
 def fix_services():
-    for s in ["sshd", "postfix", "systemd-check-failed", "systemd-networkd", "systemd-resolved", "systemd-timesyncd", "uptimed"]:
-        if rf(f"systemctl is-enabled {s} | grep enabled", silent=True) == 0:
+    ssh = "sshd" if is_arch() else "ssh"  # debian: sshd is only an alias of ssh.service
+    for s in [ssh, "postfix", "systemd-check-failed", "systemd-networkd", "systemd-resolved", "systemd-timesyncd", "uptimed"]:
+        if s in ARCH_ONLY_PACKAGES and not is_arch():
+            continue
+        if rf(f"systemctl is-enabled -q {s}.service", silent=True) == 0:
+            continue
+        # ubuntu 22.10+ starts ssh via socket activation, ssh.service stays disabled
+        if s == "ssh" and rf("systemctl is-enabled -q ssh.socket", silent=True) == 0:
             continue
         if not ask(f"enable and start {s}?"):
             continue
