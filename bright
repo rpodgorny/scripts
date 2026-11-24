@@ -19,6 +19,13 @@ def call(cmd):
 	return subprocess.check_output(cmd, shell=True, universal_newlines=True).split("\n")
 
 
+def primary_backlight():
+	# light's "auto" may pick a secondary panel (zenbook duo: eDP-2, which zenbook-duo-daemon
+	# keeps overwriting from eDP-1), so drive the backlight of the first eDP connector
+	devs = sorted(glob.glob("/sys/class/drm/card*-eDP-*/*/max_brightness"))
+	return f"sysfs/backlight/{os.path.basename(os.path.dirname(devs[0]))}" if devs else "sysfs/backlight/auto"
+
+
 class Internal:
 	"""laptop panel via light(1)"""
 
@@ -26,12 +33,13 @@ class Internal:
 
 	def __init__(self, label):
 		self.label = label
+		self.device = primary_backlight()
 
 	def get(self):
-		return int(round(float(call("light -G")[0])))
+		return int(round(float(call(f"light -s {self.device} -G")[0])))
 
 	def set(self, percent):
-		call(f"light -S {percent}")
+		call(f"light -s {self.device} -S {percent}")
 
 
 class External:
