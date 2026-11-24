@@ -7,7 +7,6 @@ ureq = { version = "3.0.2", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 dialoguer = { version = "0.11", features = ["fuzzy-select"] }
-unicode-normalization = "0.1"
 unidecode = "0.3"
 clap = { version = "4.4", features = ["derive"] }
 ---
