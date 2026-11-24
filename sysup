@@ -1,0 +1,17 @@
+#!/bin/bash
+# sysup -- full system upgrade on Arch (pacman) or Debian-based (apt) systems.
+
+set -e
+
+[ "$(id -u)" -eq 0 ] && sudo= || sudo=sudo
+
+if command -v pacman >/dev/null; then
+	$sudo pacman -Syu "$@"
+elif command -v apt >/dev/null; then
+	$sudo apt update
+	$sudo apt full-upgrade -V "$@"
+	$sudo apt autoremove "$@"
+else
+	echo "${0##*/}: no supported package manager (pacman/apt)" >&2
+	exit 1
+fi
