@@ -1,0 +1,15 @@
+#!/bin/bash
+# sudo-keepalive CMD [ARGS...] -- hold the sudo ticket warm for CMD's lifetime.
+# Prompts for the password once up front, then refreshes the per-tty timestamp
+# every 60s so a long-running script never re-prompts halfway through.
+
+[ $# -gt 0 ] || { echo "usage: ${0##*/} CMD [ARGS...]" >&2; exit 2; }
+
+sudo -v || exit 1
+
+# keeper: refresh ticket every 60s; self-terminate if we die without the trap firing
+while sudo -n true; do sleep 60; kill -0 "$$" 2>/dev/null || exit; done &
+keeper=$!
+trap 'kill "$keeper" 2>/dev/null' EXIT
+
+"$@"
