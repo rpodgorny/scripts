@@ -1,0 +1,244 @@
+#!/usr/bin/env python3
+"""Manage Email Profi (Seznam) mailboxes.
+
+  emailprofi list DOMAIN
+  emailprofi create USER@DOMAIN [--password PW] [--no-consent]
+  emailprofi delete USER@DOMAIN [--yes]
+
+Admin credentials come from EP_ADMIN / EP_ADMIN_PASSWORD, or are prompted for.
+create generates a random password unless --password is given, and accepts the
+new mailbox's licence/consent by logging in once as it (skip with --no-consent).
+"""
+import argparse, getpass, os, secrets, string, struct, sys
+import requests
+from typing import Any
+
+LOGIN = 'https://login.seznam.cz'
+EP = 'https://emailprofi.seznam.cz'
+UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36'
+
+
+# --- FastRPC (Seznam binary RPC) -------------------------------------------
+
+def _uint(v):
+    n = max(1, (v.bit_length() + 7) // 8)
+    return n, v.to_bytes(n, 'little')
+
+def _enc(v):
+    if v is None:
+        return b'\x60'
+    if isinstance(v, bool):
+        return bytes([0x10 | v])
+    if isinstance(v, int):
+        n, b = _uint((v << 1) ^ (v >> 63))  # zigzag, FRPC v3
+        return bytes([0x08 | (n - 1)]) + b
+    if isinstance(v, float):
+        return b'\x18' + struct.pack('<d', v)
+    if isinstance(v, (str, bytes)):
+        data = v.encode() if isinstance(v, str) else v
+        n, b = _uint(len(data))
+        return bytes([(0x20 if isinstance(v, str) else 0x30) | (n - 1)]) + b + data
+    if isinstance(v, dict):
+        n, b = _uint(len(v))
+        out = bytes([0x50 | (n - 1)]) + b
+        for k, x in v.items():
+            k = k.encode()
+            out += bytes([len(k)]) + k + _enc(x)
+        return out
+    if isinstance(v, (list, tuple)):
+        n, b = _uint(len(v))
+        return bytes([0x58 | (n - 1)]) + b + b''.join(map(_enc, v))
+    raise TypeError(type(v))
+
+def frpc_call(method, *params):
+    m = method.encode()
+    return b'\xca\x11\x03\x00\x68' + bytes([len(m)]) + m + b''.join(map(_enc, params))
+
+class _Dec:
+    def __init__(self, d):
+        self.d, self.p, self.v3 = d, 0, d[2] >= 3
+    def take(self, n):
+        r = self.d[self.p:self.p + n]; self.p += n; return r
+    def num(self, n):
+        return int.from_bytes(self.take(n), 'little')
+    def val(self):
+        t = self.take(1)[0]; typ, add = t >> 3, t & 7
+        if typ == 1:
+            if self.v3:
+                v = self.num(add + 1); return (v >> 1) ^ -(v & 1)
+            return struct.unpack('<i', self.take(4))[0]
+        if typ == 7: return self.num(add + 1)
+        if typ == 8: return -self.num(add + 1)
+        if typ == 2: return bool(add & 1)
+        if typ == 3: return struct.unpack('<d', self.take(8))[0]
+        if typ in (4, 6):
+            s = self.take(self.num(add + 1))
+            return s.decode() if typ == 4 else s
+        if typ == 5:  # datetime: zone, timestamp, packed fields
+            self.take(1); ts = self.num(8 if self.v3 else 4); self.take(5)
+            return ts
+        if typ == 10:
+            r = {}
+            for _ in range(self.num(add + 1)):
+                k = self.take(self.take(1)[0]).decode(); r[k] = self.val()
+            return r
+        if typ == 11: return [self.val() for _ in range(self.num(add + 1))]
+        if typ == 12: return None
+        raise ValueError(f'unknown FRPC type {typ}')
+
+def frpc_parse(data):
+    d = _Dec(data)
+    if d.take(2) != b'\xca\x11':
+        raise ValueError('not a FastRPC response')
+    d.take(2)
+    t = d.take(1)[0] >> 3
+    if t == 14:
+        return d.val()
+    if t == 15:
+        raise RuntimeError(f'FRPC fault {d.val()}: {d.val()}')
+    raise ValueError(f'unexpected FRPC message {t}')
+
+
+# --- Seznam login ----------------------------------------------------------
+
+class LoginError(Exception):
+    pass
+
+def login(username, password, accept_licence=False):
+    """Log in via login.seznam.cz; returns (session, uid)."""
+    s = requests.Session()
+    s.headers['User-Agent'] = UA
+    s.get(f'{LOGIN}/?serviceId=email').raise_for_status()  # initial cookies
+    hdr = {'Origin': LOGIN, 'Accept': 'application/json'}
+
+    def api(path, body):
+        r = s.post(f'{LOGIN}/api/v1{path}', json=body, headers=hdr)
+        try:
+            j = r.json()
+        except ValueError:
+            j = {}
+        return r.status_code, j
+
+    code, j = api('/auth/password', {'username': username, 'password': password, 'service': 'email'})
+    if code != 200 or 'token' not in j:
+        raise LoginError(f'{username}: auth/password HTTP {code} {j}')
+    sp = {'token': j['token'], 'service': 'email'}
+
+    code, j = api('/session', sp)
+    if code == 400 and j.get('status') == 462 and accept_licence:
+        # 462 = licence/consent not yet accepted (fresh mailbox)
+        c2, j2 = api('/user/properties/licence', sp)
+        if c2 != 200:
+            raise LoginError(f'{username}: licence HTTP {c2} {j2}')
+        code, j = api('/session', sp)
+    if code != 200:
+        raise LoginError(f'{username}: session HTTP {code} {j}')
+    return s, j.get('uid')
+
+
+class EmailProfi:
+    def __init__(self, session, uid):
+        self.s, self.uid = session, uid
+
+    def call(self, method, *params) -> Any:
+        r = self.s.post(f'{EP}/RPC2', params={'u': self.uid}, data=frpc_call(method, *params),
+                        headers={'Content-Type': 'application/x-frpc', 'Accept': 'application/x-frpc',
+                                 'Origin': EP, 'Referer': f'{EP}/'})
+        r.raise_for_status()
+        res = frpc_parse(r.content)
+        if isinstance(res, dict) and res.get('status') not in (None, 200):
+            raise RuntimeError(f'{method}: {res.get("status")} {res.get("statusMessage")}')
+        return res
+
+    def password_check(self, user, domain, password) -> dict:
+        return self.call('password.check', user, domain, password)
+
+    def create_user(self, user, domain, password) -> dict:
+        return self.call('custom.user.create', self.uid, {
+            'domain': domain, 'username': user, 'password': password,
+            'nameFirst': '', 'nameLast': '', 'skipMapUser': False,
+        })
+
+    def list_users(self, domain):
+        return self.call('custom.listUsers', self.uid, domain)['users']
+
+    def find_user_id(self, user, domain):
+        for u in self.list_users(domain):
+            if u['username'] == user:
+                return u['userId']
+        return None
+
+    def remove_user(self, user_id):
+        chk = self.call('custom.user.serviceCheck', self.uid, user_id)
+        if chk.get('blockingServices'):
+            raise RuntimeError(f'cannot remove, blocking services: {chk["blockingServices"]}')
+        return self.call('custom.user.remove', self.uid, user_id)
+
+
+def gen_password(n=16):
+    alpha = string.ascii_letters + string.digits
+    while True:
+        p = ''.join(secrets.choice(alpha) for _ in range(n))
+        if any(c.isdigit() for c in p) and any(c.isupper() for c in p) and any(c.islower() for c in p):
+            return p
+
+
+def split_email(ap, email):
+    user, _, domain = email.partition('@')
+    if not user or not domain:
+        ap.error('email must be user@domain')
+    return user, domain
+
+
+def main():
+    ap = argparse.ArgumentParser(prog='emailprofi', description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = ap.add_subparsers(dest='cmd', required=True)
+    p = sub.add_parser('list', help='list mailboxes in a domain')
+    p.add_argument('domain')
+    p = sub.add_parser('create', help='create a mailbox')
+    p.add_argument('email')
+    p.add_argument('--password', help='mailbox password (default: random)')
+    p.add_argument('--no-consent', action='store_true', help='skip first login / licence acceptance')
+    p = sub.add_parser('delete', help='delete a mailbox and all its mail (irreversible)')
+    p.add_argument('email')
+    p.add_argument('--yes', action='store_true', help='do not ask for confirmation')
+    a = ap.parse_args()
+
+    if a.cmd != 'list':
+        user, domain = split_email(ap, a.email)
+    admin = os.environ.get('EP_ADMIN') or input('Admin login (e.g. you@seznam.cz): ')
+    admin_pw = os.environ.get('EP_ADMIN_PASSWORD') or getpass.getpass(f'Password for {admin}: ')
+
+    s, uid = login(admin, admin_pw)
+    ep = EmailProfi(s, uid)
+    print(f'admin logged in, uid={uid}', file=sys.stderr)
+
+    if a.cmd == 'list':
+        for u in ep.list_users(a.domain):
+            print(f'{u["username"]}@{u["domain"]}\t{u["userId"]}')
+
+    elif a.cmd == 'delete':
+        user_id = ep.find_user_id(user, domain)
+        if user_id is None:
+            sys.exit(f'{a.email} not found')
+        if not a.yes and input(f'Delete {a.email} (userId={user_id}) and all its mail? [y/N] ').lower() != 'y':
+            sys.exit('aborted')
+        ep.remove_user(user_id)
+        print(f'deleted {a.email}', file=sys.stderr)
+
+    elif a.cmd == 'create':
+        pw = a.password or gen_password()
+        chk = ep.password_check(user, domain, pw)
+        if chk.get('power', 0) < chk.get('minPower', 0):
+            sys.exit(f'password too weak: power {chk["power"]} < {chk["minPower"]}')
+        res = ep.create_user(user, domain, pw)
+        print(f'created {a.email}, userId={res.get("userId")}', file=sys.stderr)
+        print(f'{a.email}\t{pw}', flush=True)  # before consent, so a failure there can't lose it
+        if not a.no_consent:
+            login(a.email, pw, accept_licence=True)
+            print('licence accepted', file=sys.stderr)
+
+
+if __name__ == '__main__':
+    main()
